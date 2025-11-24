@@ -337,9 +337,8 @@
         "sourceCode": "Source code",
         "ipGeolocation": "IP Geolocation by DB-IP",
         "poweredBy": "powered by"
-    }
-},
-"tables": {
+    },
+    "tables": {
     "torrents": {
         "headers": {
             "name": "Name",

@@ -337,9 +337,8 @@
         "sourceCode": "源代码",
         "ipGeolocation": "IP 地理定位由 DB-IP 提供",
         "poweredBy": "技术支持"
-    }
-},
-"tables": {
+    },
+    "tables": {
     "torrents": {
         "labels": "标签",
         "name": "名称",
