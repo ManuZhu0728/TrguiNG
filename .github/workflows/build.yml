@@ -1,4 +1,4 @@
-name: 'build'
+name: "build"
 
 on:
   workflow_dispatch:
@@ -59,9 +59,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: 'npm'
+          cache: "npm"
 
-      - name: 'Setup Rust'
+      - name: "Setup Rust"
         if: matrix.platform.rust_target == 'aarch64-apple-darwin' || matrix.platform.rust_target == 'x86_64-apple-darwin' || matrix.platform.rust_target == 'aarch64-pc-windows-msvc'
         run: rustup target add ${{matrix.platform.rust_target}}
 
@@ -169,10 +169,10 @@ jobs:
           show-emoji: false
 
       # And create a release with the artifacts attached
-      - name: 'create release'
+      - name: "create release"
         uses: softprops/action-gh-release@v0.1.15
         env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
           draft: true
           files: ./artifacts/**/*
@@ -181,35 +181,35 @@ jobs:
 
             ${{ steps.changelog.outputs.changelog }}
 
-  update_aur:
-    name: Publish AUR package
-    needs: build-binaries
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Determine version
-        id: determine-version
-        run: |
-          GIT_VERSION=`git describe --tags --always`
-          echo "GIT_VERSION=$GIT_VERSION" >> $GITHUB_OUTPUT
-      # Download the previously uploaded artifacts
-      - uses: actions/download-artifact@v4
-        id: download
-        with:
-          name: dbip
-      - name: Download desktop file
-        run: wget -nv -O TrguiNG.desktop "https://raw.githubusercontent.com/flathub/org.openscopeproject.TrguiNG/master/org.openscopeproject.TrguiNG.desktop"
-      - name: Generate PKGBUILD
-        run: |
-          python3 ci/generate_pkgbuild.py
-          cat PKGBUILD
-      - name: Publish to the AUR
-        uses: KSXGitHub/github-actions-deploy-aur@v3.0.1
-        with:
-          pkgname: trgui-ng
-          pkgbuild: ./PKGBUILD
-          commit_username: ${{ secrets.AUR_USERNAME }}
-          commit_email: ${{ secrets.AUR_EMAIL }}
-          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          commit_message: Update to ${{ steps.determine-version.outputs.GIT_VERSION }}
+  # update_aur:
+  #   name: Publish AUR package
+  #   needs: build-binaries
+  #   if: startsWith(github.ref, 'refs/tags/')
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Determine version
+  #       id: determine-version
+  #       run: |
+  #         GIT_VERSION=`git describe --tags --always`
+  #         echo "GIT_VERSION=$GIT_VERSION" >> $GITHUB_OUTPUT
+  #     # Download the previously uploaded artifacts
+  #     - uses: actions/download-artifact@v4
+  #       id: download
+  #       with:
+  #         name: dbip
+  #     - name: Download desktop file
+  #       run: wget -nv -O TrguiNG.desktop "https://raw.githubusercontent.com/flathub/org.openscopeproject.TrguiNG/master/org.openscopeproject.TrguiNG.desktop"
+  #     - name: Generate PKGBUILD
+  #       run: |
+  #         python3 ci/generate_pkgbuild.py
+  #         cat PKGBUILD
+  #     - name: Publish to the AUR
+  #       uses: KSXGitHub/github-actions-deploy-aur@v3.0.1
+  #       with:
+  #         pkgname: trgui-ng
+  #         pkgbuild: ./PKGBUILD
+  #         commit_username: ${{ secrets.AUR_USERNAME }}
+  #         commit_email: ${{ secrets.AUR_EMAIL }}
+  #         ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+  #         commit_message: Update to ${{ steps.determine-version.outputs.GIT_VERSION }}
