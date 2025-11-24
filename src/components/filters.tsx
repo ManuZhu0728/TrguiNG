@@ -16,596 +16,909 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import type { Torrent } from "../rpc/torrent";
 import { Status } from "../rpc/transmission";
 import * as Icon from "react-bootstrap-icons";
 import * as StatusIcons from "./statusicons";
-import type { FilterSectionName, SectionsVisibility, StatusFilterName } from "../config";
+import type {
+  FilterSectionName,
+  SectionsVisibility,
+  StatusFilterName,
+} from "../config";
 import { ConfigContext, ServerConfigContext } from "../config";
 import { Box, Button, Divider, Flex, Menu, Portal } from "@mantine/core";
 import { eventHasModKey, useForceRender } from "trutil";
+import { useTranslation } from "react-i18next";
 import { useContextMenu } from "./contextmenu";
 import { MemoSectionsContextMenu, getSectionsMap } from "./sectionscontextmenu";
 
 export interface TorrentFilter {
-    id: string,
-    filter: (t: Torrent) => boolean,
+  id: string;
+  filter: (t: Torrent) => boolean;
 }
 
 interface NamedFilter {
-    name: string,
-    filter: (t: Torrent) => boolean,
-    icon: React.ComponentType,
+  name: string;
+  filter: (t: Torrent) => boolean;
+  icon: React.ComponentType;
 }
 
 interface StatusFilter extends NamedFilter {
-    required?: boolean,
-    name: StatusFilterName,
+  required?: boolean;
+  name: StatusFilterName;
 }
 
 const statusFilters: StatusFilter[] = [
-    {
-        name: "All Torrents",
-        filter: () => true,
-        icon: StatusIcons.All,
-        required: true,
+  {
+    name: "All Torrents",
+    filter: () => true,
+    icon: StatusIcons.All,
+    required: true,
+  },
+  {
+    name: "Downloading",
+    filter: (t: Torrent) => t.status === Status.downloading,
+    icon: StatusIcons.Downloading,
+  },
+  {
+    name: "Completed",
+    filter: (t: Torrent) => {
+      return (
+        t.status === Status.seeding ||
+        (t.sizeWhenDone > 0 && Math.max(t.sizeWhenDone - t.haveValid, 0) === 0)
+      );
     },
-    {
-        name: "Downloading",
-        filter: (t: Torrent) => t.status === Status.downloading,
-        icon: StatusIcons.Downloading,
+    icon: StatusIcons.Completed,
+  },
+  {
+    name: "Active",
+    filter: (t: Torrent) => {
+      return t.rateDownload > 0 || t.rateUpload > 0;
     },
-    {
-        name: "Completed",
-        filter: (t: Torrent) => {
-            return t.status === Status.seeding ||
-                (t.sizeWhenDone > 0 && Math.max(t.sizeWhenDone - t.haveValid, 0) === 0);
-        },
-        icon: StatusIcons.Completed,
+    icon: StatusIcons.Active,
+  },
+  {
+    name: "Inactive",
+    filter: (t: Torrent) => {
+      return (
+        t.rateDownload === 0 &&
+        t.rateUpload === 0 &&
+        t.status !== Status.stopped
+      );
     },
-    {
-        name: "Active",
-        filter: (t: Torrent) => {
-            return t.rateDownload > 0 || t.rateUpload > 0;
-        },
-        icon: StatusIcons.Active,
-    },
-    {
-        name: "Inactive",
-        filter: (t: Torrent) => {
-            return t.rateDownload === 0 && t.rateUpload === 0 && t.status !== Status.stopped;
-        },
-        icon: StatusIcons.Inactive,
-    },
-    {
-        name: "Running",
-        filter: (t: Torrent) => t.status !== Status.stopped,
-        icon: StatusIcons.Running,
-    },
-    {
-        name: "Stopped",
-        filter: (t: Torrent) => t.status === Status.stopped,
-        icon: StatusIcons.Stopped,
-    },
-    {
-        name: "Error",
-        filter: (t: Torrent) => (t.error !== 0 || t.cachedError !== ""),
-        icon: StatusIcons.Error,
-    },
-    {
-        name: "Waiting",
-        filter: (t: Torrent) => [
-            Status.verifying,
-            Status.queuedToVerify,
-            Status.queuedToDownload].includes(t.status),
-        icon: StatusIcons.Waiting,
-    },
-    {
-        name: "Magnetizing",
-        filter: (t: Torrent) => t.status === Status.downloading && t.pieceCount === 0,
-        icon: StatusIcons.Magnetizing,
-    },
+    icon: StatusIcons.Inactive,
+  },
+  {
+    name: "Running",
+    filter: (t: Torrent) => t.status !== Status.stopped,
+    icon: StatusIcons.Running,
+  },
+  {
+    name: "Stopped",
+    filter: (t: Torrent) => t.status === Status.stopped,
+    icon: StatusIcons.Stopped,
+  },
+  {
+    name: "Error",
+    filter: (t: Torrent) => t.error !== 0 || t.cachedError !== "",
+    icon: StatusIcons.Error,
+  },
+  {
+    name: "Waiting",
+    filter: (t: Torrent) =>
+      [
+        Status.verifying,
+        Status.queuedToVerify,
+        Status.queuedToDownload,
+      ].includes(t.status),
+    icon: StatusIcons.Waiting,
+  },
+  {
+    name: "Magnetizing",
+    filter: (t: Torrent) =>
+      t.status === Status.downloading && t.pieceCount === 0,
+    icon: StatusIcons.Magnetizing,
+  },
 ];
 
 const noLabelsFilter: NamedFilter = {
-    name: "<No labels>",
-    filter: (t: Torrent) => t.labels?.length === 0,
-    icon: StatusIcons.Label,
+  name: "<No labels>",
+  filter: (t: Torrent) => t.labels?.length === 0,
+  icon: StatusIcons.Label,
 };
 
 export const DefaultFilter = statusFilters[0].filter;
 
 interface WithCurrentFilters {
-    currentFilters: TorrentFilter[],
-    setCurrentFilters: React.Dispatch<{
-        verb: "set" | "toggle",
-        filter: TorrentFilter,
-    }>,
+  currentFilters: TorrentFilter[];
+  setCurrentFilters: React.Dispatch<{
+    verb: "set" | "toggle";
+    filter: TorrentFilter;
+  }>;
 }
 
 interface FiltersProps extends WithCurrentFilters {
-    torrents: Torrent[],
+  torrents: Torrent[];
 }
 
 interface FilterRowProps extends WithCurrentFilters {
-    id: string,
-    filter: NamedFilter,
-    count: number,
+  id: string;
+  filter: NamedFilter;
+  count: number;
+  label?: string;
 }
 
 function focusNextFilter(element: HTMLElement, next: boolean) {
-    let nextElement: HTMLElement | null | undefined;
-    const parent = element.parentElement as HTMLElement;
-    const order = parseInt(parent.style.order);
-    if (next) {
-        if (element.nextElementSibling?.hasAttribute("tabIndex") === true) {
-            nextElement = element.nextElementSibling as HTMLElement;
-        } else {
-            for (const node of parent.parentElement?.children ?? []) {
-                if (parseInt((node as HTMLElement).style.order) === order + 1) {
-                    nextElement = node.firstElementChild?.nextElementSibling as HTMLElement | null | undefined;
-                }
-            }
-        }
+  let nextElement: HTMLElement | null | undefined;
+  const parent = element.parentElement as HTMLElement;
+  const order = parseInt(parent.style.order);
+  if (next) {
+    if (element.nextElementSibling?.hasAttribute("tabIndex") === true) {
+      nextElement = element.nextElementSibling as HTMLElement;
     } else {
-        if (element.previousElementSibling?.hasAttribute("tabIndex") === true) {
-            nextElement = element.previousElementSibling as HTMLElement;
-        } else {
-            for (const node of parent.parentElement?.children ?? []) {
-                if (parseInt((node as HTMLElement).style.order) === order - 1) {
-                    nextElement = node.lastElementChild as HTMLElement | null | undefined;
-                }
-            }
+      for (const node of parent.parentElement?.children ?? []) {
+        if (parseInt((node as HTMLElement).style.order) === order + 1) {
+          nextElement = node.firstElementChild?.nextElementSibling as
+            | HTMLElement
+            | null
+            | undefined;
         }
+      }
     }
+  } else {
+    if (element.previousElementSibling?.hasAttribute("tabIndex") === true) {
+      nextElement = element.previousElementSibling as HTMLElement;
+    } else {
+      for (const node of parent.parentElement?.children ?? []) {
+        if (parseInt((node as HTMLElement).style.order) === order - 1) {
+          nextElement = node.lastElementChild as HTMLElement | null | undefined;
+        }
+      }
+    }
+  }
 
-    if (nextElement !== undefined && nextElement != null) {
-        nextElement.focus();
-        nextElement.click?.();
-    }
+  if (nextElement !== undefined && nextElement != null) {
+    nextElement.focus();
+    nextElement.click?.();
+  }
 }
 
 function filterOnKeyDown(event: React.KeyboardEvent<HTMLElement>) {
-    if (event.key === "ArrowDown") {
-        event.stopPropagation();
-        event.preventDefault();
-        focusNextFilter(event.currentTarget, true);
-    }
-    if (event.key === "ArrowUp") {
-        event.stopPropagation();
-        event.preventDefault();
-        focusNextFilter(event.currentTarget, false);
-    }
+  if (event.key === "ArrowDown") {
+    event.stopPropagation();
+    event.preventDefault();
+    focusNextFilter(event.currentTarget, true);
+  }
+  if (event.key === "ArrowUp") {
+    event.stopPropagation();
+    event.preventDefault();
+    focusNextFilter(event.currentTarget, false);
+  }
 }
 
 const FilterRow = React.memo(function FilterRow(props: FilterRowProps) {
-    return <Flex align="center" gap="sm" px="xs" tabIndex={-1}
-        className={props.currentFilters.find((f) => f.id === props.id) !== undefined ? "selected" : ""}
-        onClick={(event) => {
-            props.setCurrentFilters({
-                verb: eventHasModKey(event) ? "toggle" : "set",
-                filter: { id: props.id, filter: props.filter.filter },
-            });
-        }}
-        onKeyDown={filterOnKeyDown}>
-        <div className="icon-container"><props.filter.icon /></div>
-        <div style={{ flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis" }}>{props.filter.name}</div>
-        <div style={{ flexShrink: 0 }}>{`(${props.count})`}</div>
-    </Flex>;
+  return (
+    <Flex
+      align="center"
+      gap="sm"
+      px="xs"
+      tabIndex={-1}
+      className={
+        props.currentFilters.find((f) => f.id === props.id) !== undefined
+          ? "selected"
+          : ""
+      }
+      onClick={(event) => {
+        props.setCurrentFilters({
+          verb: eventHasModKey(event) ? "toggle" : "set",
+          filter: { id: props.id, filter: props.filter.filter },
+        });
+      }}
+      onKeyDown={filterOnKeyDown}
+    >
+      <div className="icon-container">
+        <props.filter.icon />
+      </div>
+      <div
+        style={{ flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis" }}
+      >
+        {props.label ?? props.filter.name}
+      </div>
+      <div style={{ flexShrink: 0 }}>{`(${props.count})`}</div>
+    </Flex>
+  );
 });
 
-const LabelFilterRow = React.memo(function LabelFilterRow(props: Omit<FilterRowProps, "filter" | "id"> & { label: string }) {
-    return <FilterRow {...props} id={`label-${props.label}`} filter={{
+const LabelFilterRow = React.memo(function LabelFilterRow(
+  props: Omit<FilterRowProps, "filter" | "id"> & { label: string }
+) {
+  return (
+    <FilterRow
+      {...props}
+      id={`label-${props.label}`}
+      filter={{
         name: props.label,
         filter: (t: Torrent) => t.labels.includes(props.label),
         icon: StatusIcons.Label,
-    }} />;
+      }}
+    />
+  );
 });
 
-const TrackerFilterRow = React.memo(function TrackerFilterRow(props: Omit<FilterRowProps, "filter" | "id"> & { tracker: string }) {
-    return <FilterRow {...props} id={`tracker-${props.tracker}`} filter={{
+const TrackerFilterRow = React.memo(function TrackerFilterRow(
+  props: Omit<FilterRowProps, "filter" | "id"> & { tracker: string }
+) {
+  return (
+    <FilterRow
+      {...props}
+      id={`tracker-${props.tracker}`}
+      filter={{
         name: props.tracker,
         filter: (t: Torrent) => t.cachedMainTracker === props.tracker,
         icon: StatusIcons.Tracker,
-    }} />;
+      }}
+    />
+  );
 });
 
 interface DirFilterRowProps extends FiltersProps {
-    id: string,
-    dir: Directory,
-    expandedReducer: ({ verb, value }: { verb: "add" | "remove", value: string }) => void,
+  id: string;
+  dir: Directory;
+  expandedReducer: ({
+    verb,
+    value,
+  }: {
+    verb: "add" | "remove";
+    value: string;
+  }) => void;
 }
 
 function DirFilterRow(props: DirFilterRowProps) {
-    const config = useContext(ConfigContext);
-    const filter = useCallback((t: Torrent) => {
-        let path = t.downloadDir as string;
-        if (!path.endsWith("/") && !path.endsWith("\\")) path = path + "/";
-        if (config.values.interface.recursiveDirectories) {
-            return path.startsWith(props.dir.path);
-        }
-        return path === props.dir.path;
-    }, [props.dir.path, config.values.interface.recursiveDirectories]);
+  const config = useContext(ConfigContext);
+  const filter = useCallback(
+    (t: Torrent) => {
+      let path = t.downloadDir as string;
+      if (!path.endsWith("/") && !path.endsWith("\\")) path = path + "/";
+      if (config.values.interface.recursiveDirectories) {
+        return path.startsWith(props.dir.path);
+      }
+      return path === props.dir.path;
+    },
+    [props.dir.path, config.values.interface.recursiveDirectories]
+  );
 
-    const onExpand = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
+  const onExpand = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      props.dir.expanded = true;
+      props.expandedReducer({ verb: "add", value: props.dir.path });
+    },
+    [props]
+  );
+  const onCollapse = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      props.dir.expanded = false;
+      props.expandedReducer({ verb: "remove", value: props.dir.path });
+    },
+    [props]
+  );
+
+  const expandable = props.dir.subdirs.size > 0;
+
+  const onKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLElement>) => {
+      if (expandable && !props.dir.expanded && event.key === "ArrowRight") {
         props.dir.expanded = true;
         props.expandedReducer({ verb: "add", value: props.dir.path });
-    }, [props]);
-    const onCollapse = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
+      } else if (
+        expandable &&
+        props.dir.expanded &&
+        event.key === "ArrowLeft"
+      ) {
         props.dir.expanded = false;
         props.expandedReducer({ verb: "remove", value: props.dir.path });
-    }, [props]);
+      } else {
+        filterOnKeyDown(event);
+      }
+    },
+    [expandable, props]
+  );
 
-    const expandable = props.dir.subdirs.size > 0;
+  const count = useMemo(() => {
+    if (
+      config.values.interface.recursiveDirectories ||
+      props.dir.count === props.dir.recursiveCount
+    ) {
+      return `(${props.dir.recursiveCount})`;
+    }
+    return `(${props.dir.count}/${props.dir.recursiveCount})`;
+  }, [config.values.interface.recursiveDirectories, props.dir]);
 
-    const onKeyDown = useCallback((event: React.KeyboardEvent<HTMLElement>) => {
-        if (expandable && !props.dir.expanded && event.key === "ArrowRight") {
-            props.dir.expanded = true;
-            props.expandedReducer({ verb: "add", value: props.dir.path });
-        } else if (expandable && props.dir.expanded && event.key === "ArrowLeft") {
-            props.dir.expanded = false;
-            props.expandedReducer({ verb: "remove", value: props.dir.path });
-        } else {
-            filterOnKeyDown(event);
-        }
-    }, [expandable, props]);
-
-    const count = useMemo(() => {
-        if (config.values.interface.recursiveDirectories || props.dir.count === props.dir.recursiveCount) {
-            return `(${props.dir.recursiveCount})`;
-        }
-        return `(${props.dir.count}/${props.dir.recursiveCount})`;
-    }, [config.values.interface.recursiveDirectories, props.dir]);
-
-    return (
-        <Flex align="center" gap="sm" tabIndex={-1}
-            style={{ paddingLeft: `${props.dir.level * 1.4 + 0.25}em`, cursor: "default" }}
-            className={props.currentFilters.find((f) => f.id === props.id) !== undefined ? "selected" : ""}
-            onClick={(event) => {
-                props.setCurrentFilters({
-                    verb: eventHasModKey(event) ? "toggle" : "set",
-                    filter: { id: props.id, filter },
-                });
-            }}
-            onKeyDown={onKeyDown}>
-            <div className="icon-container">
-                {expandable
-                    ? props.dir.expanded
-                        ? <Icon.DashSquare size="1.1rem" onClick={onCollapse} style={{ cursor: "pointer" }} />
-                        : <Icon.PlusSquare size="1.1rem" onClick={onExpand} style={{ cursor: "pointer" }} />
-                    : <Icon.Folder size="1.1rem" />
-                }
-            </div>
-            <div style={{ flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis" }}>{props.dir.name}</div>
-            <div style={{ flexShrink: 0 }}>{count}</div>
-        </Flex>
-    );
+  return (
+    <Flex
+      align="center"
+      gap="sm"
+      tabIndex={-1}
+      style={{
+        paddingLeft: `${props.dir.level * 1.4 + 0.25}em`,
+        cursor: "default",
+      }}
+      className={
+        props.currentFilters.find((f) => f.id === props.id) !== undefined
+          ? "selected"
+          : ""
+      }
+      onClick={(event) => {
+        props.setCurrentFilters({
+          verb: eventHasModKey(event) ? "toggle" : "set",
+          filter: { id: props.id, filter },
+        });
+      }}
+      onKeyDown={onKeyDown}
+    >
+      <div className="icon-container">
+        {expandable ? (
+          props.dir.expanded ? (
+            <Icon.DashSquare
+              size="1.1rem"
+              onClick={onCollapse}
+              style={{ cursor: "pointer" }}
+            />
+          ) : (
+            <Icon.PlusSquare
+              size="1.1rem"
+              onClick={onExpand}
+              style={{ cursor: "pointer" }}
+            />
+          )
+        ) : (
+          <Icon.Folder size="1.1rem" />
+        )}
+      </div>
+      <div
+        style={{ flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis" }}
+      >
+        {props.dir.name}
+      </div>
+      <div style={{ flexShrink: 0 }}>{count}</div>
+    </Flex>
+  );
 }
 
 interface Directory {
-    name: string,
-    path: string,
-    subdirs: Map<string, Directory>,
-    expanded: boolean,
-    count: number,
-    recursiveCount: number,
-    level: number,
+  name: string;
+  path: string;
+  subdirs: Map<string, Directory>;
+  expanded: boolean;
+  count: number;
+  recursiveCount: number;
+  level: number;
 }
 
 const DefaultRoot: Directory = {
-    name: "",
-    path: "",
-    subdirs: new Map(),
-    expanded: true,
-    count: 0,
-    recursiveCount: 0,
-    level: -1,
+  name: "",
+  path: "",
+  subdirs: new Map(),
+  expanded: true,
+  count: 0,
+  recursiveCount: 0,
+  level: -1,
 };
 
-function buildDirTree(paths: string[], expanded: string[], compactDirectories: boolean): Directory {
-    const root: Directory = { ...DefaultRoot, subdirs: new Map() };
+function buildDirTree(
+  paths: string[],
+  expanded: string[],
+  compactDirectories: boolean
+): Directory {
+  const root: Directory = { ...DefaultRoot, subdirs: new Map() };
 
-    paths.forEach((path) => {
-        const parts = path.split("/");
-        let dir = root;
-        let currentPath = "";
-        for (const part of parts) {
-            currentPath = currentPath + part + "/";
-            if (part === "") continue;
-            if (!dir.subdirs.has(part)) {
-                dir.subdirs.set(part, {
-                    name: part,
-                    path: currentPath,
-                    subdirs: new Map(),
-                    expanded: expanded.includes(currentPath),
-                    count: 0,
-                    recursiveCount: 0,
-                    level: dir.level + 1,
-                });
-            }
-            dir = dir.subdirs.get(part) as Directory;
-            dir.recursiveCount++;
-        }
-        dir.count++;
-    });
+  paths.forEach((path) => {
+    const parts = path.split("/");
+    let dir = root;
+    let currentPath = "";
+    for (const part of parts) {
+      currentPath = currentPath + part + "/";
+      if (part === "") continue;
+      if (!dir.subdirs.has(part)) {
+        dir.subdirs.set(part, {
+          name: part,
+          path: currentPath,
+          subdirs: new Map(),
+          expanded: expanded.includes(currentPath),
+          count: 0,
+          recursiveCount: 0,
+          level: dir.level + 1,
+        });
+      }
+      dir = dir.subdirs.get(part) as Directory;
+      dir.recursiveCount++;
+    }
+    dir.count++;
+  });
 
-    return compactDirectories ? compactDirectoriesTree(root) : root;
+  return compactDirectories ? compactDirectoriesTree(root) : root;
 }
 
 function compactDirectoriesTree(root: Directory): Directory {
-    const result = squashSingleChildDirectory(root);
+  const result = squashSingleChildDirectory(root);
 
-    for (const [key, dir] of result.subdirs) {
-        dir.level = result.level + 1;
-        const condensedDir = compactDirectoriesTree(dir);
-        result.subdirs.set(key, condensedDir);
-    }
+  for (const [key, dir] of result.subdirs) {
+    dir.level = result.level + 1;
+    const condensedDir = compactDirectoriesTree(dir);
+    result.subdirs.set(key, condensedDir);
+  }
 
-    return result;
+  return result;
 }
 
 function squashSingleChildDirectory(root: Directory): Directory {
-    let result = root;
+  let result = root;
 
-    if (root.subdirs.size === 1) {
-        const [child] = root.subdirs.values();
-        if (root.recursiveCount === child.recursiveCount) {
-            child.name = root.name + "/" + child.name;
-            child.level = root.level;
-            result = squashSingleChildDirectory(child);
-        }
+  if (root.subdirs.size === 1) {
+    const [child] = root.subdirs.values();
+    if (root.recursiveCount === child.recursiveCount) {
+      child.name = root.name + "/" + child.name;
+      child.level = root.level;
+      result = squashSingleChildDirectory(child);
     }
+  }
 
-    return result;
+  return result;
 }
 
 function flattenTree(root: Directory): Directory[] {
-    const result: Directory[] = [];
-    const append = (dir: Directory) => {
-        dir.subdirs.forEach((d) => {
-            result.push(d);
-            if (d.expanded) append(d);
-        });
-    };
-    append(root);
-    return result;
+  const result: Directory[] = [];
+  const append = (dir: Directory) => {
+    dir.subdirs.forEach((d) => {
+      result.push(d);
+      if (d.expanded) append(d);
+    });
+  };
+  append(root);
+  return result;
 }
 
-export const Filters = React.memo(function Filters({ torrents, currentFilters, setCurrentFilters }: FiltersProps) {
-    const config = useContext(ConfigContext);
-    const serverConfig = useContext(ServerConfigContext);
-    const forceRender = useForceRender();
+export const Filters = React.memo(function Filters({
+  torrents,
+  currentFilters,
+  setCurrentFilters,
+}: FiltersProps) {
+  const { t } = useTranslation();
+  const config = useContext(ConfigContext);
+  const serverConfig = useContext(ServerConfigContext);
+  const forceRender = useForceRender();
 
-    const expandedReducer = useCallback(
-        ({ verb, value }: { verb: "add" | "remove" | "set", value: string | string[] }) => {
-            if (verb === "add") {
-                serverConfig.expandedDirFilters = [...serverConfig.expandedDirFilters, value as string];
-            } else {
-                const idx = serverConfig.expandedDirFilters.indexOf(value as string);
-                serverConfig.expandedDirFilters = [
-                    ...serverConfig.expandedDirFilters.slice(0, idx),
-                    ...serverConfig.expandedDirFilters.slice(idx + 1),
-                ];
-            }
-            forceRender();
-        }, [forceRender, serverConfig]);
+  const expandedReducer = useCallback(
+    ({
+      verb,
+      value,
+    }: {
+      verb: "add" | "remove" | "set";
+      value: string | string[];
+    }) => {
+      if (verb === "add") {
+        serverConfig.expandedDirFilters = [
+          ...serverConfig.expandedDirFilters,
+          value as string,
+        ];
+      } else {
+        const idx = serverConfig.expandedDirFilters.indexOf(value as string);
+        serverConfig.expandedDirFilters = [
+          ...serverConfig.expandedDirFilters.slice(0, idx),
+          ...serverConfig.expandedDirFilters.slice(idx + 1),
+        ];
+      }
+      forceRender();
+    },
+    [forceRender, serverConfig]
+  );
 
-    const paths = useMemo(
-        () => torrents.map((t) => t.downloadDir as string).sort(),
-        [torrents]);
+  const paths = useMemo(
+    () => torrents.map((t) => t.downloadDir as string).sort(),
+    [torrents]
+  );
 
-    const dirs = useMemo<Directory[]>(() => {
-        const tree = buildDirTree(paths, serverConfig.expandedDirFilters, config.values.interface.compactDirectories);
-        return flattenTree(tree);
-    }, [paths, serverConfig.expandedDirFilters, config.values.interface.compactDirectories]);
+  const dirs = useMemo<Directory[]>(() => {
+    const tree = buildDirTree(
+      paths,
+      serverConfig.expandedDirFilters,
+      config.values.interface.compactDirectories
+    );
+    return flattenTree(tree);
+  }, [
+    paths,
+    serverConfig.expandedDirFilters,
+    config.values.interface.compactDirectories,
+  ]);
 
-    const [labels, trackers] = useMemo(() => {
-        const labels: Record<string, number> = {};
-        const trackers: Record<string, number> = {};
-        config.values.interface.preconfiguredLabels.forEach((label) => { labels[label] = 0; });
+  const [labels, trackers] = useMemo(() => {
+    const labels: Record<string, number> = {};
+    const trackers: Record<string, number> = {};
+    config.values.interface.preconfiguredLabels.forEach((label) => {
+      labels[label] = 0;
+    });
 
-        torrents.forEach((t) => t.labels?.forEach((l: string) => {
-            if (!(l in labels)) labels[l] = 0;
-            labels[l] = labels[l] + 1;
-        }));
+    torrents.forEach((t) =>
+      t.labels?.forEach((l: string) => {
+        if (!(l in labels)) labels[l] = 0;
+        labels[l] = labels[l] + 1;
+      })
+    );
 
-        torrents.forEach((t) => {
-            if (!(t.cachedMainTracker in trackers)) trackers[t.cachedMainTracker] = 0;
-            trackers[t.cachedMainTracker] = trackers[t.cachedMainTracker] + 1;
-        });
+    torrents.forEach((t) => {
+      if (!(t.cachedMainTracker in trackers)) trackers[t.cachedMainTracker] = 0;
+      trackers[t.cachedMainTracker] = trackers[t.cachedMainTracker] + 1;
+    });
 
-        return [labels, trackers];
-    }, [config, torrents]);
+    return [labels, trackers];
+  }, [config, torrents]);
 
-    const [sections, setSections] = useReducer(
-        (_: SectionsVisibility<FilterSectionName>, sections: SectionsVisibility<FilterSectionName>) => {
-            setCurrentFilters({ verb: "set", filter: { id: "", filter: DefaultFilter } });
-            return sections;
-        }, config.values.interface.filterSections);
-    const [sectionsMap, setSectionsMap] = useState(getSectionsMap(sections));
-    const [statusFiltersVisibility, setStatusFiltersVisibility] = useState(config.values.interface.statusFiltersVisibility);
-    const [compactDirectories, setCompactDirectories] = useState(config.values.interface.compactDirectories);
-    const [recursiveDirectories, setRecursiveDirectories] = useState(config.values.interface.recursiveDirectories);
+  const [sections, setSections] = useReducer(
+    (
+      _: SectionsVisibility<FilterSectionName>,
+      sections: SectionsVisibility<FilterSectionName>
+    ) => {
+      setCurrentFilters({
+        verb: "set",
+        filter: { id: "", filter: DefaultFilter },
+      });
+      return sections;
+    },
+    config.values.interface.filterSections
+  );
+  const [sectionsMap, setSectionsMap] = useState(getSectionsMap(sections));
+  const [statusFiltersVisibility, setStatusFiltersVisibility] = useState(
+    config.values.interface.statusFiltersVisibility
+  );
+  const [compactDirectories, setCompactDirectories] = useState(
+    config.values.interface.compactDirectories
+  );
+  const [recursiveDirectories, setRecursiveDirectories] = useState(
+    config.values.interface.recursiveDirectories
+  );
 
-    useEffect(() => {
-        config.values.interface.filterSections = sections;
-        config.values.interface.statusFiltersVisibility = statusFiltersVisibility;
-        config.values.interface.compactDirectories = compactDirectories;
-        config.values.interface.recursiveDirectories = recursiveDirectories;
-        setSectionsMap(getSectionsMap(sections));
-    }, [config, sections, statusFiltersVisibility, compactDirectories, recursiveDirectories]);
+  useEffect(() => {
+    config.values.interface.filterSections = sections;
+    config.values.interface.statusFiltersVisibility = statusFiltersVisibility;
+    config.values.interface.compactDirectories = compactDirectories;
+    config.values.interface.recursiveDirectories = recursiveDirectories;
+    setSectionsMap(getSectionsMap(sections));
+  }, [
+    config,
+    sections,
+    statusFiltersVisibility,
+    compactDirectories,
+    recursiveDirectories,
+  ]);
 
-    const [info, setInfo, handler] = useContextMenu();
+  const [info, setInfo, handler] = useContextMenu();
 
-    const statusFiltersItemRef = useRef<HTMLButtonElement>(null);
-    const contextMenuContainerRef = useRef<HTMLDivElement | null>(null) as React.MutableRefObject<HTMLDivElement>;
-    const [statusFiltersSubmenuOpened, setStatusFiltersSubmenuOpened] = useState(false);
-    const [statusFiltersItemRect, setStatusFiltersItemRect] = useState<DOMRect>(() => new DOMRect(0, -1000, 0, 0));
+  const statusFiltersItemRef = useRef<HTMLButtonElement>(null);
+  const contextMenuContainerRef = useRef<HTMLDivElement | null>(
+    null
+  ) as React.MutableRefObject<HTMLDivElement>;
+  const [statusFiltersSubmenuOpened, setStatusFiltersSubmenuOpened] =
+    useState(false);
+  const [statusFiltersItemRect, setStatusFiltersItemRect] = useState<DOMRect>(
+    () => new DOMRect(0, -1000, 0, 0)
+  );
 
-    const openStatusFiltersSubmenu = useCallback(() => {
-        if (contextMenuContainerRef.current == null || statusFiltersItemRef.current == null) return;
-        const dropdownRect = contextMenuContainerRef.current.querySelector(".mantine-Menu-dropdown")?.getBoundingClientRect();
-        if (dropdownRect == null) return;
-        const itemRect = statusFiltersItemRef.current.getBoundingClientRect();
-        setStatusFiltersItemRect(new DOMRect(dropdownRect.x, itemRect.y, dropdownRect.width, itemRect.height));
-        setStatusFiltersSubmenuOpened(true);
-    }, []);
+  const openStatusFiltersSubmenu = useCallback(() => {
+    if (
+      contextMenuContainerRef.current == null ||
+      statusFiltersItemRef.current == null
+    )
+      return;
+    const dropdownRect = contextMenuContainerRef.current
+      .querySelector(".mantine-Menu-dropdown")
+      ?.getBoundingClientRect();
+    if (dropdownRect == null) return;
+    const itemRect = statusFiltersItemRef.current.getBoundingClientRect();
+    setStatusFiltersItemRect(
+      new DOMRect(
+        dropdownRect.x,
+        itemRect.y,
+        dropdownRect.width,
+        itemRect.height
+      )
+    );
+    setStatusFiltersSubmenuOpened(true);
+  }, []);
 
-    const closeStatusFiltersSubmenu = useCallback(() => {
-        setStatusFiltersSubmenuOpened(false);
-        setStatusFiltersItemRect(new DOMRect(0, -1000, 0, 0));
-    }, []);
+  const closeStatusFiltersSubmenu = useCallback(() => {
+    setStatusFiltersSubmenuOpened(false);
+    setStatusFiltersItemRect(new DOMRect(0, -1000, 0, 0));
+  }, []);
 
-    const onStatusFiltersSubmenuItemClick = useCallback((index: number) => {
-        const filterName = statusFilters[index].name;
-        const filterId = `status-${filterName}`;
-        const newStatusFiltersVisibility = { ...statusFiltersVisibility };
-        newStatusFiltersVisibility[filterName] = !statusFiltersVisibility[filterName];
-        setStatusFiltersVisibility(newStatusFiltersVisibility);
-        const selectedFilter = currentFilters.find(f => f.id === filterId);
-        if (selectedFilter != null) {
-            setCurrentFilters({ verb: "toggle", filter: selectedFilter });
-        }
-    }, [statusFiltersVisibility, currentFilters, setCurrentFilters]);
+  const onStatusFiltersSubmenuItemClick = useCallback(
+    (index: number) => {
+      const filterName = statusFilters[index].name;
+      const filterId = `status-${filterName}`;
+      const newStatusFiltersVisibility = { ...statusFiltersVisibility };
+      newStatusFiltersVisibility[filterName] =
+        !statusFiltersVisibility[filterName];
+      setStatusFiltersVisibility(newStatusFiltersVisibility);
+      const selectedFilter = currentFilters.find((f) => f.id === filterId);
+      if (selectedFilter != null) {
+        setCurrentFilters({ verb: "toggle", filter: selectedFilter });
+      }
+    },
+    [statusFiltersVisibility, currentFilters, setCurrentFilters]
+  );
 
-    const onCompactDirectoriesClick = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCompactDirectories(!compactDirectories);
-    }, [compactDirectories]);
+  const onCompactDirectoriesClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setCompactDirectories(!compactDirectories);
+    },
+    [compactDirectories]
+  );
 
-    const onRecursiveDirectoriesClick = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        setRecursiveDirectories(!recursiveDirectories);
-        setCurrentFilters({ verb: "set", filter: { id: "", filter: DefaultFilter } });
-    }, [recursiveDirectories, setCurrentFilters]);
+  const onRecursiveDirectoriesClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setRecursiveDirectories(!recursiveDirectories);
+      setCurrentFilters({
+        verb: "set",
+        filter: { id: "", filter: DefaultFilter },
+      });
+    },
+    [recursiveDirectories, setCurrentFilters]
+  );
 
-    return (<>
-        <Menu
-            openDelay={100}
-            closeDelay={400}
-            opened={statusFiltersSubmenuOpened}
-            onChange={setStatusFiltersSubmenuOpened}
-            middlewares={{ shift: true, flip: true }}
-            position="right-start"
-            zIndex={301}
-            offset={0}
-            closeOnItemClick={false}
-        >
-            <Portal>
-                <Box
-                    onMouseDown={closeStatusFiltersSubmenu}
-                    sx={{
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        height: "100vh",
-                        width: "100vw",
-                        zIndex: statusFiltersSubmenuOpened ? 100 : -1,
-                    }} />
-                <Menu.Target>
-                    <Button unstyled
-                        sx={{
-                            position: "absolute",
-                            border: 0,
-                            padding: 0,
-                            background: "transparent",
-                        }}
-                        style={{
-                            left: statusFiltersItemRect.x,
-                            top: statusFiltersItemRect.y,
-                            width: statusFiltersItemRect.width,
-                            height: statusFiltersItemRect.height,
-                        }} />
-                </Menu.Target>
-                <Menu.Dropdown miw="10rem">
-                    {statusFilters.map((f, index) =>
-                        f.required !== true &&
-                        <Menu.Item
-                            key={f.name}
-                            onClick={() => { onStatusFiltersSubmenuItemClick(index); }}
-                            icon={statusFiltersVisibility[f.name] ? <Icon.Check size="1rem" /> : <Box miw="1rem" />}
-                        >
-                            {f.name}
-                        </Menu.Item>)}
-                </Menu.Dropdown>
-            </Portal>
-        </Menu>
-        <Flex direction="column" onContextMenu={handler}
+  const statusFiltersTranslationKeys: Record<StatusFilterName, string> = {
+    "All Torrents": "filters.status.all",
+    Downloading: "filters.status.downloading",
+    Completed: "filters.status.completed",
+    Active: "filters.status.active",
+    Inactive: "filters.status.inactive",
+    Running: "filters.status.running",
+    Stopped: "filters.status.stopped",
+    Error: "filters.status.error",
+    Waiting: "filters.status.waiting",
+    Magnetizing: "filters.status.magnetizing",
+  };
+
+  const sectionTranslationMap: Record<FilterSectionName, string> = {
+    Status: "filters.section.status",
+    Directories: "filters.section.directories",
+    Labels: "filters.section.labels",
+    Trackers: "filters.section.trackers",
+  };
+
+  return (
+    <>
+      <Menu
+        openDelay={100}
+        closeDelay={400}
+        opened={statusFiltersSubmenuOpened}
+        onChange={setStatusFiltersSubmenuOpened}
+        middlewares={{ shift: true, flip: true }}
+        position="right-start"
+        zIndex={301}
+        offset={0}
+        closeOnItemClick={false}
+      >
+        <Portal>
+          <Box
+            onMouseDown={closeStatusFiltersSubmenu}
             sx={{
-                width: "100%",
-                minHeight: "100%",
-                whiteSpace: "nowrap",
-                cursor: "default",
-                userSelect: "none",
-            }}>
-            <MemoSectionsContextMenu
-                sections={sections} setSections={setSections}
-                contextMenuInfo={info} setContextMenuInfo={setInfo}
-                contextMenuContainerRef={contextMenuContainerRef}
-                onSectionItemMouseEnter={closeStatusFiltersSubmenu}
-                closeOnClickOutside={!statusFiltersSubmenuOpened}
-            >
-                <Menu.Divider />
-                <Menu.Item
-                    ref={statusFiltersItemRef}
-                    icon={<Box miw="1rem" />}
-                    rightSection={<Icon.ChevronRight size="12" style={{ marginRight: "-0.4rem" }} />}
-                    onMouseEnter={openStatusFiltersSubmenu}
-                    onMouseDown={(e) => { e.stopPropagation(); }}
-                >
-                    Status filters
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Item
-                    icon={compactDirectories ? <Icon.Check size="1rem" /> : <Box miw="1rem" />}
-                    onMouseEnter={closeStatusFiltersSubmenu}
-                    onMouseDown={onCompactDirectoriesClick}
-                >
-                    Compact Directories
-                </Menu.Item>
-                <Menu.Item
-                    icon={recursiveDirectories ? <Icon.Check size="1rem" /> : <Box miw="1rem" />}
-                    onMouseEnter={closeStatusFiltersSubmenu}
-                    onMouseDown={onRecursiveDirectoriesClick}
-                >
-                    Recursive Directories
-                </Menu.Item>
-            </MemoSectionsContextMenu>
-            {sections[sectionsMap.Status].visible && <div style={{ order: sectionsMap.Status }}>
-                <Divider mx="sm" label="Status" labelPosition="center" />
-                {statusFilters.map((f) =>
-                    (f.required === true || statusFiltersVisibility[f.name]) && <FilterRow key={`status-${f.name}`}
-                        id={`status-${f.name}`} filter={f}
-                        count={torrents.filter(f.filter).length}
-                        currentFilters={currentFilters} setCurrentFilters={setCurrentFilters} />)}
-            </div>}
-            {sections[sectionsMap.Directories].visible && <div style={{ order: sectionsMap.Directories }}>
-                <Divider mx="sm" mt="md" label="Directories" labelPosition="center" />
-                {dirs.map((d) =>
-                    <DirFilterRow key={`dir-${d.path}`} id={`dir-${d.path}`}
-                        dir={d} expandedReducer={expandedReducer} {...{ torrents, currentFilters, setCurrentFilters }} />)}
-            </div>}
-            {sections[sectionsMap.Labels].visible && <div style={{ order: sectionsMap.Labels }}>
-                <Divider mx="sm" mt="md" label="Labels" labelPosition="center" />
-                <FilterRow
-                    id="nolabels" filter={noLabelsFilter}
-                    count={torrents.filter(noLabelsFilter.filter).length}
-                    currentFilters={currentFilters} setCurrentFilters={setCurrentFilters} />
-                {Object.keys(labels).sort().map((label) =>
-                    <LabelFilterRow key={`labels-${label}`} label={label}
-                        count={labels[label]}
-                        currentFilters={currentFilters} setCurrentFilters={setCurrentFilters} />)}
-            </div>}
-            {sections[sectionsMap.Trackers].visible && <div style={{ order: sectionsMap.Trackers }}>
-                <Divider mx="sm" mt="md" label="Trackers" labelPosition="center" />
-                {Object.keys(trackers).sort().map((tracker) =>
-                    <TrackerFilterRow key={`trackers-${tracker}`} tracker={tracker}
-                        count={trackers[tracker]}
-                        currentFilters={currentFilters} setCurrentFilters={setCurrentFilters} />)}
-            </div>}
-        </Flex>
-    </>);
+              position: "absolute",
+              left: 0,
+              top: 0,
+              height: "100vh",
+              width: "100vw",
+              zIndex: statusFiltersSubmenuOpened ? 100 : -1,
+            }}
+          />
+          <Menu.Target>
+            <Button
+              unstyled
+              sx={{
+                position: "absolute",
+                border: 0,
+                padding: 0,
+                background: "transparent",
+              }}
+              style={{
+                left: statusFiltersItemRect.x,
+                top: statusFiltersItemRect.y,
+                width: statusFiltersItemRect.width,
+                height: statusFiltersItemRect.height,
+              }}
+            />
+          </Menu.Target>
+          <Menu.Dropdown miw="10rem">
+            {statusFilters.map(
+              (f, index) =>
+                f.required !== true && (
+                  <Menu.Item
+                    key={f.name}
+                    onClick={() => {
+                      onStatusFiltersSubmenuItemClick(index);
+                    }}
+                    icon={
+                      statusFiltersVisibility[f.name] ? (
+                        <Icon.Check size="1rem" />
+                      ) : (
+                        <Box miw="1rem" />
+                      )
+                    }
+                  >
+                    {t(statusFiltersTranslationKeys[f.name])}
+                  </Menu.Item>
+                )
+            )}
+          </Menu.Dropdown>
+        </Portal>
+      </Menu>
+      <Flex
+        direction="column"
+        onContextMenu={handler}
+        sx={{
+          width: "100%",
+          minHeight: "100%",
+          whiteSpace: "nowrap",
+          cursor: "default",
+          userSelect: "none",
+        }}
+      >
+        <MemoSectionsContextMenu
+          sections={sections}
+          setSections={setSections}
+          contextMenuInfo={info}
+          setContextMenuInfo={setInfo}
+          contextMenuContainerRef={contextMenuContainerRef}
+          onSectionItemMouseEnter={closeStatusFiltersSubmenu}
+          closeOnClickOutside={!statusFiltersSubmenuOpened}
+          translationMap={sectionTranslationMap}
+          t={t}
+        >
+          <Menu.Divider />
+          <Menu.Item
+            ref={statusFiltersItemRef}
+            icon={<Box miw="1rem" />}
+            rightSection={
+              <Icon.ChevronRight size="12" style={{ marginRight: "-0.4rem" }} />
+            }
+            onMouseEnter={openStatusFiltersSubmenu}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {t("filters.menu.statusFilters")}
+          </Menu.Item>
+          <Menu.Divider />
+          <Menu.Item
+            icon={
+              compactDirectories ? (
+                <Icon.Check size="1rem" />
+              ) : (
+                <Box miw="1rem" />
+              )
+            }
+            onMouseEnter={closeStatusFiltersSubmenu}
+            onMouseDown={onCompactDirectoriesClick}
+          >
+            {t("filters.menu.compactDirectories")}
+          </Menu.Item>
+          <Menu.Item
+            icon={
+              recursiveDirectories ? (
+                <Icon.Check size="1rem" />
+              ) : (
+                <Box miw="1rem" />
+              )
+            }
+            onMouseEnter={closeStatusFiltersSubmenu}
+            onMouseDown={onRecursiveDirectoriesClick}
+          >
+            {t("filters.menu.recursiveDirectories")}
+          </Menu.Item>
+        </MemoSectionsContextMenu>
+        {sections[sectionsMap.Status].visible && (
+          <div style={{ order: sectionsMap.Status }}>
+            <Divider
+              mx="sm"
+              label={t("filters.section.status")}
+              labelPosition="center"
+            />
+            {statusFilters.map(
+              (f) =>
+                (f.required === true || statusFiltersVisibility[f.name]) && (
+                  <FilterRow
+                    key={`status-${f.name}`}
+                    id={`status-${f.name}`}
+                    filter={f}
+                    label={t(statusFiltersTranslationKeys[f.name])}
+                    count={torrents.filter(f.filter).length}
+                    currentFilters={currentFilters}
+                    setCurrentFilters={setCurrentFilters}
+                  />
+                )
+            )}
+          </div>
+        )}
+        {sections[sectionsMap.Directories].visible && (
+          <div style={{ order: sectionsMap.Directories }}>
+            <Divider
+              mx="sm"
+              mt="md"
+              label={t("filters.section.directories")}
+              labelPosition="center"
+            />
+            {dirs.map((d) => (
+              <DirFilterRow
+                key={`dir-${d.path}`}
+                id={`dir-${d.path}`}
+                dir={d}
+                expandedReducer={expandedReducer}
+                {...{ torrents, currentFilters, setCurrentFilters }}
+              />
+            ))}
+          </div>
+        )}
+        {sections[sectionsMap.Labels].visible && (
+          <div style={{ order: sectionsMap.Labels }}>
+            <Divider
+              mx="sm"
+              mt="md"
+              label={t("filters.section.labels")}
+              labelPosition="center"
+            />
+            <FilterRow
+              id="nolabels"
+              filter={noLabelsFilter}
+              label={t("filters.noLabels")}
+              count={torrents.filter(noLabelsFilter.filter).length}
+              currentFilters={currentFilters}
+              setCurrentFilters={setCurrentFilters}
+            />
+            {Object.keys(labels)
+              .sort()
+              .map((label) => (
+                <LabelFilterRow
+                  key={`labels-${label}`}
+                  label={label}
+                  count={labels[label]}
+                  currentFilters={currentFilters}
+                  setCurrentFilters={setCurrentFilters}
+                />
+              ))}
+          </div>
+        )}
+        {sections[sectionsMap.Trackers].visible && (
+          <div style={{ order: sectionsMap.Trackers }}>
+            <Divider
+              mx="sm"
+              mt="md"
+              label={t("filters.section.trackers")}
+              labelPosition="center"
+            />
+            {Object.keys(trackers)
+              .sort()
+              .map((tracker) => (
+                <TrackerFilterRow
+                  key={`trackers-${tracker}`}
+                  tracker={tracker}
+                  count={trackers[tracker]}
+                  currentFilters={currentFilters}
+                  setCurrentFilters={setCurrentFilters}
+                />
+              ))}
+          </div>
+        )}
+      </Flex>
+    </>
+  );
 });

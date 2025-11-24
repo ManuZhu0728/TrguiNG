@@ -110,6 +110,7 @@ function useButtonHandlers(
   altSpeedMode: boolean | undefined,
   setAltSpeedMode: React.Dispatch<boolean | undefined>
 ) {
+  const { t } = useTranslation();
   const serverSelected = useServerSelectedTorrents();
   const actionMutate = useTorrentAction();
   const { mutate: mutateTorrent } = useMutateTorrent();
@@ -130,7 +131,7 @@ function useButtonHandlers(
           onError: (e) => {
             console.error("Error running torrent update method", method, e);
             notifications.show({
-              message: "Error updating torrent",
+              message: t("toolbar.notifications.errorUpdatingTorrent"),
               color: "red",
             });
           },
@@ -146,13 +147,13 @@ function useButtonHandlers(
         {
           onSuccess: () => {
             notifications.show({
-              message: "Priority is updated",
+              message: t("toolbar.notifications.priorityUpdated"),
               color: "green",
             });
           },
           onError: (error) => {
             notifications.show({
-              title: "Failed to update priority",
+              title: t("toolbar.notifications.failedToUpdatePriority"),
               message: String(error),
               color: "red",
             });
@@ -287,12 +288,12 @@ function Toolbar(props: ToolbarProps) {
         msg = e.message;
       }
       notifications.show({
-        title: "Error importing settings",
+        title: t("toolbar.notifications.errorImportingSettings"),
         message: msg,
         color: "red",
       });
     }
-  }, [config]);
+  }, [config, t]);
 
   return (
     <Flex w="100%" align="stretch">
