@@ -29,6 +29,7 @@ import {
   LoadingOverlay,
   NativeSelect,
   NumberInput,
+  SegmentedControl,
   Tabs,
   Text,
   TextInput,
@@ -883,7 +884,7 @@ export function DaemonSettingsModal(props: ModalState) {
             <Text>Language</Text>
             <SegmentedControl
               value={i18n.language ?? "en"}
-              onChange={(value) => {
+              onChange={(value: string) => {
                 void i18n.changeLanguage(value);
               }}
               data={[
