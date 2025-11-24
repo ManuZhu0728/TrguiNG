@@ -29,6 +29,7 @@ import {
   LoadingOverlay,
   NativeSelect,
   NumberInput,
+  SegmentedControl,
   Tabs,
   Text,
   TextInput,
@@ -60,6 +61,7 @@ import type { BandwidthGroup } from "rpc/torrent";
 import { notifications } from "@mantine/notifications";
 import type { InterfaceFormValues } from "./interfacepanel";
 import { InterfaceSettigsPanel } from "./interfacepanel";
+import { useTranslation } from "react-i18next";
 import * as Icon from "react-bootstrap-icons";
 const { TAURI } = await import(/* webpackChunkName: "taurishim" */ "taurishim");
 
@@ -741,6 +743,7 @@ export function DaemonSettingsModal(props: ModalState) {
   const mutation = useMutateSession();
   const config = useContext(ConfigContext);
   const serverConfig = useContext(ServerConfigContext);
+  const { i18n } = useTranslation();
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -876,6 +879,21 @@ export function DaemonSettingsModal(props: ModalState) {
             <></>
           )}
         </Tabs>
+        {!TAURI && (
+          <Group position="apart" mt="md">
+            <Text>Language</Text>
+            <SegmentedControl
+              value={i18n.language ?? "en"}
+              onChange={(value: string) => {
+                void i18n.changeLanguage(value);
+              }}
+              data={[
+                { label: "English", value: "en" },
+                { label: "中文", value: "zh" },
+              ]}
+            />
+          </Group>
+        )}
       </Box>
     </SaveCancelModal>
   );
