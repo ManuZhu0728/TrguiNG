@@ -25,142 +25,120 @@ import { notifications } from "@mantine/notifications";
 import { Button, Grid, LoadingOverlay, Text, Textarea } from "@mantine/core";
 import { ConfigContext } from "config";
 import type { TrackerStats } from "rpc/torrent";
-import { useTranslation } from "react-i18next";
-import {
-  useServerRpcVersion,
-  useServerSelectedTorrents,
-  useServerTorrentData,
-} from "rpc/torrent";
+import { useServerRpcVersion, useServerSelectedTorrents, useServerTorrentData } from "rpc/torrent";
 
 interface FormValues {
-  trackerList: string;
+    trackerList: string,
 }
 
 export function EditTrackers(props: ModalState) {
-  const { t } = useTranslation();
-  const rpcVersion = useServerRpcVersion();
-  const config = useContext(ConfigContext);
-  const serverData = useServerTorrentData();
-  const selected = useServerSelectedTorrents();
+    const rpcVersion = useServerRpcVersion();
+    const config = useContext(ConfigContext);
+    const serverData = useServerTorrentData();
+    const selected = useServerSelectedTorrents();
 
-  const torrentId = useMemo(() => {
-    if (serverData.current === undefined || !selected.has(serverData.current)) {
-      return [...selected][0];
-    }
-    return serverData.current;
-  }, [selected, serverData]);
+    const torrentId = useMemo(() => {
+        if (serverData.current === undefined || !selected.has(serverData.current)) {
+            return [...selected][0];
+        }
+        return serverData.current;
+    }, [selected, serverData]);
 
-  const { data: torrent, isLoading } = useTorrentDetails(
-    torrentId ?? -1,
-    torrentId !== undefined && props.opened,
-    false,
-    true
-  );
+    const { data: torrent, isLoading } = useTorrentDetails(
+        torrentId ?? -1, torrentId !== undefined && props.opened, false, true);
 
-  const form = useForm<FormValues>({});
+    const form = useForm<FormValues>({});
 
-  const { setValues } = form;
-  useEffect(() => {
-    if (torrent === undefined) return;
-    setValues({
-      trackerList:
-        rpcVersion >= 17
-          ? torrent.trackerList
-          : torrent.trackerStats
-              .map((s: TrackerStats) => s.announce)
-              .join("\n"),
-    });
-  }, [rpcVersion, setValues, torrent]);
+    const { setValues } = form;
+    useEffect(() => {
+        if (torrent === undefined) return;
+        setValues({
+            trackerList: rpcVersion >= 17
+                ? torrent.trackerList
+                : torrent.trackerStats.map((s: TrackerStats) => s.announce).join("\n"),
+        });
+    }, [rpcVersion, setValues, torrent]);
 
-  const { mutate } = useMutateTorrent();
+    const { mutate } = useMutateTorrent();
 
-  const onSave = useCallback(() => {
-    if (torrentId === undefined || torrent === undefined) return;
-    const dedupedTrackers: string[] = [];
-    for (const tracker of form.values.trackerList.split("\n")) {
-      if (tracker !== "" && dedupedTrackers.includes(tracker)) continue;
-      if (tracker === "" && dedupedTrackers.length === 0) continue;
-      if (tracker === "" && dedupedTrackers[dedupedTrackers.length - 1] === "")
-        continue;
-      dedupedTrackers.push(tracker);
-    }
-    let toAdd;
-    let toRemove;
-    if (rpcVersion < 17) {
-      const trackers = dedupedTrackers.filter((s) => s !== "");
-      const currentTrackers = Object.fromEntries(
-        torrent.trackerStats.map((s: TrackerStats) => [s.announce, s.id])
-      );
+    const onSave = useCallback(() => {
+        if (torrentId === undefined || torrent === undefined) return;
+        const dedupedTrackers: string[] = [];
+        for (const tracker of form.values.trackerList.split("\n")) {
+            if (tracker !== "" && dedupedTrackers.includes(tracker)) continue;
+            if (tracker === "" && dedupedTrackers.length === 0) continue;
+            if (tracker === "" && dedupedTrackers[dedupedTrackers.length - 1] === "") continue;
+            dedupedTrackers.push(tracker);
+        }
+        let toAdd;
+        let toRemove;
+        if (rpcVersion < 17) {
+            const trackers = dedupedTrackers.filter((s) => s !== "");
+            const currentTrackers = Object.fromEntries(
+                torrent.trackerStats.map((s: TrackerStats) => [s.announce, s.id]));
 
-      toAdd = trackers.filter(
-        (t) => !Object.prototype.hasOwnProperty.call(currentTrackers, t)
-      );
-      toRemove = (torrent.trackerStats as TrackerStats[])
-        .filter((s: TrackerStats) => !trackers.includes(s.announce))
-        .map((s: TrackerStats) => s.id as number);
-      if (toAdd.length === 0) toAdd = undefined;
-      if (toRemove.length === 0) toRemove = undefined;
-    }
-    mutate(
-      {
-        torrentIds: [...selected],
-        fields: {
-          trackerList: dedupedTrackers.join("\n"),
-          trackerAdd: toAdd,
-          trackerRemove: toRemove,
-        },
-      },
-      {
-        onError: (e) => {
-          console.error("Failed to update torrent properties", e);
-          notifications.show({
-            message: t("modals.edit_trackers.error_update"),
-            color: "red",
-          });
-        },
-      }
-    );
-    props.close();
-  }, [torrentId, torrent, rpcVersion, mutate, selected, form.values, props, t]);
+            toAdd = trackers.filter((t) => !Object.prototype.hasOwnProperty.call(currentTrackers, t));
+            toRemove = (torrent.trackerStats as TrackerStats[])
+                .filter((s: TrackerStats) => !trackers.includes(s.announce))
+                .map((s: TrackerStats) => s.id as number);
+            if (toAdd.length === 0) toAdd = undefined;
+            if (toRemove.length === 0) toRemove = undefined;
+        }
+        mutate(
+            {
+                torrentIds: [...selected],
+                fields: {
+                    trackerList: dedupedTrackers.join("\n"),
+                    trackerAdd: toAdd,
+                    trackerRemove: toRemove,
+                },
+            },
+            {
+                onError: (e) => {
+                    console.error("Failed to update torrent properties", e);
+                    notifications.show({
+                        message: "Error updating torrent",
+                        color: "red",
+                    });
+                },
+            },
+        );
+        props.close();
+    }, [torrentId, torrent, rpcVersion, mutate, selected, form.values, props]);
 
-  const addDefaultTrackers = useCallback(() => {
-    let list = form.values.trackerList;
-    if (!list.endsWith("\n")) list += "\n";
-    list += config.values.interface.defaultTrackers.join("\n");
-    form.setFieldValue("trackerList", list);
-  }, [config, form]);
+    const addDefaultTrackers = useCallback(() => {
+        let list = form.values.trackerList;
+        if (!list.endsWith("\n")) list += "\n";
+        list += config.values.interface.defaultTrackers.join("\n");
+        form.setFieldValue("trackerList", list);
+    }, [config, form]);
 
-  return (
-    <>
-      {props.opened && (
+    return <>{props.opened &&
         <SaveCancelModal
-          opened={props.opened}
-          size="lg"
-          onClose={props.close}
-          onSave={onSave}
-          centered
-          title={t("modals.edit_trackers.title")}
-          mih="25rem"
+            opened={props.opened}
+            size="lg"
+            onClose={props.close}
+            onSave={onSave}
+            centered
+            title="Edit torrent trackers"
+            mih="25rem"
         >
-          <LoadingOverlay visible={isLoading} />
-          <Grid align="center">
-            <Grid.Col>
-              <TorrentsNames />
-            </Grid.Col>
-            <Grid.Col span={8}>
-              <Text>{t("modals.edit_trackers.tracker_list_desc")}</Text>
-            </Grid.Col>
-            <Grid.Col span={4}>
-              <Button onClick={addDefaultTrackers}>
-                {t("modals.edit_trackers.add_default_list")}
-              </Button>
-            </Grid.Col>
-            <Grid.Col>
-              <Textarea minRows={10} {...form.getInputProps("trackerList")} />
-            </Grid.Col>
-          </Grid>
-        </SaveCancelModal>
-      )}
-    </>
-  );
+            <LoadingOverlay visible={isLoading} />
+            <Grid align="center">
+                <Grid.Col>
+                    <TorrentsNames />
+                </Grid.Col>
+                <Grid.Col span={8}>
+                    <Text>Tracker list, one per line, empty line between tiers</Text>
+                </Grid.Col>
+                <Grid.Col span={4}>
+                    <Button onClick={addDefaultTrackers}>Add default list</Button>
+                </Grid.Col>
+                <Grid.Col>
+                    <Textarea minRows={10}
+                        {...form.getInputProps("trackerList")} />
+                </Grid.Col>
+            </Grid>
+        </SaveCancelModal>}
+    </>;
 }
