@@ -54,6 +54,7 @@ import { ColorSchemeToggle } from "components/miscbuttons";
 import { Label } from "./common";
 import * as Icon from "react-bootstrap-icons";
 import { useTranslation } from "react-i18next";
+import { availableLanguages } from "../../i18n";
 const { TAURI, invoke } = await import(
   /* webpackChunkName: "taurishim" */ "taurishim"
 );
@@ -204,10 +205,19 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           <Grid.Col span={6}>{t("settings.language")}</Grid.Col>
           <Grid.Col span={6}>
             <NativeSelect
-              data={[
-                { label: "English", value: "en" },
-                { label: "中文", value: "zh" },
-              ]}
+              data={availableLanguages.map((lang) => {
+                let label = lang;
+                try {
+                  label =
+                    new Intl.DisplayNames([lang], {
+                      type: "language",
+                    }).of(lang) ?? lang;
+                  label = label.charAt(0).toUpperCase() + label.slice(1);
+                } catch (e) {
+                  console.warn("Intl.DisplayNames error", e);
+                }
+                return { label, value: lang };
+              })}
               value={i18n.language ?? "en"}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                 void i18n.changeLanguage(e.currentTarget.value);
@@ -223,7 +233,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
             <NativeSelect
               data={systemFonts}
               value={style.font}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                 setFont(e.currentTarget.value);
               }}
             />
@@ -274,7 +284,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               data={[...DateFormatOptions]}
               disabled={!props.form.values.interface.useCustomDateTimeFormat}
               value={props.form.values.interface.dateFormat}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                 setFieldValue("interface.dateFormat", e.target.value);
               }}
             />
@@ -284,7 +294,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               data={[...TimeFormatOptions]}
               disabled={!props.form.values.interface.useCustomDateTimeFormat}
               value={props.form.values.interface.timeFormat}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                 setFieldValue("interface.timeFormat", e.target.value);
               }}
             />
@@ -351,7 +361,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               minRows={6}
               label={t("interface.preconfiguredDirectories")}
               value={props.form.values.interface.preconfiguredDirs.join("\n")}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                 props.form.setFieldValue(
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   "interface.preconfiguredDirs",
@@ -453,7 +463,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               minRows={6}
               label={t("interface.defaultTrackerList")}
               value={props.form.values.interface.defaultTrackers.join("\n")}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                 props.form.setFieldValue(
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   "interface.defaultTrackers",

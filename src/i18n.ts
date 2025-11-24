@@ -2,17 +2,24 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
-import en from "./locales/en.json";
-import zh from "./locales/zh.json";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const require: any;
 
-const resources = {
-  en: {
-    translation: en,
-  },
-  zh: {
-    translation: zh,
-  },
-} as const;
+const resources: Record<string, { translation: unknown }> = {};
+export const availableLanguages: string[] = [];
+
+try {
+  const context = require.context("./locales", false, /\.json$/);
+  context.keys().forEach((key: string) => {
+    const langCode = key.replace("./", "").replace(".json", "");
+    resources[langCode] = {
+      translation: context(key),
+    };
+    availableLanguages.push(langCode);
+  });
+} catch (e) {
+  console.error("Failed to load locales via require.context", e);
+}
 
 void i18n
   .use(LanguageDetector)
@@ -20,7 +27,7 @@ void i18n
   .init({
     resources,
     fallbackLng: "en",
-    supportedLngs: ["en", "zh"],
+    supportedLngs: availableLanguages,
     interpolation: {
       escapeValue: false,
     },
