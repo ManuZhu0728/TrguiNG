@@ -348,7 +348,9 @@
         "buildDate": "Build date",
         "sourceCode": "Source code",
         "ipGeolocation": "IP Geolocation by DB-IP",
-        "poweredBy": "powered by"
+        "poweredBy": "powered by",
+        "original": "Original",
+        "localization": "Localization"
     },
     "tables": {
         "common": {

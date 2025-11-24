@@ -81,16 +81,32 @@ export function VersionModal({ opened, close }: ModalState) {
           </Grid.Col>
           <Grid.Col span={4}>{t("version.sourceCode")}</Grid.Col>
           <Grid.Col span={8}>
-            <Box component="span" mr="sm">
-              <Github />
-            </Box>
-            <Anchor
-              href="https://github.com/openscopeproject/trguing/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              github
-            </Anchor>
+            <Flex direction="column" gap="xs">
+              <Flex align="center">
+                <Box component="span" mr="sm">
+                  <Github />
+                </Box>
+                <Anchor
+                  href="https://github.com/openscopeproject/trguing/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t("version.original")}
+                </Anchor>
+              </Flex>
+              <Flex align="center">
+                <Box component="span" mr="sm">
+                  <Github />
+                </Box>
+                <Anchor
+                  href="https://github.com/ManuZhu0728/TrguiNG"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t("version.localization")}
+                </Anchor>
+              </Flex>
+            </Flex>
           </Grid.Col>
           <Grid.Col mt="xl">
             {TAURI && (

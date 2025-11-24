@@ -351,7 +351,9 @@
         "buildDate": "建置日期",
         "sourceCode": "原始碼",
         "ipGeolocation": "IP 地理定位由 DB-IP 提供",
-        "poweredBy": "技術支援"
+        "poweredBy": "技術支援",
+        "original": "原版",
+        "localization": "中文化"
     },
     "tables": {
         "common": {
