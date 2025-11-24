@@ -425,22 +425,39 @@
             }
         },
         "filetree": {
-            "name": "Name",
-            "size": "Size",
-            "progress": "Progress",
-            "priority": "Priority",
-            "search": "Search files...",
-            "context": {
-                "high": "High",
-                "normal": "Normal",
-                "low": "Low",
+            "headers": {
+                "name": "Name",
+                "size": "Size",
+                "progress": "Progress",
+                "priority": "Priority",
+                "done": "Done",
+                "percent": "Percent"
+            },
+            "search": {
+                "placeholder": "Search files...",
+                "clear": "Clear search"
+            },
+            "contextMenu": {
+                "highPriority": "High",
+                "normalPriority": "Normal",
+                "lowPriority": "Low",
+                "open": "Open",
+                "openFolder": "Open folder",
                 "rename": "Rename",
-                "mark": "Mark",
-                "unmark": "Unmark"
+                "setWanted": "Set wanted",
+                "setUnwanted": "Set unwanted",
+                "expandAll": "Expand all",
+                "collapseAll": "Collapse all",
+                "toggleSearch": "Toggle search",
+                "showAsTree": "Show as tree"
             },
             "notifications": {
                 "rename_success": "Renamed {{oldName}} to {{newName}}",
-                "rename_error": "Failed to rename {{oldName}}"
+                "rename_error": "Failed to rename {{oldName}}",
+                "failedToUpdatePath": "Failed to update file path",
+                "priorityUpdated": "Priority updated",
+                "filesUpdated": "Files updated",
+                "errorOpeningPath": "Error opening path"
             }
         },
         "peers": {

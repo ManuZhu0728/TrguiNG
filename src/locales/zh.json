@@ -31,6 +31,9 @@
     "toolbar.exportSettings": "导出设置",
     "toolbar.importSettings": "导入设置",
     "toolbar.daemonSettings": "轮询间隔与服务器设置 (F9)",
+    "toolbar.toggleColorScheme": "切换颜色主题 ({{hotkey}})",
+    "toolbar.showVersion": "显示版本信息",
+    "toolbar.toggleFontSize": "切换字体大小 ({{hotkey}})",
     "toolbar.notifications.errorUpdatingTorrent": "更新种子出错",
     "toolbar.notifications.priorityUpdated": "优先级已更新",
     "toolbar.notifications.failedToUpdatePriority": "更新优先级失败",
@@ -425,22 +428,39 @@
             }
         },
         "filetree": {
-            "name": "名称",
-            "size": "大小",
-            "progress": "进度",
-            "priority": "优先级",
-            "search": "搜索文件...",
-            "context": {
-                "high": "高",
-                "normal": "正常",
-                "low": "低",
+            "headers": {
+                "name": "名称",
+                "size": "大小",
+                "progress": "进度",
+                "priority": "优先级",
+                "done": "已完成",
+                "percent": "百分比"
+            },
+            "search": {
+                "placeholder": "搜索文件...",
+                "clear": "清空搜索"
+            },
+            "contextMenu": {
+                "highPriority": "高",
+                "normalPriority": "正常",
+                "lowPriority": "低",
+                "open": "打开",
+                "openFolder": "打开文件夹",
                 "rename": "重命名",
-                "mark": "标记",
-                "unmark": "取消标记"
+                "setWanted": "下载",
+                "setUnwanted": "不下载",
+                "expandAll": "展开所有",
+                "collapseAll": "折叠所有",
+                "toggleSearch": "显示/隐藏搜索",
+                "showAsTree": "树状显示"
             },
             "notifications": {
                 "rename_success": "已将 {{oldName}} 重命名为 {{newName}}",
-                "rename_error": "重命名 {{oldName}} 失败"
+                "rename_error": "重命名 {{oldName}} 失败",
+                "failedToUpdatePath": "更新路径失败",
+                "priorityUpdated": "优先级已更新",
+                "filesUpdated": "文件已更新",
+                "errorOpeningPath": "打开路径出错"
             }
         },
         "peers": {

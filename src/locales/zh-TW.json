@@ -31,6 +31,9 @@
     "toolbar.exportSettings": "匯出設定",
     "toolbar.importSettings": "匯入設定",
     "toolbar.daemonSettings": "輪詢間隔與伺服器設定 (F9)",
+    "toolbar.toggleColorScheme": "切換色彩佈景主題 ({{hotkey}})",
+    "toolbar.showVersion": "顯示版本資訊",
+    "toolbar.toggleFontSize": "切換字型大小 ({{hotkey}})",
     "toolbar.notifications.errorUpdatingTorrent": "更新種子出錯",
     "toolbar.notifications.priorityUpdated": "優先級已更新",
     "toolbar.notifications.failedToUpdatePriority": "更新優先級失敗",
@@ -425,22 +428,39 @@
             }
         },
         "filetree": {
-            "name": "名稱",
-            "size": "大小",
-            "progress": "進度",
-            "priority": "優先級",
-            "search": "搜尋檔案...",
-            "context": {
-                "high": "高",
-                "normal": "正常",
-                "low": "低",
+            "headers": {
+                "name": "名稱",
+                "size": "大小",
+                "progress": "進度",
+                "priority": "優先級",
+                "done": "已完成",
+                "percent": "百分比"
+            },
+            "search": {
+                "placeholder": "搜尋檔案...",
+                "clear": "清除搜尋"
+            },
+            "contextMenu": {
+                "highPriority": "高",
+                "normalPriority": "正常",
+                "lowPriority": "低",
+                "open": "開啟",
+                "openFolder": "開啟資料夾",
                 "rename": "重新命名",
-                "mark": "標記",
-                "unmark": "取消標記"
+                "setWanted": "下載",
+                "setUnwanted": "不下載",
+                "expandAll": "展開所有",
+                "collapseAll": "摺疊所有",
+                "toggleSearch": "顯示/隱藏搜尋",
+                "showAsTree": "樹狀顯示"
             },
             "notifications": {
                 "rename_success": "已將 {{oldName}} 重新命名為 {{newName}}",
-                "rename_error": "重新命名 {{oldName}} 失敗"
+                "rename_error": "重新命名 {{oldName}} 失敗",
+                "failedToUpdatePath": "更新路徑失敗",
+                "priorityUpdated": "優先級已更新",
+                "filesUpdated": "檔案已更新",
+                "errorOpeningPath": "開啟路徑出錯"
             }
         },
         "peers": {

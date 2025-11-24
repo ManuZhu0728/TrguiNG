@@ -514,7 +514,7 @@ export function FileTreeTable(props: FileTreeTableProps) {
         path = pathMapFromServer(path, serverConfig);
         invoke("shell_open", { path, reveal }).catch(() => {
           notifications.show({
-            title: "Error opening path",
+            title: t("tables.filetree.notifications.errorOpeningPath"),
             message: path,
             color: "red",
           });

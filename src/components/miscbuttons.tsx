@@ -26,63 +26,93 @@ import { useDisclosure, useHotkeys } from "@mantine/hooks";
 import { modKeyString } from "trutil";
 import { useFontSize } from "themehooks";
 
-export function ColorSchemeToggle(props: { sz?: string, btn?: MantineNumberSize }) {
-    const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-    const dark = colorScheme === "dark";
+import { useTranslation } from "react-i18next";
 
-    useHotkeys([
-        ["mod + U", () => { toggleColorScheme(); }],
-    ]);
+export function ColorSchemeToggle(props: {
+  sz?: string;
+  btn?: MantineNumberSize;
+}) {
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const dark = colorScheme === "dark";
+  const { t } = useTranslation();
 
-    return (
-        <ActionIcon
-            variant="default"
-            size={props.btn}
-            onClick={() => { toggleColorScheme(); }}
-            title={`Toggle color scheme (${modKeyString()} + U)`}
-            my="auto"
-        >
-            {dark
-                ? <Icon.Sun size={props.sz} color="yellow" />
-                : <Icon.MoonStars size={props.sz} color="blue" />}
-        </ActionIcon>
-    );
+  useHotkeys([
+    [
+      "mod + U",
+      () => {
+        toggleColorScheme();
+      },
+    ],
+  ]);
+
+  return (
+    <ActionIcon
+      variant="default"
+      size={props.btn}
+      onClick={() => {
+        toggleColorScheme();
+      }}
+      title={t("toolbar.toggleColorScheme", {
+        hotkey: modKeyString() + " + U",
+      })}
+      my="auto"
+    >
+      {dark ? (
+        <Icon.Sun size={props.sz} color="yellow" />
+      ) : (
+        <Icon.MoonStars size={props.sz} color="blue" />
+      )}
+    </ActionIcon>
+  );
 }
 
-export function ShowVersion(props: { sz?: string, btn?: MantineNumberSize }) {
-    const [showVersionModal, { open: openVersionModal, close: closeVersionModal }] = useDisclosure(false);
+export function ShowVersion(props: { sz?: string; btn?: MantineNumberSize }) {
+  const [
+    showVersionModal,
+    { open: openVersionModal, close: closeVersionModal },
+  ] = useDisclosure(false);
+  const { t } = useTranslation();
 
-    return (
-        <>
-            <VersionModal opened={showVersionModal} close={closeVersionModal} />
-            <ActionIcon
-                size={props.btn}
-                onClick={openVersionModal}
-                title="Show version information"
-                ml="auto" my="auto"
-            >
-                <Icon.InfoCircle size={props.sz} />
-            </ActionIcon>
-        </>
-    );
+  return (
+    <>
+      <VersionModal opened={showVersionModal} close={closeVersionModal} />
+      <ActionIcon
+        size={props.btn}
+        onClick={openVersionModal}
+        title={t("toolbar.showVersion")}
+        ml="auto"
+        my="auto"
+      >
+        <Icon.InfoCircle size={props.sz} />
+      </ActionIcon>
+    </>
+  );
 }
 
 export function FontSizeToggle() {
-    const { toggle } = useFontSize();
+  const { toggle } = useFontSize();
+  const { t } = useTranslation();
 
-    useHotkeys([
-        ["mod + =", () => { toggle(); }],
-    ]);
+  useHotkeys([
+    [
+      "mod + =",
+      () => {
+        toggle();
+      },
+    ],
+  ]);
 
-    return (
-        <ActionIcon
-            variant="default"
-            size="lg"
-            onClick={() => { toggle(); }}
-            title={`Toggle font size (${modKeyString()} + =)`}
-            my="auto"
-        >
-            <FontSizeIcon width="1.1rem" height="1.1rem" fill="currentColor" />
-        </ActionIcon>
-    );
+  return (
+    <ActionIcon
+      variant="default"
+      size="lg"
+      onClick={() => {
+        toggle();
+      }}
+      title={t("toolbar.toggleFontSize", { hotkey: modKeyString() + " + =" })}
+      my="auto"
+    >
+      <FontSizeIcon width="1.1rem" height="1.1rem" fill="currentColor" />
+    </ActionIcon>
+  );
 }
