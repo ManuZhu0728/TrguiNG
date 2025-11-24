@@ -17,13 +17,41 @@
  */
 
 import type { NumberInputProps } from "@mantine/core";
-import { Box, Button, Checkbox, Flex, Grid, Group, HoverCard, Loader, LoadingOverlay, NativeSelect, NumberInput, Tabs, Text, TextInput, Tooltip } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Flex,
+  Grid,
+  Group,
+  HoverCard,
+  Loader,
+  LoadingOverlay,
+  NativeSelect,
+  NumberInput,
+  Tabs,
+  Text,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
 import type { ServerConfig } from "config";
 import { ConfigContext, ServerConfigContext } from "config";
-import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { ModalState } from "./common";
 import { SaveCancelModal } from "./common";
-import { queryClient, useMutateSession, useSessionFull, useTestPort, useUpdateBlocklist } from "queries";
+import {
+  queryClient,
+  useMutateSession,
+  useSessionFull,
+  useTestPort,
+  useUpdateBlocklist,
+} from "queries";
 import type { UseFormReturnType } from "@mantine/form";
 import { useForm } from "@mantine/form";
 import type { SessionInfo } from "rpc/client";
@@ -32,657 +60,840 @@ import type { BandwidthGroup } from "rpc/torrent";
 import { notifications } from "@mantine/notifications";
 import type { InterfaceFormValues } from "./interfacepanel";
 import { InterfaceSettigsPanel } from "./interfacepanel";
+import { useTranslation } from "react-i18next";
 import * as Icon from "react-bootstrap-icons";
-const { TAURI } = await import(/* webpackChunkName: "taurishim" */"taurishim");
+const { TAURI } = await import(/* webpackChunkName: "taurishim" */ "taurishim");
 
 interface FormValues extends InterfaceFormValues {
-    intervals: ServerConfig["intervals"],
-    session?: SessionInfo,
-    bandwidthGroups?: BandwidthGroup[],
+  intervals: ServerConfig["intervals"];
+  session?: SessionInfo;
+  bandwidthGroups?: BandwidthGroup[];
 }
 
 function PollingPanel({ form }: { form: UseFormReturnType<FormValues> }) {
-    return (
-        <Grid align="center">
-            <Grid.Col><Text>Update intervals (sec)</Text></Grid.Col>
-            <Grid.Col span={8}>Session</Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={1}
-                    max={3600}
-                    {...form.getInputProps("intervals.session")}
-                />
-            </Grid.Col>
-            <Grid.Col span={2} />
-            <Grid.Col span={8}>Torrent details</Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={1}
-                    max={3600}
-                    {...form.getInputProps("intervals.details")}
-                />
-            </Grid.Col>
-            <Grid.Col span={2} />
-            <Grid.Col span={8}>Torrents active</Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={1}
-                    max={3600}
-                    {...form.getInputProps("intervals.torrents")}
-                />
-            </Grid.Col>
-            <Grid.Col span={2} />
-            <Grid.Col span={8}>Torrents inactive/minimized</Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={1}
-                    max={3600}
-                    {...form.getInputProps("intervals.torrentsMinimized")}
-                />
-            </Grid.Col>
-            <Grid.Col span={2} />
-        </Grid>
-    );
+  return (
+    <Grid align="center">
+      <Grid.Col>
+        <Text>Update intervals (sec)</Text>
+      </Grid.Col>
+      <Grid.Col span={8}>Session</Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput
+          min={1}
+          max={3600}
+          {...form.getInputProps("intervals.session")}
+        />
+      </Grid.Col>
+      <Grid.Col span={2} />
+      <Grid.Col span={8}>Torrent details</Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput
+          min={1}
+          max={3600}
+          {...form.getInputProps("intervals.details")}
+        />
+      </Grid.Col>
+      <Grid.Col span={2} />
+      <Grid.Col span={8}>Torrents active</Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput
+          min={1}
+          max={3600}
+          {...form.getInputProps("intervals.torrents")}
+        />
+      </Grid.Col>
+      <Grid.Col span={2} />
+      <Grid.Col span={8}>Torrents inactive/minimized</Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput
+          min={1}
+          max={3600}
+          {...form.getInputProps("intervals.torrentsMinimized")}
+        />
+      </Grid.Col>
+      <Grid.Col span={2} />
+    </Grid>
+  );
 }
 
-function DownloadPanel({ form, session }: { form: UseFormReturnType<FormValues>, session: SessionInfo }) {
-    return (
-        <Grid align="center">
-            <Grid.Col>
-                <TextInput
-                    label="Default download folder (server setting)"
-                    {...form.getInputProps("session.download-dir")}
-                    autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" />
-            </Grid.Col>
-            <Grid.Col>
-                <Checkbox mt="lg"
-                    label={<Box>
-                        <span>Start added torrents</span>
-                        <HoverCard width={280} shadow="md">
-                            <HoverCard.Target>
-                                <Icon.Question />
-                            </HoverCard.Target>
-                            <HoverCard.Dropdown>
-                                <Text size="sm">
-                                    This setting only applies to torrents added via the
-                                    watch directory or by other clients that do not specify
-                                    the start parameter. TrguiNG sets the start parameter
-                                    based on your selection in the add torrent/magnet dialog.
-                                </Text>
-                            </HoverCard.Dropdown>
-                        </HoverCard>
-                    </Box>}
-                    {...form.getInputProps("session.start-added-torrents", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col>
-                <Checkbox mt="lg"
-                    label="Add .part extension to incomplete files"
-                    {...form.getInputProps("session.rename-partial-files", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col>
-                <Checkbox mt="lg"
-                    label="Use separate directory for incomplete files"
-                    {...form.getInputProps("session.incomplete-dir-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col>
-                <TextInput
-                    label="Path for incomplete files"
-                    {...form.getInputProps("session.incomplete-dir")}
-                    disabled={session["incomplete-dir-enabled"] !== true}
-                    autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" />
-            </Grid.Col>
-            <Grid.Col span={6}>
-                <Checkbox
-                    label="Use default seed ratio limit"
-                    {...form.getInputProps("session.seedRatioLimited", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={0}
-                    precision={2}
-                    step={0.05}
-                    {...form.getInputProps("session.seedRatioLimit")}
-                    disabled={session.seedRatioLimited !== true}
-                />
-            </Grid.Col>
-            <Grid.Col span={4}></Grid.Col>
-            <Grid.Col span={6}>
-                <Checkbox
-                    label="Stop idle torrents after"
-                    {...form.getInputProps("session.idle-seeding-limit-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.idle-seeding-limit")}
-                    disabled={session["idle-seeding-limit-enabled"] !== true}
-                />
-            </Grid.Col>
-            <Grid.Col span={4}>minutes</Grid.Col>
-            <Grid.Col span={6}>Disk cache size</Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.cache-size-mb")}
-                />
-            </Grid.Col>
-            <Grid.Col span={4}>MB</Grid.Col>
-        </Grid>
-    );
+function DownloadPanel({
+  form,
+  session,
+}: {
+  form: UseFormReturnType<FormValues>;
+  session: SessionInfo;
+}) {
+  return (
+    <Grid align="center">
+      <Grid.Col>
+        <TextInput
+          label="Default download folder (server setting)"
+          {...form.getInputProps("session.download-dir")}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
+        />
+      </Grid.Col>
+      <Grid.Col>
+        <Checkbox
+          mt="lg"
+          label={
+            <Box>
+              <span>Start added torrents</span>
+              <HoverCard width={280} shadow="md">
+                <HoverCard.Target>
+                  <Icon.Question />
+                </HoverCard.Target>
+                <HoverCard.Dropdown>
+                  <Text size="sm">
+                    This setting only applies to torrents added via the watch
+                    directory or by other clients that do not specify the start
+                    parameter. TrguiNG sets the start parameter based on your
+                    selection in the add torrent/magnet dialog.
+                  </Text>
+                </HoverCard.Dropdown>
+              </HoverCard>
+            </Box>
+          }
+          {...form.getInputProps("session.start-added-torrents", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col>
+        <Checkbox
+          mt="lg"
+          label="Add .part extension to incomplete files"
+          {...form.getInputProps("session.rename-partial-files", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col>
+        <Checkbox
+          mt="lg"
+          label="Use separate directory for incomplete files"
+          {...form.getInputProps("session.incomplete-dir-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col>
+        <TextInput
+          label="Path for incomplete files"
+          {...form.getInputProps("session.incomplete-dir")}
+          disabled={session["incomplete-dir-enabled"] !== true}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
+        />
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <Checkbox
+          label="Use default seed ratio limit"
+          {...form.getInputProps("session.seedRatioLimited", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput
+          min={0}
+          precision={2}
+          step={0.05}
+          {...form.getInputProps("session.seedRatioLimit")}
+          disabled={session.seedRatioLimited !== true}
+        />
+      </Grid.Col>
+      <Grid.Col span={4}></Grid.Col>
+      <Grid.Col span={6}>
+        <Checkbox
+          label="Stop idle torrents after"
+          {...form.getInputProps("session.idle-seeding-limit-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput
+          min={0}
+          {...form.getInputProps("session.idle-seeding-limit")}
+          disabled={session["idle-seeding-limit-enabled"] !== true}
+        />
+      </Grid.Col>
+      <Grid.Col span={4}>minutes</Grid.Col>
+      <Grid.Col span={6}>Disk cache size</Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput min={0} {...form.getInputProps("session.cache-size-mb")} />
+      </Grid.Col>
+      <Grid.Col span={4}>MB</Grid.Col>
+    </Grid>
+  );
 }
 
 interface PortTestResult {
-    label: string,
-    color: ExtendedCustomColors,
+  label: string;
+  color: ExtendedCustomColors;
 }
 
-function NetworkPanel(
-    { opened, form, session }: {
-        opened: boolean,
-        form: UseFormReturnType<FormValues>,
-        session: SessionInfo,
-    },
-) {
-    const [testPortQueryEnbaled, setTestPortQueryEnabled] = useState(false);
-    const [testPortResult, setTestPortResult] = useState<PortTestResult>({ label: "", color: "green" });
+function NetworkPanel({
+  opened,
+  form,
+  session,
+}: {
+  opened: boolean;
+  form: UseFormReturnType<FormValues>;
+  session: SessionInfo;
+}) {
+  const [testPortQueryEnbaled, setTestPortQueryEnabled] = useState(false);
+  const [testPortResult, setTestPortResult] = useState<PortTestResult>({
+    label: "",
+    color: "green",
+  });
 
-    const { data: testPort, status, fetchStatus, remove: removeQuery } = useTestPort(testPortQueryEnbaled);
+  const {
+    data: testPort,
+    status,
+    fetchStatus,
+    remove: removeQuery,
+  } = useTestPort(testPortQueryEnbaled);
 
-    const onTestPort = useCallback(() => {
-        setTestPortQueryEnabled(true);
-    }, [setTestPortQueryEnabled]);
+  const onTestPort = useCallback(() => {
+    setTestPortQueryEnabled(true);
+  }, [setTestPortQueryEnabled]);
 
-    useEffect(() => {
-        if (fetchStatus !== "fetching") {
-            setTestPortQueryEnabled(false);
-        }
-        if (status === "success") {
-            setTestPortResult(testPort.arguments["port-is-open"] === true
-                ? {
-                    label: "Port is open",
-                    color: "green",
-                }
-                : {
-                    label: "Port unreachable",
-                    color: "red",
-                });
-        } else if (status === "loading") {
-            setTestPortResult({
-                label: "",
-                color: "green",
-            });
-        } else {
-            setTestPortResult({
-                label: "API error",
-                color: "red",
-            });
-        }
-    }, [fetchStatus, status, testPort]);
+  useEffect(() => {
+    if (fetchStatus !== "fetching") {
+      setTestPortQueryEnabled(false);
+    }
+    if (status === "success") {
+      setTestPortResult(
+        testPort.arguments["port-is-open"] === true
+          ? {
+              label: "Port is open",
+              color: "green",
+            }
+          : {
+              label: "Port unreachable",
+              color: "red",
+            }
+      );
+    } else if (status === "loading") {
+      setTestPortResult({
+        label: "",
+        color: "green",
+      });
+    } else {
+      setTestPortResult({
+        label: "API error",
+        color: "red",
+      });
+    }
+  }, [fetchStatus, status, testPort]);
 
-    useEffect(() => {
-        if (!opened) {
-            setTestPortResult({
-                label: "",
-                color: "green",
-            });
-            removeQuery();
-        }
-    }, [opened, setTestPortResult, removeQuery]);
+  useEffect(() => {
+    if (!opened) {
+      setTestPortResult({
+        label: "",
+        color: "green",
+      });
+      removeQuery();
+    }
+  }, [opened, setTestPortResult, removeQuery]);
 
-    const { mutate: updateBlocklist, isLoading: updatePending } = useUpdateBlocklist();
-    const onUpdateBlocklist = useCallback(() => {
-        updateBlocklist(undefined, {
-            onError: (e) => {
-                console.log(e);
-                notifications.show({
-                    title: "Error updating blocklist",
-                    message: e.message,
-                    color: "red",
-                });
-            },
+  const { mutate: updateBlocklist, isLoading: updatePending } =
+    useUpdateBlocklist();
+  const onUpdateBlocklist = useCallback(() => {
+    updateBlocklist(undefined, {
+      onError: (e) => {
+        console.log(e);
+        notifications.show({
+          title: "Error updating blocklist",
+          message: e.message,
+          color: "red",
         });
-    }, [updateBlocklist]);
+      },
+    });
+  }, [updateBlocklist]);
 
-    return (
-        <Grid align="center">
-            <Grid.Col span={3}>
-                Incoming port:
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <NumberInput
-                    min={1}
-                    max={65535}
-                    {...form.getInputProps("session.peer-port")}
-                    disabled={session["peer-port-random-on-start"] === true}
-                />
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <Tooltip
-                    withArrow
-                    label="Checks currently configured port. If you made changes save them before testing.">
-                    <Button
-                        w="100%"
-                        onClick={onTestPort}
-                        title="Test port"
-                    >
-                        Test port
-                    </Button>
-                </Tooltip>
-            </Grid.Col>
-            <Grid.Col span={3}>
-                {fetchStatus === "fetching"
-                    ? <Loader key="pt" size="1.5rem" />
-                    : <Text key="pt" color={testPortResult.color}>{testPortResult.label}</Text>
-                }
-            </Grid.Col>
-            <Grid.Col>
-                <Checkbox mt="lg"
-                    label="Let daemon pick a random port"
-                    {...form.getInputProps("session.peer-port-random-on-start", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col>
-                <Checkbox mt="lg"
-                    label="Enable UPnP port forwarding"
-                    {...form.getInputProps("session.port-forwarding-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={3}>
-                Encryption:
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <NativeSelect
-                    data={["tolerated", "preferred", "required"]}
-                    {...form.getInputProps("session.encryption")} />
-            </Grid.Col>
-            <Grid.Col span={6}></Grid.Col>
-            <Grid.Col span={3}>
-                Global peer limit:
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.peer-limit-global")}
-                />
-            </Grid.Col>
-            <Grid.Col span={3}>
-                per torrent:
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.peer-limit-per-torrent")}
-                />
-            </Grid.Col>
-            <Grid.Col span={6}>
-                <Checkbox mt="lg"
-                    label="Enable peer exchange"
-                    {...form.getInputProps("session.pex-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={6}>
-                <Checkbox mt="lg"
-                    label="Enable DHT"
-                    {...form.getInputProps("session.dht-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={6}>
-                <Checkbox my="lg"
-                    label="Enable local discovery"
-                    {...form.getInputProps("session.lpd-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={6}>
-                <Checkbox my="lg"
-                    label="Enable uTP"
-                    {...form.getInputProps("session.utp-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={6}>
-                <Checkbox
-                    label="Enable blocklist:"
-                    {...form.getInputProps("session.blocklist-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={6}>
-                <TextInput
-                    {...form.getInputProps("session.blocklist-url")}
-                    disabled={session["blocklist-enabled"] !== true}
-                    autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" />
-            </Grid.Col>
-            <Grid.Col span={6}>
-                <Text>Blocklist contains {session["blocklist-size"] as number} entries</Text>
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <Tooltip
-                    withArrow
-                    label="Fetches currently configured blocklist. If you made changes save them before updating.">
-                    <Button
-                        w="100%"
-                        onClick={onUpdateBlocklist}
-                        title="Update blocklist"
-                    >
-                        Update
-                    </Button>
-                </Tooltip>
-            </Grid.Col>
-            <Grid.Col span={3}>
-                {updatePending && <Loader size="1.5rem" />}
-            </Grid.Col>
-        </Grid>
-    );
+  return (
+    <Grid align="center">
+      <Grid.Col span={3}>Incoming port:</Grid.Col>
+      <Grid.Col span={3}>
+        <NumberInput
+          min={1}
+          max={65535}
+          {...form.getInputProps("session.peer-port")}
+          disabled={session["peer-port-random-on-start"] === true}
+        />
+      </Grid.Col>
+      <Grid.Col span={3}>
+        <Tooltip
+          withArrow
+          label="Checks currently configured port. If you made changes save them before testing."
+        >
+          <Button w="100%" onClick={onTestPort} title="Test port">
+            Test port
+          </Button>
+        </Tooltip>
+      </Grid.Col>
+      <Grid.Col span={3}>
+        {fetchStatus === "fetching" ? (
+          <Loader key="pt" size="1.5rem" />
+        ) : (
+          <Text key="pt" color={testPortResult.color}>
+            {testPortResult.label}
+          </Text>
+        )}
+      </Grid.Col>
+      <Grid.Col>
+        <Checkbox
+          mt="lg"
+          label="Let daemon pick a random port"
+          {...form.getInputProps("session.peer-port-random-on-start", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col>
+        <Checkbox
+          mt="lg"
+          label="Enable UPnP port forwarding"
+          {...form.getInputProps("session.port-forwarding-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={3}>Encryption:</Grid.Col>
+      <Grid.Col span={3}>
+        <NativeSelect
+          data={["tolerated", "preferred", "required"]}
+          {...form.getInputProps("session.encryption")}
+        />
+      </Grid.Col>
+      <Grid.Col span={6}></Grid.Col>
+      <Grid.Col span={3}>Global peer limit:</Grid.Col>
+      <Grid.Col span={3}>
+        <NumberInput
+          min={0}
+          {...form.getInputProps("session.peer-limit-global")}
+        />
+      </Grid.Col>
+      <Grid.Col span={3}>per torrent:</Grid.Col>
+      <Grid.Col span={3}>
+        <NumberInput
+          min={0}
+          {...form.getInputProps("session.peer-limit-per-torrent")}
+        />
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <Checkbox
+          mt="lg"
+          label="Enable peer exchange"
+          {...form.getInputProps("session.pex-enabled", { type: "checkbox" })}
+        />
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <Checkbox
+          mt="lg"
+          label="Enable DHT"
+          {...form.getInputProps("session.dht-enabled", { type: "checkbox" })}
+        />
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <Checkbox
+          my="lg"
+          label="Enable local discovery"
+          {...form.getInputProps("session.lpd-enabled", { type: "checkbox" })}
+        />
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <Checkbox
+          my="lg"
+          label="Enable uTP"
+          {...form.getInputProps("session.utp-enabled", { type: "checkbox" })}
+        />
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <Checkbox
+          label="Enable blocklist:"
+          {...form.getInputProps("session.blocklist-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <TextInput
+          {...form.getInputProps("session.blocklist-url")}
+          disabled={session["blocklist-enabled"] !== true}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
+        />
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <Text>
+          Blocklist contains {session["blocklist-size"] as number} entries
+        </Text>
+      </Grid.Col>
+      <Grid.Col span={3}>
+        <Tooltip
+          withArrow
+          label="Fetches currently configured blocklist. If you made changes save them before updating."
+        >
+          <Button w="100%" onClick={onUpdateBlocklist} title="Update blocklist">
+            Update
+          </Button>
+        </Tooltip>
+      </Grid.Col>
+      <Grid.Col span={3}>{updatePending && <Loader size="1.5rem" />}</Grid.Col>
+    </Grid>
+  );
 }
 
 function toTimeStr(time: string) {
-    const t = parseInt(time);
-    return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0");
+  const t = parseInt(time);
+  return (
+    String(Math.floor(t / 60)).padStart(2, "0") +
+    ":" +
+    String(t % 60).padStart(2, "0")
+  );
 }
 
 function fromTimeStr(time: string) {
-    const parts = time.split(":");
-    if (parts.length !== 2) return "";
-    const h = parseInt(parts[0]);
-    const m = parseInt(parts[1]);
-    if (isNaN(h) || isNaN(m)) return "";
-    return `${h * 60 + m}`;
+  const parts = time.split(":");
+  if (parts.length !== 2) return "";
+  const h = parseInt(parts[0]);
+  const m = parseInt(parts[1]);
+  if (isNaN(h) || isNaN(m)) return "";
+  return `${h * 60 + m}`;
 }
 
 function TimeInput(props: NumberInputProps) {
-    return <NumberInput
-        {...props}
-        parser={fromTimeStr}
-        formatter={toTimeStr}
-    />;
+  return <NumberInput {...props} parser={fromTimeStr} formatter={toTimeStr} />;
 }
 
-const DaysOfTheWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+const DaysOfTheWeek = [
+  "Sun",
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+] as const;
 
-function DayOfWeekCheckbox({ form, day, session }: { form: UseFormReturnType<FormValues>, day: number, session: SessionInfo }) {
-    return <Checkbox my="lg"
-        label={DaysOfTheWeek[day]}
-        checked={((session["alt-speed-time-day"] as number) & (1 << day)) > 0}
-        onChange={(event) => {
-            const val = session["alt-speed-time-day"] as number;
-            form.setFieldValue(
-                "session.alt-speed-time-day",
-                event.currentTarget.checked ? val | (1 << day) : val & ~(1 << day));
-        }}
-        disabled={session["alt-speed-time-enabled"] !== true} />;
+function DayOfWeekCheckbox({
+  form,
+  day,
+  session,
+}: {
+  form: UseFormReturnType<FormValues>;
+  day: number;
+  session: SessionInfo;
+}) {
+  return (
+    <Checkbox
+      my="lg"
+      label={DaysOfTheWeek[day]}
+      checked={((session["alt-speed-time-day"] as number) & (1 << day)) > 0}
+      onChange={(event) => {
+        const val = session["alt-speed-time-day"] as number;
+        form.setFieldValue(
+          "session.alt-speed-time-day",
+          event.currentTarget.checked ? val | (1 << day) : val & ~(1 << day)
+        );
+      }}
+      disabled={session["alt-speed-time-enabled"] !== true}
+    />
+  );
 }
 
-function BandwidthPanel({ form, session }: { form: UseFormReturnType<FormValues>, session: SessionInfo }) {
-    return (
-        <Grid align="center">
-            <Grid.Col span={6}></Grid.Col>
-            <Grid.Col span={3}>Normal</Grid.Col>
-            <Grid.Col span={3}>Alternate</Grid.Col>
-            <Grid.Col span={6}>
-                <Checkbox
-                    label="Maximum download speed (KB/s):"
-                    {...form.getInputProps("session.speed-limit-down-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.speed-limit-down")}
-                    disabled={session["speed-limit-down-enabled"] !== true} />
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.alt-speed-down")} />
-            </Grid.Col>
-            <Grid.Col span={6}>
-                <Checkbox
-                    label="Maximum upload speed (KB/s):"
-                    {...form.getInputProps("session.speed-limit-up-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.speed-limit-up")}
-                    disabled={session["speed-limit-up-enabled"] !== true} />
-            </Grid.Col>
-            <Grid.Col span={3}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.alt-speed-up")} />
-            </Grid.Col>
-            <Grid.Col>
-                <Checkbox mt="lg"
-                    label="Use alternate bandwidth settings"
-                    {...form.getInputProps("session.alt-speed-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col>
-                <Checkbox my="lg"
-                    label="Apply alternate bandwidth settings automatically"
-                    {...form.getInputProps("session.alt-speed-time-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={2}>From:</Grid.Col>
-            <Grid.Col span={3}>
-                <TimeInput
-                    min={0}
-                    max={24 * 60 - 1}
-                    {...form.getInputProps("session.alt-speed-time-begin")}
-                    disabled={session["alt-speed-time-enabled"] !== true} />
-            </Grid.Col>
-            <Grid.Col span={2}>to:</Grid.Col>
-            <Grid.Col span={3}>
-                <TimeInput
-                    min={0}
-                    max={24 * 60 - 1}
-                    {...form.getInputProps("session.alt-speed-time-end")}
-                    disabled={session["alt-speed-time-enabled"] !== true} />
-            </Grid.Col>
-            <Grid.Col span={2}></Grid.Col>
-            <Grid.Col span={2}>Days:</Grid.Col>
-            <Grid.Col span={10}>
-                <Group>
-                    {DaysOfTheWeek.map((_, day) =>
-                        <DayOfWeekCheckbox key={day} form={form} day={day} session={session} />)}
-                </Group>
-            </Grid.Col>
-        </Grid>
-    );
+function BandwidthPanel({
+  form,
+  session,
+}: {
+  form: UseFormReturnType<FormValues>;
+  session: SessionInfo;
+}) {
+  return (
+    <Grid align="center">
+      <Grid.Col span={6}></Grid.Col>
+      <Grid.Col span={3}>Normal</Grid.Col>
+      <Grid.Col span={3}>Alternate</Grid.Col>
+      <Grid.Col span={6}>
+        <Checkbox
+          label="Maximum download speed (KB/s):"
+          {...form.getInputProps("session.speed-limit-down-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={3}>
+        <NumberInput
+          min={0}
+          {...form.getInputProps("session.speed-limit-down")}
+          disabled={session["speed-limit-down-enabled"] !== true}
+        />
+      </Grid.Col>
+      <Grid.Col span={3}>
+        <NumberInput
+          min={0}
+          {...form.getInputProps("session.alt-speed-down")}
+        />
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <Checkbox
+          label="Maximum upload speed (KB/s):"
+          {...form.getInputProps("session.speed-limit-up-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={3}>
+        <NumberInput
+          min={0}
+          {...form.getInputProps("session.speed-limit-up")}
+          disabled={session["speed-limit-up-enabled"] !== true}
+        />
+      </Grid.Col>
+      <Grid.Col span={3}>
+        <NumberInput min={0} {...form.getInputProps("session.alt-speed-up")} />
+      </Grid.Col>
+      <Grid.Col>
+        <Checkbox
+          mt="lg"
+          label="Use alternate bandwidth settings"
+          {...form.getInputProps("session.alt-speed-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col>
+        <Checkbox
+          my="lg"
+          label="Apply alternate bandwidth settings automatically"
+          {...form.getInputProps("session.alt-speed-time-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}>From:</Grid.Col>
+      <Grid.Col span={3}>
+        <TimeInput
+          min={0}
+          max={24 * 60 - 1}
+          {...form.getInputProps("session.alt-speed-time-begin")}
+          disabled={session["alt-speed-time-enabled"] !== true}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}>to:</Grid.Col>
+      <Grid.Col span={3}>
+        <TimeInput
+          min={0}
+          max={24 * 60 - 1}
+          {...form.getInputProps("session.alt-speed-time-end")}
+          disabled={session["alt-speed-time-enabled"] !== true}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}></Grid.Col>
+      <Grid.Col span={2}>Days:</Grid.Col>
+      <Grid.Col span={10}>
+        <Group>
+          {DaysOfTheWeek.map((_, day) => (
+            <DayOfWeekCheckbox
+              key={day}
+              form={form}
+              day={day}
+              session={session}
+            />
+          ))}
+        </Group>
+      </Grid.Col>
+    </Grid>
+  );
 }
 
-function QueuePanel({ form, session }: { form: UseFormReturnType<FormValues>, session: SessionInfo }) {
-    return (
-        <Grid align="center">
-            <Grid.Col span={8}>
-                <Checkbox
-                    label="Download queue size"
-                    {...form.getInputProps("session.download-queue-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.download-queue-size")}
-                    disabled={session["download-queue-enabled"] !== true} />
-            </Grid.Col>
-            <Grid.Col span={2}></Grid.Col>
-            <Grid.Col span={8}>
-                <Checkbox
-                    label="Seed queue size"
-                    {...form.getInputProps("session.seed-queue-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.seed-queue-size")}
-                    disabled={session["seed-queue-enabled"] !== true} />
-            </Grid.Col>
-            <Grid.Col span={2}></Grid.Col>
-            <Grid.Col span={8}>
-                <Checkbox
-                    label="Consider torrents as stalled when idle for"
-                    {...form.getInputProps("session.queue-stalled-enabled", { type: "checkbox" })} />
-            </Grid.Col>
-            <Grid.Col span={2}>
-                <NumberInput
-                    min={0}
-                    {...form.getInputProps("session.queue-stalled-minutes")}
-                    disabled={session["queue-stalled-enabled"] !== true} />
-            </Grid.Col>
-            <Grid.Col span={2}>minutes</Grid.Col>
-        </Grid>
-    );
+function QueuePanel({
+  form,
+  session,
+}: {
+  form: UseFormReturnType<FormValues>;
+  session: SessionInfo;
+}) {
+  return (
+    <Grid align="center">
+      <Grid.Col span={8}>
+        <Checkbox
+          label="Download queue size"
+          {...form.getInputProps("session.download-queue-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput
+          min={0}
+          {...form.getInputProps("session.download-queue-size")}
+          disabled={session["download-queue-enabled"] !== true}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}></Grid.Col>
+      <Grid.Col span={8}>
+        <Checkbox
+          label="Seed queue size"
+          {...form.getInputProps("session.seed-queue-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput
+          min={0}
+          {...form.getInputProps("session.seed-queue-size")}
+          disabled={session["seed-queue-enabled"] !== true}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}></Grid.Col>
+      <Grid.Col span={8}>
+        <Checkbox
+          label="Consider torrents as stalled when idle for"
+          {...form.getInputProps("session.queue-stalled-enabled", {
+            type: "checkbox",
+          })}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}>
+        <NumberInput
+          min={0}
+          {...form.getInputProps("session.queue-stalled-minutes")}
+          disabled={session["queue-stalled-enabled"] !== true}
+        />
+      </Grid.Col>
+      <Grid.Col span={2}>minutes</Grid.Col>
+    </Grid>
+  );
 }
 
 function MagnetHandlerPanel() {
-    const handlerUrl = useMemo(() => {
-        const handlerUrl = new URL(window.location.href);
-        handlerUrl.search = "add=%s";
-        return handlerUrl;
-    }, []);
+  const handlerUrl = useMemo(() => {
+    const handlerUrl = new URL(window.location.href);
+    handlerUrl.search = "add=%s";
+    return handlerUrl;
+  }, []);
 
-    const registerHandler = useCallback(() => {
-        navigator.registerProtocolHandler("magnet", handlerUrl.toString());
-    }, [handlerUrl]);
+  const registerHandler = useCallback(() => {
+    navigator.registerProtocolHandler("magnet", handlerUrl.toString());
+  }, [handlerUrl]);
 
-    // Unregister handler only exists in some browsers
-    const unregisterHandler = useCallback(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (navigator as any).unregisterProtocolHandler?.("magnet", handlerUrl.toString());
-    }, [handlerUrl]);
-
-    return (
-        <Grid align="center">
-            {window.location.protocol === "https:"
-                ? <>
-                    <Grid.Col span={6}>
-                        <Text>Register magnet protocol handler</Text>
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                        <Flex justify="space-around">
-                            <Button onClick={registerHandler}>Register</Button>
-                            {
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                typeof (navigator as any).unregisterProtocolHandler === "function" &&
-                                <Button onClick={unregisterHandler}>Unregister</Button>}
-                        </Flex>
-                    </Grid.Col>
-                </>
-                : <Grid.Col>
-                    <Text mb="md">
-                        Registering magnet protocol handler is currently not available.
-                        Browsers support this feature only in secure contexts, i.e. https websites.
-                    </Text>
-                    <Text>
-                        Transmission does not natively support serving the web interface with https but you can
-                        setup a reverse proxy with ssl termination in front of it and use a self signed or letsencrypt
-                        provided free certificate to secure your transmission web endpoint.
-                    </Text>
-                </Grid.Col>}
-        </Grid>
+  // Unregister handler only exists in some browsers
+  const unregisterHandler = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (navigator as any).unregisterProtocolHandler?.(
+      "magnet",
+      handlerUrl.toString()
     );
+  }, [handlerUrl]);
+
+  return (
+    <Grid align="center">
+      {window.location.protocol === "https:" ? (
+        <>
+          <Grid.Col span={6}>
+            <Text>Register magnet protocol handler</Text>
+          </Grid.Col>
+          <Grid.Col span={6}>
+            <Flex justify="space-around">
+              <Button onClick={registerHandler}>Register</Button>
+              {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                typeof (navigator as any).unregisterProtocolHandler ===
+                  "function" && (
+                  <Button onClick={unregisterHandler}>Unregister</Button>
+                )
+              }
+            </Flex>
+          </Grid.Col>
+        </>
+      ) : (
+        <Grid.Col>
+          <Text mb="md">
+            Registering magnet protocol handler is currently not available.
+            Browsers support this feature only in secure contexts, i.e. https
+            websites.
+          </Text>
+          <Text>
+            Transmission does not natively support serving the web interface
+            with https but you can setup a reverse proxy with ssl termination in
+            front of it and use a self signed or letsencrypt provided free
+            certificate to secure your transmission web endpoint.
+          </Text>
+        </Grid.Col>
+      )}
+    </Grid>
+  );
 }
 
 export function DaemonSettingsModal(props: ModalState) {
-    const { data: session, fetchStatus } = useSessionFull(props.opened);
-    const mutation = useMutateSession();
-    const config = useContext(ConfigContext);
-    const serverConfig = useContext(ServerConfigContext);
+  const { data: session, fetchStatus } = useSessionFull(props.opened);
+  const mutation = useMutateSession();
+  const config = useContext(ConfigContext);
+  const serverConfig = useContext(ServerConfigContext);
+  const { i18n } = useTranslation();
 
-    const form = useForm<FormValues>({
-        initialValues: {
-            intervals: serverConfig.intervals,
-            session,
-            interface: config.values.interface,
+  const form = useForm<FormValues>({
+    initialValues: {
+      intervals: serverConfig.intervals,
+      session,
+      interface: config.values.interface,
+    },
+  });
+
+  const { setFieldValue } = form;
+  useEffect(() => {
+    setFieldValue("session", session);
+  }, [session, setFieldValue]);
+
+  useEffect(() => {
+    if (props.opened) {
+      setFieldValue("interface", config.values.interface);
+    }
+  }, [config, props.opened, setFieldValue]);
+
+  const onSave = useCallback(() => {
+    serverConfig.intervals = { ...form.values.intervals };
+    config.values.interface = {
+      ...config.values.interface,
+      ...form.values.interface,
+    };
+    config.cleanup();
+    void config.save();
+    if (form.values.session !== undefined) {
+      mutation.mutate(form.values.session, {
+        onSuccess: () => {
+          notifications.show({
+            message: "Session saved successfully",
+            color: "green",
+          });
+          props.close();
+          if (!TAURI) {
+            // clear client cache to make sure new interface settings are applied
+            queryClient.clear();
+          }
         },
-    });
+        onError: (error) => {
+          notifications.show({
+            title: "Failed to update daemon settings",
+            message: String(error),
+            color: "red",
+          });
+        },
+      });
+    } else {
+      props.close();
+    }
+  }, [form.values, mutation, props, config, serverConfig]);
 
-    const { setFieldValue } = form;
-    useEffect(() => { setFieldValue("session", session); }, [session, setFieldValue]);
+  return (
+    <SaveCancelModal
+      opened={props.opened}
+      size="lg"
+      onClose={props.close}
+      onSave={onSave}
+      saveLoading={mutation.isLoading}
+      centered
+      title="Server Settings"
+    >
+      <Box pos="relative">
+        <LoadingOverlay visible={fetchStatus === "fetching"} overlayBlur={2} />
+        <Tabs defaultValue="polling" mih="33rem">
+          <Tabs.List>
+            <Tabs.Tab value="polling" p="lg">
+              Polling
+            </Tabs.Tab>
+            <Tabs.Tab value="download" p="lg">
+              Download
+            </Tabs.Tab>
+            <Tabs.Tab value="network" p="lg">
+              Network
+            </Tabs.Tab>
+            <Tabs.Tab value="bandwidth" p="lg">
+              Bandwidth
+            </Tabs.Tab>
+            <Tabs.Tab value="queue" p="lg">
+              Queue
+            </Tabs.Tab>
+            {!TAURI && (
+              <>
+                <Tabs.Tab value="interface" p="lg">
+                  Interface
+                </Tabs.Tab>
+                <Tabs.Tab value="magnethandler" p="lg">
+                  Magnet links
+                </Tabs.Tab>
+              </>
+            )}
+          </Tabs.List>
+          {form.values.session !== undefined ? (
+            <>
+              <Tabs.Panel value="polling" p="lg">
+                <PollingPanel form={form} />
+              </Tabs.Panel>
 
-    useEffect(() => {
-        if (props.opened) {
-            setFieldValue("interface", config.values.interface);
-        }
-    }, [config, props.opened, setFieldValue]);
+              <Tabs.Panel value="download" p="lg">
+                <DownloadPanel form={form} session={form.values.session} />
+              </Tabs.Panel>
 
-    const onSave = useCallback(() => {
-        serverConfig.intervals = { ...form.values.intervals };
-        config.values.interface = { ...config.values.interface, ...form.values.interface };
-        config.cleanup();
-        void config.save();
-        if (form.values.session !== undefined) {
-            mutation.mutate(form.values.session, {
-                onSuccess: () => {
-                    notifications.show({
-                        message: "Session saved successfully",
-                        color: "green",
-                    });
-                    props.close();
-                    if (!TAURI) {
-                        // clear client cache to make sure new interface settings are applied
-                        queryClient.clear();
-                    }
-                },
-                onError: (error) => {
-                    notifications.show({
-                        title: "Failed to update daemon settings",
-                        message: String(error),
-                        color: "red",
-                    });
-                },
-            });
-        } else {
-            props.close();
-        }
-    }, [form.values, mutation, props, config, serverConfig]);
+              <Tabs.Panel value="network" p="lg">
+                <NetworkPanel
+                  opened={props.opened}
+                  form={form}
+                  session={form.values.session}
+                />
+              </Tabs.Panel>
 
-    return (
-        <SaveCancelModal
-            opened={props.opened}
-            size="lg"
-            onClose={props.close}
-            onSave={onSave}
-            saveLoading={mutation.isLoading}
-            centered
-            title="Server Settings"
-        >
-            <Box pos="relative">
-                <LoadingOverlay visible={fetchStatus === "fetching"} overlayBlur={2} />
-                <Tabs defaultValue="polling" mih="33rem">
-                    <Tabs.List>
-                        <Tabs.Tab value="polling" p="lg">Polling</Tabs.Tab>
-                        <Tabs.Tab value="download" p="lg">Download</Tabs.Tab>
-                        <Tabs.Tab value="network" p="lg">Network</Tabs.Tab>
-                        <Tabs.Tab value="bandwidth" p="lg">Bandwidth</Tabs.Tab>
-                        <Tabs.Tab value="queue" p="lg">Queue</Tabs.Tab>
-                        {!TAURI && <>
-                            <Tabs.Tab value="interface" p="lg">Interface</Tabs.Tab>
-                            <Tabs.Tab value="magnethandler" p="lg">Magnet links</Tabs.Tab>
-                        </>}
-                    </Tabs.List>
-                    {form.values.session !== undefined
-                        ? <>
-                            <Tabs.Panel value="polling" p="lg">
-                                <PollingPanel form={form} />
-                            </Tabs.Panel>
+              <Tabs.Panel value="bandwidth" p="lg">
+                <BandwidthPanel form={form} session={form.values.session} />
+              </Tabs.Panel>
 
-                            <Tabs.Panel value="download" p="lg">
-                                <DownloadPanel form={form} session={form.values.session} />
-                            </Tabs.Panel>
+              <Tabs.Panel value="queue" p="lg">
+                <QueuePanel form={form} session={form.values.session} />
+              </Tabs.Panel>
 
-                            <Tabs.Panel value="network" p="lg">
-                                <NetworkPanel opened={props.opened} form={form} session={form.values.session} />
-                            </Tabs.Panel>
-
-                            <Tabs.Panel value="bandwidth" p="lg">
-                                <BandwidthPanel form={form} session={form.values.session} />
-                            </Tabs.Panel>
-
-                            <Tabs.Panel value="queue" p="lg">
-                                <QueuePanel form={form} session={form.values.session} />
-                            </Tabs.Panel>
-
-                            {!TAURI && <>
-                                <Tabs.Panel value="interface" p="lg">
-                                    <InterfaceSettigsPanel form={form} />
-                                </Tabs.Panel>
-                                <Tabs.Panel value="magnethandler" p="lg">
-                                    <MagnetHandlerPanel />
-                                </Tabs.Panel>
-                            </>}
-                        </>
-                        : <></>}
-                </Tabs>
-            </Box>
-        </SaveCancelModal>
-    );
+              {!TAURI && (
+                <>
+                  <Tabs.Panel value="interface" p="lg">
+                    <InterfaceSettigsPanel form={form} />
+                  </Tabs.Panel>
+                  <Tabs.Panel value="magnethandler" p="lg">
+                    <MagnetHandlerPanel />
+                  </Tabs.Panel>
+                </>
+              )}
+            </>
+          ) : (
+            <></>
+          )}
+        </Tabs>
+        {!TAURI && (
+          <Group position="apart" mt="md">
+            <Text>Language</Text>
+            <SegmentedControl
+              value={i18n.language ?? "en"}
+              onChange={(value) => {
+                void i18n.changeLanguage(value);
+              }}
+              data={[
+                { label: "English", value: "en" },
+                { label: "中文", value: "zh" },
+              ]}
+            />
+          </Group>
+        )}
+      </Box>
+    </SaveCancelModal>
+  );
 }
