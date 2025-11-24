@@ -544,7 +544,8 @@
     "priority": {
         "low": "低",
         "normal": "正常",
-        "high": "高"
+        "high": "高",
+        "mixed": "混合"
     },
     "units": {
         "days": "天",

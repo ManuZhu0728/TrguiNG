@@ -260,14 +260,21 @@ function PercentBarField(props: TableFieldProps) {
 }
 
 function PriorityField(props: TableFieldProps) {
+  const { t } = useTranslation();
   const priority = props.entry.priority;
+
+  let label = t("priority.mixed");
+  if (priority === -1) label = t("priority.low");
+  else if (priority === 0) label = t("priority.normal");
+  else if (priority === 1) label = t("priority.high");
+
   return (
     <Badge
       radius="md"
       variant="filled"
       bg={priority === undefined ? "gray" : PriorityColors.get(priority)}
     >
-      {priority === undefined ? "mixed" : PriorityStrings.get(priority)}
+      {label}
     </Badge>
   );
 }

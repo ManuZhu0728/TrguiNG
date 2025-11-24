@@ -736,7 +736,8 @@
     "priority": {
         "low": "Low",
         "normal": "Normal",
-        "high": "High"
+        "high": "High",
+        "mixed": "Mixed"
     },
     "units": {
         "days": "d",
