@@ -59,6 +59,11 @@ const { TAURI, invoke } = await import(
   /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
+const languageOverrides: Record<string, string> = {
+  zh: "简体中文",
+  "zh-TW": "繁體中文",
+};
+
 export interface InterfaceFormValues {
   interface: {
     theme?: ColorScheme;
@@ -207,14 +212,18 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
             <NativeSelect
               data={availableLanguages.map((lang) => {
                 let label = lang;
-                try {
-                  label =
-                    new Intl.DisplayNames([lang], {
-                      type: "language",
-                    }).of(lang) ?? lang;
-                  label = label.charAt(0).toUpperCase() + label.slice(1);
-                } catch (e) {
-                  console.warn("Intl.DisplayNames error", e);
+                if (languageOverrides[lang]) {
+                  label = languageOverrides[lang];
+                } else {
+                  try {
+                    label =
+                      new Intl.DisplayNames([lang], {
+                        type: "language",
+                      }).of(lang) ?? lang;
+                    label = label.charAt(0).toUpperCase() + label.slice(1);
+                  } catch (e) {
+                    console.warn("Intl.DisplayNames error", e);
+                  }
                 }
                 return { label, value: lang };
               })}

@@ -10,12 +10,19 @@ export const availableLanguages: string[] = [];
 
 try {
   const context = require.context("./locales", false, /\.json$/);
+  const seenLangs = new Set<string>();
   context.keys().forEach((key: string) => {
-    const langCode = key.replace("./", "").replace(".json", "");
-    resources[langCode] = {
-      translation: context(key),
-    };
-    availableLanguages.push(langCode);
+    const fileName = key.split("/").pop();
+    if (fileName) {
+      const langCode = fileName.replace(".json", "");
+      if (!seenLangs.has(langCode)) {
+        seenLangs.add(langCode);
+        resources[langCode] = {
+          translation: context(key),
+        };
+        availableLanguages.push(langCode);
+      }
+    }
   });
 } catch (e) {
   console.error("Failed to load locales via require.context", e);
