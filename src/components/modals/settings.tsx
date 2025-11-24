@@ -193,6 +193,7 @@ interface ServerPanelProps {
 function ServerPanel(props: ServerPanelProps) {
   const [mappingsString, setMappingsString] = useState("");
   const server = props.form.values.servers[props.current];
+  const { t } = useTranslation();
 
   useEffect(() => {
     setMappingsString(
@@ -203,14 +204,14 @@ function ServerPanel(props: ServerPanelProps) {
   return (
     <div style={{ flexGrow: 1 }}>
       <TextInput
-        label="Name"
+        label={t("modals.settings.name")}
         {...props.form.getInputProps(`servers.${props.current}.name`)}
         autoCorrect="off"
         autoCapitalize="off"
       />
 
       <TextInput
-        label="Server rpc url"
+        label={t("modals.settings.rpcUrl")}
         {...props.form.getInputProps(`servers.${props.current}.connection.url`)}
         placeholder="http://1.2.3.4:9091/transmission/rpc"
         autoComplete="off"
@@ -222,7 +223,7 @@ function ServerPanel(props: ServerPanelProps) {
       <Grid>
         <Grid.Col span={6}>
           <TextInput
-            label="User name"
+            label={t("modals.settings.username")}
             {...props.form.getInputProps(
               `servers.${props.current}.connection.username`
             )}
@@ -234,7 +235,7 @@ function ServerPanel(props: ServerPanelProps) {
         </Grid.Col>
         <Grid.Col span={6}>
           <PasswordInput
-            label="Password"
+            label={t("modals.settings.password")}
             {...props.form.getInputProps(
               `servers.${props.current}.connection.password`
             )}
@@ -243,7 +244,7 @@ function ServerPanel(props: ServerPanelProps) {
 
         <Grid.Col span={12}>
           <Textarea
-            label={'Path mappings in "remote=local" format, one per line'}
+            label={t("modals.settings.pathMappings")}
             onChange={(e) => {
               // TODO fix
               const mappings = e.target.value.split("\n").map((line) => {
@@ -272,6 +273,7 @@ const bigSwitchStyles = { track: { flexGrow: 1 } };
 
 function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
   const platform = useMemo(() => UAParser().os.name ?? "unknown", []);
+  const { t } = useTranslation();
 
   const [autostart, setAutostart] = useState(false);
 
@@ -305,7 +307,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
 
   return (
     <Grid align="center" gutter="md">
-      <Grid.Col span={6}>Delete successfully added torrent files</Grid.Col>
+      <Grid.Col span={6}>{t("modals.settings.deleteAdded")}</Grid.Col>
       <Grid.Col span={2}>
         <Switch
           onLabel="ON"
@@ -316,7 +318,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
         />
       </Grid.Col>
       <Grid.Col span={4}></Grid.Col>
-      <Grid.Col span={6}>Show notifications for completed torrents</Grid.Col>
+      <Grid.Col span={6}>{t("modals.settings.showNotifications")}</Grid.Col>
       <Grid.Col span={2}>
         <Switch
           onLabel="ON"
@@ -328,7 +330,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
           })}
         />
       </Grid.Col>
-      <Grid.Col span={2}>Play sound</Grid.Col>
+      <Grid.Col span={2}>{t("modals.settings.playSound")}</Grid.Col>
       <Grid.Col span={2}>
         <Switch
           onLabel="ON"
@@ -342,7 +344,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
       </Grid.Col>
       {platform === "Windows" && (
         <>
-          <Grid.Col span={6}>Launch on startup</Grid.Col>
+          <Grid.Col span={6}>{t("modals.settings.launchOnStartup")}</Grid.Col>
           <Grid.Col span={2}>
             <Switch
               onLabel="ON"
@@ -354,16 +356,20 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
             />
           </Grid.Col>
           <Grid.Col span={4}></Grid.Col>
-          <Grid.Col span={6}>Associate application</Grid.Col>
+          <Grid.Col span={6}>{t("modals.settings.associateApp")}</Grid.Col>
           <Grid.Col span={3}>
-            <Button onClick={associateTorrent}>.torrent files</Button>
+            <Button onClick={associateTorrent}>
+              {t("modals.settings.torrentFiles")}
+            </Button>
           </Grid.Col>
           <Grid.Col span={3}>
-            <Button onClick={associateMagnet}>magnet links</Button>
+            <Button onClick={associateMagnet}>
+              {t("modals.settings.magnetLinks")}
+            </Button>
           </Grid.Col>
         </>
       )}
-      <Grid.Col span={6}>Show tray icon</Grid.Col>
+      <Grid.Col span={6}>{t("modals.settings.showTrayIcon")}</Grid.Col>
       <Grid.Col span={2}>
         <Switch
           onLabel="ON"
@@ -380,8 +386,8 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
           }}
         />
       </Grid.Col>
-      <Grid.Col span={4}>(takes effect after restart)</Grid.Col>
-      <Grid.Col span={6}>When minimized</Grid.Col>
+      <Grid.Col span={4}>{t("modals.settings.restartRequired")}</Grid.Col>
+      <Grid.Col span={6}>{t("modals.settings.whenMinimized")}</Grid.Col>
       <Grid.Col span={6}>
         <SegmentedControl
           data={WindowMinimizeOptions as unknown as string[]}
@@ -389,7 +395,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
           {...form.getInputProps("app.onMinimize")}
         />
       </Grid.Col>
-      <Grid.Col span={6}>When closed</Grid.Col>
+      <Grid.Col span={6}>{t("modals.settings.whenClosed")}</Grid.Col>
       <Grid.Col span={6}>
         <SegmentedControl
           data={WindowCloseOptions as unknown as string[]}
@@ -399,10 +405,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
       </Grid.Col>
       <Grid.Col>
         <Text fz="sm" fs="italic">
-          Hiding the window keeps frontend running, this uses more RAM but
-          reopening the window is nearly instant. Closing the window shuts down
-          the webview, in this mode reopening the window is slower. You can
-          always access the window through the system tray icon.
+          {t("modals.settings.trayHint")}
         </Text>
       </Grid.Col>
     </Grid>
@@ -415,6 +418,7 @@ interface AppSettingsModalProps extends ModalState {
 
 export function AppSettingsModal(props: AppSettingsModalProps) {
   const config = useContext(ConfigContext);
+  const { t, i18n } = useTranslation();
   const form = useForm<FormValues>({
     initialValues: {
       servers: config.getServers(),
@@ -430,17 +434,17 @@ export function AppSettingsModal(props: AppSettingsModalProps) {
               found = true;
             }
           });
-          return found ? "Server names must be unique" : null;
+          return found ? t("modals.settings.serverNamesUnique") : null;
         },
         connection: {
           url: (value) => {
             try {
               const url = new URL(value);
               if (!["http:", "https:"].includes(url.protocol)) {
-                return "Only http/https URLs are supported";
+                return t("modals.settings.onlyHttp");
               }
             } catch {
-              return "Invalid URL";
+              return t("modals.settings.invalidUrl");
             }
             return null;
           },
@@ -451,7 +455,6 @@ export function AppSettingsModal(props: AppSettingsModalProps) {
   });
 
   const [currentServerIndex, setCurrentServerIndex] = useState(-1);
-  const { i18n } = useTranslation();
   const { setValues } = form;
 
   useEffect(() => {
@@ -487,20 +490,20 @@ export function AppSettingsModal(props: AppSettingsModalProps) {
       onClose={props.close}
       onSave={onSave}
       centered
-      title="Application Settings"
+      title={t("modals.settings.title")}
     >
       <form>
         <Tabs mih="33rem" defaultValue="servers">
           <Tabs.List>
             <Tabs.Tab value="servers" p="lg">
-              Servers
+              {t("modals.settings.tabs.servers")}
             </Tabs.Tab>
             <Tabs.Tab value="integrations" p="lg">
-              Integrations
+              {t("modals.settings.tabs.integrations")}
             </Tabs.Tab>
             {TAURI && (
               <Tabs.Tab value="interface" p="lg">
-                Interface
+                {t("modals.settings.tabs.interface")}
               </Tabs.Tab>
             )}
           </Tabs.List>
@@ -531,7 +534,7 @@ export function AppSettingsModal(props: AppSettingsModalProps) {
           )}
         </Tabs>
         <Group position="apart" mt="md">
-          <Text>Language</Text>
+          <Text>{t("modals.settings.language")}</Text>
           <SegmentedControl
             value={i18n.language ?? "en"}
             onChange={(value) => {

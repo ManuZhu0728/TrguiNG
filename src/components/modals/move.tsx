@@ -19,72 +19,103 @@
 import { Button, Checkbox, Divider, Group, Text } from "@mantine/core";
 import React, { useCallback, useEffect, useState } from "react";
 import type { ModalState } from "./common";
-import { HkModal, TorrentLocation, TorrentsNames, useTorrentLocation } from "./common";
+import {
+  HkModal,
+  TorrentLocation,
+  TorrentsNames,
+  useTorrentLocation,
+} from "./common";
 import { useTorrentChangeDirectory } from "queries";
 import { notifications } from "@mantine/notifications";
 import { useServerSelectedTorrents, useServerTorrentData } from "rpc/torrent";
+import { useTranslation } from "react-i18next";
 
 export function MoveModal(props: ModalState) {
-    const serverData = useServerTorrentData();
-    const serverSelected = useServerSelectedTorrents();
-    const [moveData, setMoveData] = useState<boolean>(true);
+  const serverData = useServerTorrentData();
+  const serverSelected = useServerSelectedTorrents();
+  const [moveData, setMoveData] = useState<boolean>(true);
+  const { t } = useTranslation();
 
-    const location = useTorrentLocation();
-    const { setPath, addPath } = location;
+  const location = useTorrentLocation();
+  const { setPath, addPath } = location;
 
-    const changeDirectory = useTorrentChangeDirectory();
+  const changeDirectory = useTorrentChangeDirectory();
 
-    const onMove = useCallback(() => {
-        changeDirectory(
-            {
-                torrentIds: Array.from(serverSelected),
-                location: location.path,
-                move: moveData,
-            },
-            {
-                onSuccess: () => {
-                    addPath(location.path);
-                },
-                onError: (e) => {
-                    console.error("Error moving torrents", e);
-                    notifications.show({
-                        message: "Error moving torrents",
-                        color: "red",
-                    });
-                },
-            },
-        );
+  const onMove = useCallback(() => {
+    changeDirectory(
+      {
+        torrentIds: Array.from(serverSelected),
+        location: location.path,
+        move: moveData,
+      },
+      {
+        onSuccess: () => {
+          addPath(location.path);
+        },
+        onError: (e) => {
+          console.error("Error moving torrents", e);
+          notifications.show({
+            message: t("modals.move.errorMoving"),
+            color: "red",
+          });
+        },
+      }
+    );
 
-        props.close();
-    }, [changeDirectory, serverSelected, location.path, moveData, props, addPath]);
+    props.close();
+  }, [
+    changeDirectory,
+    serverSelected,
+    location.path,
+    moveData,
+    props,
+    addPath,
+    t,
+  ]);
 
-    const calculateInitialLocation = useCallback(() => {
-        const [id] = [...serverSelected];
-        const torrent = serverData.torrents.find((t) => t.id === id);
-        return torrent?.downloadDir ?? "";
-    }, [serverData.torrents, serverSelected]);
+  const calculateInitialLocation = useCallback(() => {
+    const [id] = [...serverSelected];
+    const torrent = serverData.torrents.find((t) => t.id === id);
+    return torrent?.downloadDir ?? "";
+  }, [serverData.torrents, serverSelected]);
 
-    useEffect(() => {
-        if (props.opened) setPath(calculateInitialLocation());
-    }, [props.opened, setPath, calculateInitialLocation]);
+  useEffect(() => {
+    if (props.opened) setPath(calculateInitialLocation());
+  }, [props.opened, setPath, calculateInitialLocation]);
 
-    return <>
-        {props.opened &&
-            <HkModal opened={props.opened} onClose={props.close} title="Move torrents" centered size="lg">
-                <Divider my="sm" />
-                <Text mb="md">Enter new location for</Text>
-                <TorrentsNames />
-                <TorrentLocation {...location} focusPath/>
-                <Checkbox
-                    label="Move torrent data to new location"
-                    checked={moveData}
-                    onChange={(e) => { setMoveData(e.currentTarget.checked); }}
-                    my="xl" />
-                <Divider my="sm" />
-                <Group position="center" spacing="md">
-                    <Button onClick={onMove} variant="filled">Move</Button>
-                    <Button onClick={props.close} variant="light">Cancel</Button>
-                </Group>
-            </HkModal>}
-    </>;
+  return (
+    <>
+      {props.opened && (
+        <HkModal
+          opened={props.opened}
+          onClose={props.close}
+          title={t("modals.move.title")}
+          centered
+          size="lg"
+        >
+          <Divider my="sm" />
+          <Text mb="md">{t("modals.move.enterNewLocation")}</Text>
+          <TorrentsNames />
+          <TorrentLocation {...location} focusPath />
+          <Checkbox
+            label={t("modals.move.moveData")}
+            checked={moveData}
+            onChange={(e) => {
+              setMoveData(e.currentTarget.checked);
+            }}
+            my="xl"
+          />
+          <Divider my="sm" />
+          <Group position="center" spacing="md">
+            <Button onClick={onMove} variant="filled">
+              {t("modals.move.move")}
+            </Button>
+            <Button onClick={props.close} variant="light">
+              {t("modals.move.cancel")}
+            </Button>
+          </Group>
+        </HkModal>
+      )}
+    </>
+  );
 }

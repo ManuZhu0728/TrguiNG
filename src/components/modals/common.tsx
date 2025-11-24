@@ -18,282 +18,386 @@
 
 import type { ModalProps, MultiSelectValueProps } from "@mantine/core";
 import {
-    Badge, Button, CloseButton, Divider, Group, Loader, Modal, MultiSelect,
-    Text, TextInput, ActionIcon, Menu, ScrollArea,
+  Badge,
+  Button,
+  CloseButton,
+  Divider,
+  Group,
+  Loader,
+  Modal,
+  MultiSelect,
+  Text,
+  TextInput,
+  ActionIcon,
+  Menu,
+  ScrollArea,
 } from "@mantine/core";
 import { ConfigContext, ServerConfigContext } from "config";
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { pathMapFromServer, pathMapToServer } from "trutil";
 import * as Icon from "react-bootstrap-icons";
 import { useServerSelectedTorrents, useServerTorrentData } from "rpc/torrent";
 import { useHotkeysContext } from "hotkeys";
-const { TAURI, dialogOpen } = await import(/* webpackChunkName: "taurishim" */"taurishim");
+import { useTranslation } from "react-i18next";
+const { TAURI, dialogOpen } = await import(
+  /* webpackChunkName: "taurishim" */ "taurishim"
+);
 
 export interface ModalState {
-    opened: boolean,
-    close: () => void,
+  opened: boolean;
+  close: () => void;
 }
 
 export function HkModal(props: ModalProps) {
-    const hk = useHotkeysContext();
+  const hk = useHotkeysContext();
 
-    useEffect(() => {
-        hk.active = !props.opened;
+  useEffect(() => {
+    hk.active = !props.opened;
 
-        return () => { hk.active = true; };
-    }, [props.opened, hk]);
+    return () => {
+      hk.active = true;
+    };
+  }, [props.opened, hk]);
 
-    return <Modal {...props}>{props.children}</Modal>;
+  return <Modal {...props}>{props.children}</Modal>;
 }
 
 interface SaveCancelModalProps extends ModalProps {
-    onSave: () => void,
-    onClose: () => void,
-    saveLoading?: boolean,
+  onSave: () => void;
+  onClose: () => void;
+  saveLoading?: boolean;
 }
 
-export function SaveCancelModal({ onSave, onClose, children, saveLoading, ...other }: SaveCancelModalProps) {
-    return (
-        <HkModal onClose={onClose} {...other}>
-            <Divider my="sm" />
-            {children}
-            <Divider my="sm" />
-            <Group position="center" spacing="md">
-                <Button onClick={onSave} variant="filled" data-autofocus>
-                    {saveLoading === true ? <Loader size="1rem" /> : "Save"}
-                </Button>
-                <Button onClick={onClose} variant="light">Cancel</Button>
-            </Group>
-        </HkModal>
-    );
+export function SaveCancelModal({
+  onSave,
+  onClose,
+  children,
+  saveLoading,
+  ...other
+}: SaveCancelModalProps) {
+  const { t } = useTranslation();
+  return (
+    <HkModal onClose={onClose} {...other}>
+      <Divider my="sm" />
+      {children}
+      <Divider my="sm" />
+      <Group position="center" spacing="md">
+        <Button onClick={onSave} variant="filled" data-autofocus>
+          {saveLoading === true ? (
+            <Loader size="1rem" />
+          ) : (
+            t("modals.common.save")
+          )}
+        </Button>
+        <Button onClick={onClose} variant="light">
+          {t("modals.common.cancel")}
+        </Button>
+      </Group>
+    </HkModal>
+  );
 }
 
-export function LimitedNamesList({ names, limit }: { names: string[], limit?: number }) {
-    limit = limit ?? 5;
-    const t = names.slice(0, limit);
+export function LimitedNamesList({
+  names,
+  limit,
+}: {
+  names: string[];
+  limit?: number;
+}) {
+  limit = limit ?? 5;
+  const t_ = names.slice(0, limit);
+  const { t } = useTranslation();
 
-    return <>
-        {t.map((s, i) => <Text key={i} mx="md" my="xs" px="sm" sx={{
+  return (
+    <>
+      {t_.map((s, i) => (
+        <Text
+          key={i}
+          mx="md"
+          my="xs"
+          px="sm"
+          sx={{
             whiteSpace: "pre",
             overflow: "hidden",
             textOverflow: "ellipsis",
             boxShadow: "inset 0 0 0 9999px rgba(133, 133, 133, 0.1)",
-        }}>
-            {s}
-        </Text>)}
-        {names.length > limit && <Text mx="xl" mb="md">{`... and ${names.length - limit} more`}</Text>}
-    </>;
+          }}
+        >
+          {s}
+        </Text>
+      ))}
+      {names.length > limit && (
+        <Text mx="xl" mb="md">
+          {t("modals.common.andMore", { count: names.length - limit })}
+        </Text>
+      )}
+    </>
+  );
 }
 
 export function TorrentsNames() {
-    const serverData = useServerTorrentData();
-    const serverSelected = useServerSelectedTorrents();
+  const serverData = useServerTorrentData();
+  const serverSelected = useServerSelectedTorrents();
+  const { t } = useTranslation();
 
-    const allNames = useMemo<string[]>(() => {
-        if (serverData.current == null || serverSelected.size === 0) {
-            return ["No torrent selected"];
-        }
-        return serverData.torrents.filter(
-            (t) => serverSelected.has(t.id)).map((t) => t.name);
-    }, [serverData, serverSelected]);
+  const allNames = useMemo<string[]>(() => {
+    if (serverData.current == null || serverSelected.size === 0) {
+      return [t("modals.common.noTorrentSelected")];
+    }
+    return serverData.torrents
+      .filter((t) => serverSelected.has(t.id))
+      .map((t) => t.name);
+  }, [serverData, serverSelected, t]);
 
-    return <LimitedNamesList names={allNames} />;
+  return <LimitedNamesList names={allNames} />;
 }
 
 export interface LocationData {
-    path: string,
-    setPath: (s: string) => void,
-    lastPaths: string[],
-    addPath: (dir: string) => void,
-    removePath: (dir: string) => void,
-    browseHandler: () => void,
-    inputLabel?: string,
-    disabled?: boolean,
-    focusPath?: boolean,
+  path: string;
+  setPath: (s: string) => void;
+  lastPaths: string[];
+  addPath: (dir: string) => void;
+  removePath: (dir: string) => void;
+  browseHandler: () => void;
+  inputLabel?: string;
+  disabled?: boolean;
+  focusPath?: boolean;
 }
 
 export function useTorrentLocation(): LocationData {
-    const config = useContext(ConfigContext);
-    const serverConfig = useContext(ServerConfigContext);
-    const [lastPaths, setLastPaths] = useState([] as string[]);
+  const config = useContext(ConfigContext);
+  const serverConfig = useContext(ServerConfigContext);
+  const [lastPaths, setLastPaths] = useState([] as string[]);
+  const { t } = useTranslation();
 
-    const updateLastPaths = useCallback(() => {
-        const paths = [...serverConfig.lastSaveDirs];
-        if (config.values.interface.sortLastSaveDirs) {
-            paths.sort();
-        }
-        setLastPaths(paths);
-    }, [config, serverConfig]);
+  const updateLastPaths = useCallback(() => {
+    const paths = [...serverConfig.lastSaveDirs];
+    if (config.values.interface.sortLastSaveDirs) {
+      paths.sort();
+    }
+    setLastPaths(paths);
+  }, [config, serverConfig]);
 
-    useEffect(() => {
-        updateLastPaths();
-    }, [updateLastPaths]);
+  useEffect(() => {
+    updateLastPaths();
+  }, [updateLastPaths]);
 
-    const [path, setPath] = useState<string>("");
+  const [path, setPath] = useState<string>("");
 
-    const pathRef = useRef(path);
-    pathRef.current = path;
+  const pathRef = useRef(path);
+  pathRef.current = path;
 
-    useEffect(() => {
-        if (!lastPaths.includes(pathRef.current) && lastPaths.length > 0) {
-            setPath(lastPaths[0]);
-        }
-    }, [lastPaths]);
+  useEffect(() => {
+    if (!lastPaths.includes(pathRef.current) && lastPaths.length > 0) {
+      setPath(lastPaths[0]);
+    }
+  }, [lastPaths]);
 
-    const browseHandler = useCallback(() => {
-        const mappedLocation = pathMapFromServer(path, serverConfig);
-        dialogOpen({
-            title: "Select directory",
-            defaultPath: mappedLocation === "" ? undefined : mappedLocation,
-            directory: true,
-        }).then((directory) => {
-            if (directory === null) return;
-            const mappedPath = pathMapToServer((directory as string).replace(/\\/g, "/"), serverConfig);
-            setPath(mappedPath.replace(/\\/g, "/"));
-        }).catch(console.error);
-    }, [serverConfig, path, setPath]);
+  const browseHandler = useCallback(() => {
+    const mappedLocation = pathMapFromServer(path, serverConfig);
+    dialogOpen({
+      title: t("modals.common.selectDirectory"),
+      defaultPath: mappedLocation === "" ? undefined : mappedLocation,
+      directory: true,
+    })
+      .then((directory) => {
+        if (directory === null) return;
+        const mappedPath = pathMapToServer(
+          (directory as string).replace(/\\/g, "/"),
+          serverConfig
+        );
+        setPath(mappedPath.replace(/\\/g, "/"));
+      })
+      .catch(console.error);
+  }, [serverConfig, path, setPath, t]);
 
-    const addPath = useCallback((dir: string) => {
-        config.addSaveDir(serverConfig.name, dir);
-        updateLastPaths();
-    }, [config, serverConfig, updateLastPaths]);
+  const addPath = useCallback(
+    (dir: string) => {
+      config.addSaveDir(serverConfig.name, dir);
+      updateLastPaths();
+    },
+    [config, serverConfig, updateLastPaths]
+  );
 
-    const removePath = useCallback((dir: string) => {
-        config.removeSaveDir(serverConfig.name, dir);
-        updateLastPaths();
-    }, [config, serverConfig, updateLastPaths]);
+  const removePath = useCallback(
+    (dir: string) => {
+      config.removeSaveDir(serverConfig.name, dir);
+      updateLastPaths();
+    },
+    [config, serverConfig, updateLastPaths]
+  );
 
-    return { path, setPath, lastPaths, addPath, removePath, browseHandler };
+  return { path, setPath, lastPaths, addPath, removePath, browseHandler };
 }
 
 export function TorrentLocation(props: LocationData) {
-    const config = useContext(ConfigContext);
+  const config = useContext(ConfigContext);
+  const { t } = useTranslation();
 
-    return (
-        <Group align="flex-end">
-            <TextInput
-                value={props.path}
-                label={props.inputLabel}
-                disabled={props.disabled}
-                onChange={(e) => { props.setPath(e.currentTarget.value); }}
-                styles={{ root: { flexGrow: 1 } }}
-                data-autofocus={props.focusPath}
-                rightSection={
-                    <Menu position="left-start" withinPortal returnFocus
-                        middlewares={{ shift: true, flip: false }} offset={{ mainAxis: -20, crossAxis: 30 }}>
-                        <Menu.Target>
-                            <ActionIcon py="md" disabled={props.disabled === true || props.lastPaths.length === 0}>
-                                <Icon.ClockHistory size="16" />
-                            </ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                            <ScrollArea.Autosize
-                                type="auto"
-                                mah="calc(100vh - 0.5rem)"
-                                miw="30rem"
-                                offsetScrollbars
-                                styles={{ viewport: { paddingBottom: 0 } }}
-                            >
-                                {config.values.interface.preconfiguredDirs.map((path) => (
-                                    <Menu.Item key={path} onClick={() => { props.setPath(path); }}>
-                                        {path}
-                                    </Menu.Item>
-                                ))}
-                                {config.values.interface.preconfiguredDirs.length > 0 && props.lastPaths.length > 0 &&
-                                    <Menu.Divider />}
-                                {props.lastPaths.map((path) => (
-                                    <Menu.Item key={path}
-                                        onClick={() => { props.setPath(path); }}
-                                        rightSection={
-                                            <ActionIcon
-                                                component="div"
-                                                title="Remove path"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    props.removePath(path);
-                                                }}
-                                                className="list-delete-icon">
-                                                <Icon.Trash size="12" />
-                                            </ActionIcon>}
-                                    >
-                                        {path.length > 0 ? path : "<empty>"}
-                                    </Menu.Item>
-                                ))}
-                            </ScrollArea.Autosize>
-                        </Menu.Dropdown>
-                    </Menu>
+  return (
+    <Group align="flex-end">
+      <TextInput
+        value={props.path}
+        label={props.inputLabel}
+        disabled={props.disabled}
+        onChange={(e) => {
+          props.setPath(e.currentTarget.value);
+        }}
+        styles={{ root: { flexGrow: 1 } }}
+        data-autofocus={props.focusPath}
+        rightSection={
+          <Menu
+            position="left-start"
+            withinPortal
+            returnFocus
+            middlewares={{ shift: true, flip: false }}
+            offset={{ mainAxis: -20, crossAxis: 30 }}
+          >
+            <Menu.Target>
+              <ActionIcon
+                py="md"
+                disabled={
+                  props.disabled === true || props.lastPaths.length === 0
                 }
-                autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" />
-            {TAURI && <Button onClick={props.browseHandler} disabled={props.disabled}>Browse</Button>}
-        </Group>
-    );
+              >
+                <Icon.ClockHistory size="16" />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <ScrollArea.Autosize
+                type="auto"
+                mah="calc(100vh - 0.5rem)"
+                miw="30rem"
+                offsetScrollbars
+                styles={{ viewport: { paddingBottom: 0 } }}
+              >
+                {config.values.interface.preconfiguredDirs.map((path) => (
+                  <Menu.Item
+                    key={path}
+                    onClick={() => {
+                      props.setPath(path);
+                    }}
+                  >
+                    {path}
+                  </Menu.Item>
+                ))}
+                {config.values.interface.preconfiguredDirs.length > 0 &&
+                  props.lastPaths.length > 0 && <Menu.Divider />}
+                {props.lastPaths.map((path) => (
+                  <Menu.Item
+                    key={path}
+                    onClick={() => {
+                      props.setPath(path);
+                    }}
+                    rightSection={
+                      <ActionIcon
+                        component="div"
+                        title={t("modals.common.removePath")}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          props.removePath(path);
+                        }}
+                        className="list-delete-icon"
+                      >
+                        <Icon.Trash size="12" />
+                      </ActionIcon>
+                    }
+                  >
+                    {path.length > 0 ? path : t("modals.common.empty")}
+                  </Menu.Item>
+                ))}
+              </ScrollArea.Autosize>
+            </Menu.Dropdown>
+          </Menu>
+        }
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
+      />
+      {TAURI && (
+        <Button onClick={props.browseHandler} disabled={props.disabled}>
+          {t("modals.common.browse")}
+        </Button>
+      )}
+    </Group>
+  );
 }
 
-export function Label({
-    label,
-    onRemove,
-    ...others
-}: MultiSelectValueProps) {
-    return (
-        <div {...others}>
-            <Badge radius="md" variant="filled"
-                rightSection={
-                    <CloseButton
-                        onMouseDown={onRemove}
-                        title="Remove"
-                        color="gray.0"
-                        variant="transparent"
-                        size={22}
-                        iconSize={14}
-                        tabIndex={-1}
-                        mr="-0.25rem"
-                    />
-                }
-            >
-                {label}
-            </Badge>
-        </div>
-    );
+export function Label({ label, onRemove, ...others }: MultiSelectValueProps) {
+  const { t } = useTranslation();
+  return (
+    <div {...others}>
+      <Badge
+        radius="md"
+        variant="filled"
+        rightSection={
+          <CloseButton
+            onMouseDown={onRemove}
+            title={t("modals.common.remove")}
+            color="gray.0"
+            variant="transparent"
+            size={22}
+            iconSize={14}
+            tabIndex={-1}
+            mr="-0.25rem"
+          />
+        }
+      >
+        {label}
+      </Badge>
+    </div>
+  );
 }
 
 interface TorrentLabelsProps {
-    labels: string[],
-    setLabels: React.Dispatch<string[]>,
-    inputLabel?: string,
-    disabled?: boolean,
-    initiallyOpened?: boolean,
+  labels: string[];
+  setLabels: React.Dispatch<string[]>;
+  inputLabel?: string;
+  disabled?: boolean;
+  initiallyOpened?: boolean;
 }
 
 export function TorrentLabels(props: TorrentLabelsProps) {
-    const config = useContext(ConfigContext);
-    const serverData = useServerTorrentData();
+  const config = useContext(ConfigContext);
+  const serverData = useServerTorrentData();
+  const { t } = useTranslation();
 
-    const initialLabelset = useMemo(() => {
-        const labels = new Set<string>(config.values.interface.preconfiguredLabels);
-        serverData.torrents.forEach((t) => t.labels?.forEach((l: string) => labels.add(l)));
-
-        return Array.from(labels).sort();
-    }, [config, serverData.torrents]);
-
-    const [data, setData] = useState<string[]>(initialLabelset);
-
-    return (
-        <MultiSelect
-            data={data}
-            value={props.labels}
-            onChange={props.setLabels}
-            label={props.inputLabel}
-            withinPortal
-            searchable
-            creatable
-            initiallyOpened={props.initiallyOpened}
-            disabled={props.disabled}
-            getCreateLabel={(query) => `+ Add ${query}`}
-            onCreate={(query) => {
-                setData((current) => [...current, query]);
-                return query;
-            }}
-            valueComponent={Label}
-        />
+  const initialLabelset = useMemo(() => {
+    const labels = new Set<string>(config.values.interface.preconfiguredLabels);
+    serverData.torrents.forEach((t) =>
+      t.labels?.forEach((l: string) => labels.add(l))
     );
+
+    return Array.from(labels).sort();
+  }, [config, serverData.torrents]);
+
+  const [data, setData] = useState<string[]>(initialLabelset);
+
+  return (
+    <MultiSelect
+      data={data}
+      value={props.labels}
+      onChange={props.setLabels}
+      label={props.inputLabel}
+      withinPortal
+      searchable
+      creatable
+      initiallyOpened={props.initiallyOpened}
+      disabled={props.disabled}
+      getCreateLabel={(query) => t("modals.common.addLabel", { query })}
+      onCreate={(query) => {
+        setData((current) => [...current, query]);
+        return query;
+      }}
+      valueComponent={Label}
+    />
+  );
 }

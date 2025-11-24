@@ -22,84 +22,104 @@ import { SaveCancelModal, TorrentLabels, TorrentsNames } from "./common";
 import React, { useCallback, useEffect, useState } from "react";
 import { useMutateTorrent } from "queries";
 import { notifications } from "@mantine/notifications";
-import { useServerRpcVersion, useServerSelectedTorrents, useServerTorrentData } from "rpc/torrent";
+import {
+  useServerRpcVersion,
+  useServerSelectedTorrents,
+  useServerTorrentData,
+} from "rpc/torrent";
+import { useTranslation } from "react-i18next";
 
 export function EditLabelsModal(props: ModalState) {
-    const { opened, close } = props;
-    const serverData = useServerTorrentData();
-    const serverSelected = useServerSelectedTorrents();
-    const rpcVersion = useServerRpcVersion();
-    const [labels, setLabels] = useState<string[]>([]);
+  const { opened, close } = props;
+  const serverData = useServerTorrentData();
+  const serverSelected = useServerSelectedTorrents();
+  const rpcVersion = useServerRpcVersion();
+  const [labels, setLabels] = useState<string[]>([]);
+  const { t } = useTranslation();
 
-    const calculateInitialLabels = useCallback(() => {
-        const selected = serverData.torrents.filter(
-            (t) => serverSelected.has(t.id)) ?? [];
-        const labels: string[] = [];
-        selected.forEach((t) => t.labels?.forEach((l: string) => {
-            if (!labels.includes(l)) labels.push(l);
-        }));
-        return labels;
-    }, [serverData.torrents, serverSelected]);
+  const calculateInitialLabels = useCallback(() => {
+    const selected =
+      serverData.torrents.filter((t) => serverSelected.has(t.id)) ?? [];
+    const labels: string[] = [];
+    selected.forEach((t) =>
+      t.labels?.forEach((l: string) => {
+        if (!labels.includes(l)) labels.push(l);
+      })
+    );
+    return labels;
+  }, [serverData.torrents, serverSelected]);
 
-    useEffect(() => {
-        if (opened) setLabels(calculateInitialLabels());
-    }, [calculateInitialLabels, opened]);
+  useEffect(() => {
+    if (opened) setLabels(calculateInitialLabels());
+  }, [calculateInitialLabels, opened]);
 
-    const { mutate } = useMutateTorrent();
+  const { mutate } = useMutateTorrent();
 
-    const onSave = useCallback(() => {
-        if (rpcVersion < 16) {
-            notifications.show({
-                title: "Can not set labels",
-                message: "Labels feature requires transmission 3.0 or later",
-                color: "red",
-            });
-            close();
-            return;
-        }
-        mutate(
-            {
-                torrentIds: Array.from(serverSelected),
-                fields: { labels },
-            },
-            {
-                onSuccess: () => {
-                    notifications.show({
-                        message: "Labels are updated",
-                        color: "green",
-                    });
-                },
-                onError: (error) => {
-                    notifications.show({
-                        title: "Failed to update labels",
-                        message: String(error),
-                        color: "red",
-                    });
-                },
-            },
-        );
-        close();
-    }, [rpcVersion, mutate, serverSelected, labels, close]);
+  const onSave = useCallback(() => {
+    if (rpcVersion < 16) {
+      notifications.show({
+        title: t("modals.editLabels.canNotSetLabels"),
+        message: t("modals.editLabels.requiresTransmission3"),
+        color: "red",
+      });
+      close();
+      return;
+    }
+    mutate(
+      {
+        torrentIds: Array.from(serverSelected),
+        fields: { labels },
+      },
+      {
+        onSuccess: () => {
+          notifications.show({
+            message: t("modals.editLabels.labelsUpdated"),
+            color: "green",
+          });
+        },
+        onError: (error) => {
+          notifications.show({
+            title: t("modals.editLabels.failedToUpdateLabels"),
+            message: String(error),
+            color: "red",
+          });
+        },
+      }
+    );
+    close();
+  }, [rpcVersion, mutate, serverSelected, labels, close, t]);
 
-    return <>
-        {props.opened &&
-            <SaveCancelModal
-                opened={props.opened}
-                size="lg"
-                onClose={props.close}
-                onSave={onSave}
-                centered
-                title="Edit torrent labels"
-            >
-                {rpcVersion < 16
-                    ? <Text color="red" fz="lg">Labels feature requires transmission 3.0 or later</Text>
-                    : <>
-                        <Text mb="md">Enter new labels for</Text>
-                        <TorrentsNames />
-                    </>}
-                <Box mih="17rem">
-                    <TorrentLabels labels={labels} setLabels={setLabels} disabled={rpcVersion < 16} initiallyOpened />
-                </Box>
-            </SaveCancelModal>}
-    </>;
+  return (
+    <>
+      {props.opened && (
+        <SaveCancelModal
+          opened={props.opened}
+          size="lg"
+          onClose={props.close}
+          onSave={onSave}
+          centered
+          title={t("modals.editLabels.editTorrentLabels")}
+        >
+          {rpcVersion < 16 ? (
+            <Text color="red" fz="lg">
+              {t("modals.editLabels.requiresTransmission3")}
+            </Text>
+          ) : (
+            <>
+              <Text mb="md">{t("modals.editLabels.enterNewLabelsFor")}</Text>
+              <TorrentsNames />
+            </>
+          )}
+          <Box mih="17rem">
+            <TorrentLabels
+              labels={labels}
+              setLabels={setLabels}
+              disabled={rpcVersion < 16}
+              initiallyOpened
+            />
+          </Box>
+        </SaveCancelModal>
+      )}
+    </>
+  );
 }

@@ -24,66 +24,82 @@ import { useRemoveTorrents } from "queries";
 import { notifications } from "@mantine/notifications";
 import { useServerSelectedTorrents } from "rpc/torrent";
 import { ConfigContext } from "config";
+import { useTranslation } from "react-i18next";
 
 export function RemoveModal(props: ModalState) {
-    const config = useContext(ConfigContext);
-    const serverSelected = useServerSelectedTorrents();
-    const [deleteData, setDeleteData] = useState<boolean>(false);
+  const config = useContext(ConfigContext);
+  const serverSelected = useServerSelectedTorrents();
+  const [deleteData, setDeleteData] = useState<boolean>(false);
+  const { t } = useTranslation();
 
-    useEffect(() => {
-        if (props.opened) {
-            if (config.values.interface.deleteTorrentData !== "remember selection") {
-                setDeleteData(config.values.interface.deleteTorrentData === "default on");
-            } else {
-                setDeleteData(config.values.interface.deleteTorrentDataSelection);
-            }
-        }
-    }, [config, props.opened]);
-
-    const onDeleteDataChanged = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.currentTarget.checked;
-        setDeleteData(value);
-        config.values.interface.deleteTorrentDataSelection = value;
-    }, [config]);
-
-    const remove = useRemoveTorrents();
-
-    const onDelete = useCallback(() => {
-        remove(
-            {
-                torrentIds: Array.from(serverSelected),
-                deleteData,
-            },
-            {
-                onError: (e) => {
-                    console.error("Error removing torrents", e);
-                    notifications.show({
-                        message: "Error removing torrents",
-                        color: "red",
-                    });
-                },
-            },
+  useEffect(() => {
+    if (props.opened) {
+      if (config.values.interface.deleteTorrentData !== "remember selection") {
+        setDeleteData(
+          config.values.interface.deleteTorrentData === "default on"
         );
-        props.close();
-    }, [remove, serverSelected, deleteData, props]);
+      } else {
+        setDeleteData(config.values.interface.deleteTorrentDataSelection);
+      }
+    }
+  }, [config, props.opened]);
 
-    return (
-        <HkModal opened={props.opened} onClose={props.close} title="Remove torrents" centered size="lg">
-            <Divider my="sm" />
-            <Text mb="md">Are you sure you want to remove following torrents?</Text>
-            <TorrentsNames />
-            <Checkbox
-                label="Delete torrent data"
-                checked={deleteData}
-                onChange={onDeleteDataChanged}
-                my="xl" />
-            <Divider my="sm" />
-            <Group position="center" spacing="md">
-                <Button onClick={onDelete} variant="filled" color="red" data-autofocus>
-                    {deleteData ? "Delete" : "Remove"}
-                </Button>
-                <Button onClick={props.close} variant="light">Cancel</Button>
-            </Group>
-        </HkModal>
+  const onDeleteDataChanged = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.currentTarget.checked;
+      setDeleteData(value);
+      config.values.interface.deleteTorrentDataSelection = value;
+    },
+    [config]
+  );
+
+  const remove = useRemoveTorrents();
+
+  const onDelete = useCallback(() => {
+    remove(
+      {
+        torrentIds: Array.from(serverSelected),
+        deleteData,
+      },
+      {
+        onError: (e) => {
+          console.error("Error removing torrents", e);
+          notifications.show({
+            message: t("modals.remove.errorRemoving"),
+            color: "red",
+          });
+        },
+      }
     );
+    props.close();
+  }, [remove, serverSelected, deleteData, props, t]);
+
+  return (
+    <HkModal
+      opened={props.opened}
+      onClose={props.close}
+      title={t("modals.remove.title")}
+      centered
+      size="lg"
+    >
+      <Divider my="sm" />
+      <Text mb="md">{t("modals.remove.confirmation")}</Text>
+      <TorrentsNames />
+      <Checkbox
+        label={t("modals.remove.deleteData")}
+        checked={deleteData}
+        onChange={onDeleteDataChanged}
+        my="xl"
+      />
+      <Divider my="sm" />
+      <Group position="center" spacing="md">
+        <Button onClick={onDelete} variant="filled" color="red" data-autofocus>
+          {deleteData ? t("modals.remove.delete") : t("modals.remove.remove")}
+        </Button>
+        <Button onClick={props.close} variant="light">
+          {t("modals.remove.cancel")}
+        </Button>
+      </Group>
+    </HkModal>
+  );
 }
