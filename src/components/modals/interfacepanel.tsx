@@ -93,6 +93,9 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
   const { style, setStyle } = useGlobalStyleOverrides();
   const [systemFonts, setSystemFonts] = useState<string[]>(["Default"]);
   const { t, i18n } = useTranslation();
+  const [storedLang, setStoredLang] = useState<string | null>(
+    localStorage.getItem("i18nextLng")
+  );
 
   useEffect(() => {
     if (TAURI) {
@@ -210,26 +213,37 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           <Grid.Col span={6}>{t("settings.language")}</Grid.Col>
           <Grid.Col span={6}>
             <NativeSelect
-              data={availableLanguages.map((lang) => {
-                let label = lang;
-                if (languageOverrides[lang]) {
-                  label = languageOverrides[lang];
-                } else {
-                  try {
-                    label =
-                      new Intl.DisplayNames([lang], {
-                        type: "language",
-                      }).of(lang) ?? lang;
-                    label = label.charAt(0).toUpperCase() + label.slice(1);
-                  } catch (e) {
-                    console.warn("Intl.DisplayNames error", e);
+              data={[
+                { label: t("interface.auto"), value: "auto" },
+                ...availableLanguages.map((lang) => {
+                  let label = lang;
+                  if (languageOverrides[lang]) {
+                    label = languageOverrides[lang];
+                  } else {
+                    try {
+                      label =
+                        new Intl.DisplayNames([lang], {
+                          type: "language",
+                        }).of(lang) ?? lang;
+                      label = label.charAt(0).toUpperCase() + label.slice(1);
+                    } catch (e) {
+                      console.warn("Intl.DisplayNames error", e);
+                    }
                   }
-                }
-                return { label, value: lang };
-              })}
-              value={i18n.language ?? "en"}
+                  return { label, value: lang };
+                }),
+              ]}
+              value={storedLang ?? "auto"}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                void i18n.changeLanguage(e.currentTarget.value);
+                const val = e.currentTarget.value;
+                if (val === "auto") {
+                  localStorage.removeItem("i18nextLng");
+                  location.reload();
+                } else {
+                  localStorage.setItem("i18nextLng", val);
+                  void i18n.changeLanguage(val);
+                  setStoredLang(val);
+                }
               }}
             />
           </Grid.Col>

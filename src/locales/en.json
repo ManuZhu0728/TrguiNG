@@ -305,6 +305,7 @@
         "addDefaultList": "Add default list"
     },
     "interface": {
+        "auto": "Auto",
         "options": {
             "minimize": "minimize",
             "hide": "hide",

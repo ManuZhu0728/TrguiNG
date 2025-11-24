@@ -305,6 +305,7 @@
         "addDefaultList": "添加默认列表"
     },
     "interface": {
+        "auto": "自动",
         "options": {
             "minimize": "最小化",
             "hide": "隐藏",

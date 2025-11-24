@@ -40,7 +40,7 @@ void i18n
     },
     detection: {
       order: ["querystring", "localStorage", "navigator"],
-      caches: ["localStorage"],
+      caches: [],
     },
   });
 
