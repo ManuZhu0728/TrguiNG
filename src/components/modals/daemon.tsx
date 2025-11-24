@@ -882,21 +882,6 @@ export function DaemonSettingsModal(props: ModalState) {
             <></>
           )}
         </Tabs>
-        {!TAURI && (
-          <Group position="apart" mt="md">
-            <Text>{t("modals.daemon.language")}</Text>
-            <SegmentedControl
-              value={i18n.language ?? "en"}
-              onChange={(value: string) => {
-                void i18n.changeLanguage(value);
-              }}
-              data={[
-                { label: "English", value: "en" },
-                { label: "中文", value: "zh" },
-              ]}
-            />
-          </Group>
-        )}
       </Box>
     </SaveCancelModal>
   );
