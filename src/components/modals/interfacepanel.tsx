@@ -86,7 +86,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
   const theme = useMantineTheme();
   const { style, setStyle } = useGlobalStyleOverrides();
   const [systemFonts, setSystemFonts] = useState<string[]>(["Default"]);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     if (TAURI) {
@@ -201,6 +201,19 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
       </Tabs.List>
       <Tabs.Panel value="appearance" p="lg">
         <Grid align="center">
+          <Grid.Col span={6}>{t("settings.language")}</Grid.Col>
+          <Grid.Col span={6}>
+            <NativeSelect
+              data={[
+                { label: "English", value: "en" },
+                { label: "中文", value: "zh" },
+              ]}
+              value={i18n.language ?? "en"}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                void i18n.changeLanguage(e.currentTarget.value);
+              }}
+            />
+          </Grid.Col>
           <Grid.Col span={6}>{t("interface.theme")}</Grid.Col>
           <Grid.Col span={6}>
             <ColorSchemeToggle />

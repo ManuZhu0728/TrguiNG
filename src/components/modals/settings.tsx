@@ -539,19 +539,6 @@ export function AppSettingsModal(props: AppSettingsModalProps) {
             </Tabs.Panel>
           )}
         </Tabs>
-        <Group position="apart" mt="md">
-          <Text>{t("settings.language")}</Text>
-          <SegmentedControl
-            value={i18n.language ?? "en"}
-            onChange={(value) => {
-              void i18n.changeLanguage(value);
-            }}
-            data={[
-              { label: "English", value: "en" },
-              { label: "中文", value: "zh" },
-            ]}
-          />
-        </Group>
       </form>
     </SaveCancelModal>
   );
