@@ -255,6 +255,18 @@
         "addDefaultList": "添加默认列表"
     },
     "interface": {
+        "options": {
+            "minimize": "最小化",
+            "hide": "隐藏",
+            "close": "关闭",
+            "quit": "退出",
+            "default off": "默认关闭",
+            "default on": "默认开启",
+            "remember selection": "记住选择",
+            "default low": "默认低",
+            "default normal": "默认正常",
+            "default high": "默认高"
+        },
         "tabs": {
             "appearance": "外观",
             "downloads": "下载",
@@ -495,5 +507,29 @@
     },
     "servertabs": {
         "connect": "连接"
+    },
+    "status": {
+        "stopped": "已暂停",
+        "queuedToVerify": "等待校验",
+        "verifying": "校验中",
+        "queuedToDownload": "等待下载",
+        "downloading": "下载中",
+        "queuedToSeed": "等待做种",
+        "seeding": "做种中",
+        "magnetizing": "磁力转换中",
+        "sequentially": " (顺序)"
+    },
+    "priority": {
+        "low": "低",
+        "normal": "正常",
+        "high": "高"
+    },
+    "units": {
+        "days": "天",
+        "hours": "时",
+        "minutes": "分",
+        "seconds": "秒",
+        "now": "刚刚",
+        "ago": "前"
     }
 }

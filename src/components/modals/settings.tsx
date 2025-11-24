@@ -390,7 +390,10 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
       <Grid.Col span={6}>{t("settings.whenMinimized")}</Grid.Col>
       <Grid.Col span={6}>
         <SegmentedControl
-          data={WindowMinimizeOptions as unknown as string[]}
+          data={WindowMinimizeOptions.map((o) => ({
+            value: o,
+            label: t(`interface.options.${o}`),
+          }))}
           disabled={!form.values.app.showTrayIcon}
           {...form.getInputProps("app.onMinimize")}
         />
@@ -398,7 +401,10 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
       <Grid.Col span={6}>{t("settings.whenClosed")}</Grid.Col>
       <Grid.Col span={6}>
         <SegmentedControl
-          data={WindowCloseOptions as unknown as string[]}
+          data={WindowCloseOptions.map((o) => ({
+            value: o,
+            label: t(`interface.options.${o}`),
+          }))}
           disabled={!form.values.app.showTrayIcon}
           {...form.getInputProps("app.onClose")}
         />

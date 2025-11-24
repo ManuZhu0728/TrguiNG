@@ -479,10 +479,16 @@ function ErrorField(props: TableFieldProps) {
 }
 
 function PriorityField(props: TableFieldProps) {
+  const { t } = useTranslation();
   const priority = props.torrent[props.fieldName];
+  let label = PriorityStrings.get(priority);
+  if (priority === -1) label = t("priority.low");
+  else if (priority === 0) label = t("priority.normal");
+  else if (priority === 1) label = t("priority.high");
+
   return (
     <Badge radius="md" variant="filled" bg={PriorityColors.get(priority)}>
-      {PriorityStrings.get(priority)}
+      {label}
     </Badge>
   );
 }
@@ -506,17 +512,44 @@ export function LabelsField(props: TableFieldProps) {
 }
 
 export function StatusField(props: TableFieldProps) {
-  let status: string = StatusStrings[props.torrent.status];
+  const { t } = useTranslation();
+  let status: string;
+  switch (props.torrent.status) {
+    case Status.stopped:
+      status = t("status.stopped");
+      break;
+    case Status.queuedToVerify:
+      status = t("status.queuedToVerify");
+      break;
+    case Status.verifying:
+      status = t("status.verifying");
+      break;
+    case Status.queuedToDownload:
+      status = t("status.queuedToDownload");
+      break;
+    case Status.downloading:
+      status = t("status.downloading");
+      break;
+    case Status.queuedToSeed:
+      status = t("status.queuedToSeed");
+      break;
+    case Status.seeding:
+      status = t("status.seeding");
+      break;
+    default:
+      status = StatusStrings[props.torrent.status];
+  }
+
   if (
     props.torrent.status === Status.downloading &&
     props.torrent.pieceCount === 0
   )
-    status = "Magnetizing";
+    status = t("status.magnetizing");
 
   const sequential =
     props.torrent.status === Status.downloading &&
     props.torrent.sequentialDownload === true
-      ? " sequentially"
+      ? t("status.sequentially")
       : "";
   return <div>{status + sequential}</div>;
 }
@@ -531,6 +564,7 @@ export function DateField(props: TableFieldProps) {
 }
 
 export function DateDiffField(props: TableFieldProps) {
+  const { t } = useTranslation();
   const config = useContext(ConfigContext);
   const date =
     props.torrent[props.fieldName] > 0
@@ -541,10 +575,10 @@ export function DateDiffField(props: TableFieldProps) {
   return (
     <div title={date} style={{ width: "100%", textAlign: "right" }}>
       {seconds < 30
-        ? "now"
+        ? t("units.now")
         : date === ""
         ? ""
-        : `${secondsToHumanReadableStr(seconds)} ago`}
+        : `${secondsToHumanReadableStr(seconds)} ${t("units.ago")}`}
     </div>
   );
 }

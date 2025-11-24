@@ -124,7 +124,7 @@ function AddCommon(props: AddCommonProps) {
           disabled={props.disabled}
           data={Array.from(PriorityStrings.entries()).map(([k, v]) => ({
             value: String(k),
-            label: v,
+            label: t(`priority.${v.toLowerCase()}`),
           }))}
         />
       </Group>

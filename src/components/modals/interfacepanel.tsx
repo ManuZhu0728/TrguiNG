@@ -291,9 +291,12 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           <Grid.Col span={6}>{t("interface.newTorrentStart")}</Grid.Col>
           <Grid.Col span={6}>
             <NativeSelect
-              data={AddTorrentStartOptions as unknown as string[]}
+              data={AddTorrentStartOptions.map((o) => ({
+                value: o,
+                label: t(`interface.options.${o}`),
+              }))}
               value={props.form.values.interface.addTorrentStart}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                 setFieldValue("interface.addTorrentStart", e.target.value);
               }}
             />
@@ -301,9 +304,12 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           <Grid.Col span={6}>{t("interface.newTorrentPriority")}</Grid.Col>
           <Grid.Col span={6}>
             <NativeSelect
-              data={AddTorrentPriorityOptions as unknown as string[]}
+              data={AddTorrentPriorityOptions.map((o) => ({
+                value: o,
+                label: t(`interface.options.${o}`),
+              }))}
               value={props.form.values.interface.addTorrentPriority}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                 setFieldValue("interface.addTorrentPriority", e.target.value);
               }}
             />
@@ -364,8 +370,8 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               withinPortal
               searchable
               creatable
-              getCreateLabel={(query) => `+ Add ${query}`}
-              onCreate={(query) => {
+              getCreateLabel={(query: string) => `+ Add ${query}`}
+              onCreate={(query: string) => {
                 setPreconfiguredLabels([
                   ...props.form.values.interface.preconfiguredLabels,
                   query,
@@ -384,9 +390,12 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           </Grid.Col>
           <Grid.Col span={4}>
             <NativeSelect
-              data={DeleteTorrentDataOptions as unknown as string[]}
+              data={DeleteTorrentDataOptions.map((o) => ({
+                value: o,
+                label: t(`interface.options.${o}`),
+              }))}
               value={props.form.values.interface.deleteTorrentData}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                 setFieldValue("interface.deleteTorrentData", e.target.value);
               }}
             />
@@ -415,8 +424,8 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               searchable
               creatable
               error={props.form.errors["interface.ignoredTrackerPrefixes"]}
-              getCreateLabel={(query) => `+ Add ${query}`}
-              onCreate={(query) => {
+              getCreateLabel={(query: string) => `+ Add ${query}`}
+              onCreate={(query: string) => {
                 setIgnoredTrackerPrefixes([
                   ...props.form.values.interface.ignoredTrackerPrefixes,
                   query,

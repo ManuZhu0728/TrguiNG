@@ -255,6 +255,18 @@
         "addDefaultList": "Add default list"
     },
     "interface": {
+        "options": {
+            "minimize": "minimize",
+            "hide": "hide",
+            "close": "close",
+            "quit": "quit",
+            "default off": "default off",
+            "default on": "default on",
+            "remember selection": "remember selection",
+            "default low": "default low",
+            "default normal": "default normal",
+            "default high": "default high"
+        },
         "tabs": {
             "appearance": "Appearance",
             "downloads": "Downloads",
@@ -690,5 +702,29 @@
     },
     "servertabs": {
         "connect": "Connect"
+    },
+    "status": {
+        "stopped": "Stopped",
+        "queuedToVerify": "Queued to verify",
+        "verifying": "Verifying",
+        "queuedToDownload": "Queued to download",
+        "downloading": "Downloading",
+        "queuedToSeed": "Queued to seed",
+        "seeding": "Seeding",
+        "magnetizing": "Magnetizing",
+        "sequentially": " (sequentially)"
+    },
+    "priority": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High"
+    },
+    "units": {
+        "days": "d",
+        "hours": "hr",
+        "minutes": "min",
+        "seconds": "s",
+        "now": "now",
+        "ago": "ago"
     }
 }
