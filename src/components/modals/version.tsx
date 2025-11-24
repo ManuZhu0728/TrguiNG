@@ -57,7 +57,7 @@ export function VersionModal({ opened, close }: ModalState) {
         TrguiNG
       </Title>
       <Text>
-        {t("modals.version.remoteInterfaceFor")}&nbsp;
+        {t("version.remoteInterfaceFor")}&nbsp;
         <Anchor
           href="https://transmissionbt.com/"
           target="_blank"
@@ -65,21 +65,21 @@ export function VersionModal({ opened, close }: ModalState) {
         >
           Transmission
         </Anchor>
-        &nbsp;{t("modals.version.torrentDaemon")}
+        &nbsp;{t("version.torrentDaemon")}
       </Text>
       <Divider px="sm" my="xl" />
       <Flex gap="md" align="center">
         <AppLogo style={{ flexShrink: 0 }} />
         <Grid>
-          <Grid.Col span={4}>{t("modals.version.version")}</Grid.Col>
+          <Grid.Col span={4}>{t("version.version")}</Grid.Col>
           <Grid.Col span={8}>{appVersion.gitVersion}</Grid.Col>
-          <Grid.Col span={4}>{t("modals.version.frontend")}</Grid.Col>
+          <Grid.Col span={4}>{t("version.frontend")}</Grid.Col>
           <Grid.Col span={8}>{frontend}</Grid.Col>
-          <Grid.Col span={4}>{t("modals.version.buildDate")}</Grid.Col>
+          <Grid.Col span={4}>{t("version.buildDate")}</Grid.Col>
           <Grid.Col span={8}>
             {new Date(appVersion.buildDate).toLocaleString()}
           </Grid.Col>
-          <Grid.Col span={4}>{t("modals.version.sourceCode")}</Grid.Col>
+          <Grid.Col span={4}>{t("version.sourceCode")}</Grid.Col>
           <Grid.Col span={8}>
             <Box component="span" mr="sm">
               <Github />
@@ -95,14 +95,14 @@ export function VersionModal({ opened, close }: ModalState) {
           <Grid.Col mt="xl">
             {TAURI && (
               <Anchor href="https://db-ip.com" target="_blank" rel="noreferrer">
-                {t("modals.version.ipGeolocation")}
+                {t("version.ipGeolocation")}
               </Anchor>
             )}
           </Grid.Col>
         </Grid>
       </Flex>
       <Divider px="sm" my="xl" />
-      <Text align="center">{t("modals.version.poweredBy")}</Text>
+      <Text align="center">{t("version.poweredBy")}</Text>
       <Flex justify="center">
         <Anchor href="https://react.dev/" target="_blank" rel="noreferrer">
           <ReactLogo />

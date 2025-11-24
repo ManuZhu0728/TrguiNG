@@ -179,7 +179,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
       } catch {
         setFieldError(
           "interface.ignoredTrackerPrefixes",
-          t("modals.interface.invalidRegex")
+          t("interface.invalidRegex")
         );
       }
     },
@@ -190,22 +190,22 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
     <Tabs defaultValue="appearance" orientation="vertical" mih="29rem">
       <Tabs.List>
         <Tabs.Tab value="appearance" p="lg">
-          {t("modals.interface.tabs.appearance")}
+          {t("interface.tabs.appearance")}
         </Tabs.Tab>
         <Tabs.Tab value="downloads" p="lg">
-          {t("modals.interface.tabs.downloads")}
+          {t("interface.tabs.downloads")}
         </Tabs.Tab>
         <Tabs.Tab value="miscellaneous" p="lg">
-          {t("modals.interface.tabs.miscellaneous")}
+          {t("interface.tabs.miscellaneous")}
         </Tabs.Tab>
       </Tabs.List>
       <Tabs.Panel value="appearance" p="lg">
         <Grid align="center">
-          <Grid.Col span={6}>{t("modals.interface.theme")}</Grid.Col>
+          <Grid.Col span={6}>{t("interface.theme")}</Grid.Col>
           <Grid.Col span={6}>
             <ColorSchemeToggle />
           </Grid.Col>
-          <Grid.Col span={6}>{t("modals.interface.font")}</Grid.Col>
+          <Grid.Col span={6}>{t("interface.font")}</Grid.Col>
           <Grid.Col span={6}>
             <NativeSelect
               data={systemFonts}
@@ -215,24 +215,24 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               }}
             />
           </Grid.Col>
-          <Grid.Col span={6}>{t("modals.interface.textColor")}</Grid.Col>
+          <Grid.Col span={6}>{t("interface.textColor")}</Grid.Col>
           <Grid.Col span={6}>
             <ColorChooser
               value={style[theme.colorScheme].color ?? defaultColor}
               onChange={setTextColor}
             />
           </Grid.Col>
-          <Grid.Col span={6}>{t("modals.interface.background")}</Grid.Col>
+          <Grid.Col span={6}>{t("interface.background")}</Grid.Col>
           <Grid.Col span={6}>
             <ColorChooser
               value={style[theme.colorScheme].backgroundColor ?? defaultBg}
               onChange={setBgColor}
             />
           </Grid.Col>
-          <Grid.Col span={6}>{t("modals.interface.progressBars")}</Grid.Col>
+          <Grid.Col span={6}>{t("interface.progressBars")}</Grid.Col>
           <Grid.Col span={3}>
             <Checkbox
-              label={t("modals.interface.colorful")}
+              label={t("interface.colorful")}
               {...props.form.getInputProps("interface.colorfulProgressbars", {
                 type: "checkbox",
               })}
@@ -240,7 +240,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           </Grid.Col>
           <Grid.Col span={3}>
             <Checkbox
-              label={t("modals.interface.animated")}
+              label={t("interface.animated")}
               {...props.form.getInputProps("interface.animatedProgressbars", {
                 type: "checkbox",
               })}
@@ -248,7 +248,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           </Grid.Col>
           <Grid.Col>
             <Checkbox
-              label={t("modals.interface.customDateTimeFormat")}
+              label={t("interface.customDateTimeFormat")}
               mt="lg"
               {...props.form.getInputProps(
                 "interface.useCustomDateTimeFormat",
@@ -282,13 +282,13 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
         <Grid align="center">
           <Grid.Col>
             <Checkbox
-              label={t("modals.interface.skipAddTorrentDialog")}
+              label={t("interface.skipAddTorrentDialog")}
               {...props.form.getInputProps("interface.skipAddDialog", {
                 type: "checkbox",
               })}
             />
           </Grid.Col>
-          <Grid.Col span={6}>{t("modals.interface.newTorrentStart")}</Grid.Col>
+          <Grid.Col span={6}>{t("interface.newTorrentStart")}</Grid.Col>
           <Grid.Col span={6}>
             <NativeSelect
               data={AddTorrentStartOptions as unknown as string[]}
@@ -298,9 +298,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               }}
             />
           </Grid.Col>
-          <Grid.Col span={6}>
-            {t("modals.interface.newTorrentPriority")}
-          </Grid.Col>
+          <Grid.Col span={6}>{t("interface.newTorrentPriority")}</Grid.Col>
           <Grid.Col span={6}>
             <NativeSelect
               data={AddTorrentPriorityOptions as unknown as string[]}
@@ -312,7 +310,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           </Grid.Col>
           <Grid.Col>
             <Checkbox
-              label={t("modals.interface.sortDownloadDirectories")}
+              label={t("interface.sortDownloadDirectories")}
               my="lg"
               {...props.form.getInputProps("interface.sortLastSaveDirs", {
                 type: "checkbox",
@@ -320,7 +318,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
             />
           </Grid.Col>
           <Grid.Col span={9}>
-            {t("modals.interface.maxSavedDownloadDirectories")}
+            {t("interface.maxSavedDownloadDirectories")}
           </Grid.Col>
           <Grid.Col span={3}>
             <NumberInput
@@ -332,7 +330,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           <Grid.Col>
             <Textarea
               minRows={6}
-              label={t("modals.interface.preconfiguredDirectories")}
+              label={t("interface.preconfiguredDirectories")}
               value={props.form.values.interface.preconfiguredDirs.join("\n")}
               onChange={(e) => {
                 props.form.setFieldValue(
@@ -350,14 +348,14 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               onChange={setPreconfiguredLabels}
               label={
                 <Box>
-                  <span>{t("modals.interface.preconfiguredLabels")}</span>
+                  <span>{t("interface.preconfiguredLabels")}</span>
                   <HoverCard width={280} shadow="md">
                     <HoverCard.Target>
                       <Icon.Question />
                     </HoverCard.Target>
                     <HoverCard.Dropdown>
                       <Text size="sm">
-                        {t("modals.interface.preconfiguredLabelsHint")}
+                        {t("interface.preconfiguredLabelsHint")}
                       </Text>
                     </HoverCard.Dropdown>
                   </HoverCard>
@@ -382,7 +380,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
       <Tabs.Panel value="miscellaneous" p="lg">
         <Grid align="center">
           <Grid.Col span={8}>
-            {t("modals.interface.removeTorrentDialogDeleteDataOption")}
+            {t("interface.removeTorrentDialogDeleteDataOption")}
           </Grid.Col>
           <Grid.Col span={4}>
             <NativeSelect
@@ -400,14 +398,14 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               onChange={setIgnoredTrackerPrefixes}
               label={
                 <Box>
-                  <span>{t("modals.interface.ignoredTrackerPrefixes")}</span>
+                  <span>{t("interface.ignoredTrackerPrefixes")}</span>
                   <HoverCard width={380} shadow="md">
                     <HoverCard.Target>
                       <Icon.Question />
                     </HoverCard.Target>
                     <HoverCard.Dropdown>
                       <Text size="sm">
-                        {t("modals.interface.ignoredTrackerPrefixesHint")}
+                        {t("interface.ignoredTrackerPrefixesHint")}
                       </Text>
                     </HoverCard.Dropdown>
                   </HoverCard>
@@ -431,7 +429,7 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
           <Grid.Col>
             <Textarea
               minRows={6}
-              label={t("modals.interface.defaultTrackerList")}
+              label={t("interface.defaultTrackerList")}
               value={props.form.values.interface.defaultTrackers.join("\n")}
               onChange={(e) => {
                 props.form.setFieldValue(

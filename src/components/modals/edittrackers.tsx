@@ -114,7 +114,7 @@ export function EditTrackers(props: ModalState) {
         onError: (e) => {
           console.error("Failed to update torrent properties", e);
           notifications.show({
-            message: t("modals.editTrackers.errorUpdatingTorrent"),
+            message: t("editTrackers.errorUpdatingTorrent"),
             color: "red",
           });
         },
@@ -139,7 +139,7 @@ export function EditTrackers(props: ModalState) {
           onClose={props.close}
           onSave={onSave}
           centered
-          title={t("modals.editTrackers.editTorrentTrackers")}
+          title={t("editTrackers.editTorrentTrackers")}
           mih="25rem"
         >
           <LoadingOverlay visible={isLoading} />
@@ -148,11 +148,11 @@ export function EditTrackers(props: ModalState) {
               <TorrentsNames />
             </Grid.Col>
             <Grid.Col span={8}>
-              <Text>{t("modals.editTrackers.trackerListHint")}</Text>
+              <Text>{t("editTrackers.trackerListHint")}</Text>
             </Grid.Col>
             <Grid.Col span={4}>
               <Button onClick={addDefaultTrackers}>
-                {t("modals.editTrackers.addDefaultList")}
+                {t("editTrackers.addDefaultList")}
               </Button>
             </Grid.Col>
             <Grid.Col>

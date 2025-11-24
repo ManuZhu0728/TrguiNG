@@ -101,7 +101,7 @@ export function EditTorrent(props: ModalState) {
         onError: (e) => {
           console.error("Failed to update torrent properties", e);
           notifications.show({
-            message: t("modals.editTorrent.errorUpdatingTorrent"),
+            message: t("editTorrent.errorUpdatingTorrent"),
             color: "red",
           });
         },
@@ -119,7 +119,7 @@ export function EditTorrent(props: ModalState) {
           onClose={props.close}
           onSave={onSave}
           centered
-          title={t("modals.editTorrent.editTorrentProperties")}
+          title={t("editTorrent.editTorrentProperties")}
           mih="25rem"
         >
           <LoadingOverlay visible={isLoading} />
@@ -130,7 +130,7 @@ export function EditTorrent(props: ModalState) {
             <Grid.Col span={8}>
               <Checkbox
                 my="sm"
-                label={t("modals.editTorrent.honorSessionUploadLimit")}
+                label={t("editTorrent.honorSessionUploadLimit")}
                 {...form.getInputProps("honorsSessionLimits", {
                   type: "checkbox",
                 })}
@@ -140,7 +140,7 @@ export function EditTorrent(props: ModalState) {
               {rpcVersion >= 18 && (
                 <Checkbox
                   my="sm"
-                  label={t("modals.editTorrent.sequentialDownload")}
+                  label={t("editTorrent.sequentialDownload")}
                   {...form.getInputProps("sequentialDownload", {
                     type: "checkbox",
                   })}
@@ -149,7 +149,7 @@ export function EditTorrent(props: ModalState) {
             </Grid.Col>
             <Grid.Col span={8}>
               <Checkbox
-                label={t("modals.editTorrent.maxDownloadSpeed")}
+                label={t("editTorrent.maxDownloadSpeed")}
                 {...form.getInputProps("downloadLimited", { type: "checkbox" })}
               />
             </Grid.Col>
@@ -160,10 +160,10 @@ export function EditTorrent(props: ModalState) {
                 disabled={form.values.downloadLimited !== true}
               />
             </Grid.Col>
-            <Grid.Col span={2}>{t("modals.editTorrent.kbs")}</Grid.Col>
+            <Grid.Col span={2}>{t("editTorrent.kbs")}</Grid.Col>
             <Grid.Col span={8}>
               <Checkbox
-                label={t("modals.editTorrent.maxUploadSpeed")}
+                label={t("editTorrent.maxUploadSpeed")}
                 {...form.getInputProps("uploadLimited", { type: "checkbox" })}
               />
             </Grid.Col>
@@ -174,15 +174,15 @@ export function EditTorrent(props: ModalState) {
                 disabled={form.values.uploadLimited !== true}
               />
             </Grid.Col>
-            <Grid.Col span={2}>{t("modals.editTorrent.kbs")}</Grid.Col>
-            <Grid.Col span={8}>{t("modals.editTorrent.peerLimit")}</Grid.Col>
+            <Grid.Col span={2}>{t("editTorrent.kbs")}</Grid.Col>
+            <Grid.Col span={8}>{t("editTorrent.peerLimit")}</Grid.Col>
             <Grid.Col span={2}>
               <NumberInput min={0} {...form.getInputProps("peerLimit")} />
             </Grid.Col>
             <Grid.Col span={2} />
             <Grid.Col span={8}>
               <Checkbox
-                label={t("modals.editTorrent.seedRatio")}
+                label={t("editTorrent.seedRatio")}
                 checked={form.values.seedRatioMode < 2}
                 indeterminate={form.values.seedRatioMode === 0}
                 onChange={() => {
@@ -205,7 +205,7 @@ export function EditTorrent(props: ModalState) {
             <Grid.Col span={2} />
             <Grid.Col span={8}>
               <Checkbox
-                label={t("modals.editTorrent.stopSeedingWhenInactiveFor")}
+                label={t("editTorrent.stopSeedingWhenInactiveFor")}
                 checked={form.values.seedIdleMode < 2}
                 indeterminate={form.values.seedIdleMode === 0}
                 onChange={() => {
@@ -223,7 +223,7 @@ export function EditTorrent(props: ModalState) {
                 disabled={form.values.seedIdleMode !== 1}
               />
             </Grid.Col>
-            <Grid.Col span={2}>{t("modals.editTorrent.minutes")}</Grid.Col>
+            <Grid.Col span={2}>{t("editTorrent.minutes")}</Grid.Col>
           </Grid>
         </SaveCancelModal>
       )}

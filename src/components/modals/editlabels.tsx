@@ -58,8 +58,8 @@ export function EditLabelsModal(props: ModalState) {
   const onSave = useCallback(() => {
     if (rpcVersion < 16) {
       notifications.show({
-        title: t("modals.editLabels.canNotSetLabels"),
-        message: t("modals.editLabels.requiresTransmission3"),
+        title: t("editLabels.canNotSetLabels"),
+        message: t("editLabels.requiresTransmission3"),
         color: "red",
       });
       close();
@@ -73,13 +73,13 @@ export function EditLabelsModal(props: ModalState) {
       {
         onSuccess: () => {
           notifications.show({
-            message: t("modals.editLabels.labelsUpdated"),
+            message: t("editLabels.labelsUpdated"),
             color: "green",
           });
         },
         onError: (error) => {
           notifications.show({
-            title: t("modals.editLabels.failedToUpdateLabels"),
+            title: t("editLabels.failedToUpdateLabels"),
             message: String(error),
             color: "red",
           });
@@ -98,15 +98,15 @@ export function EditLabelsModal(props: ModalState) {
           onClose={props.close}
           onSave={onSave}
           centered
-          title={t("modals.editLabels.editTorrentLabels")}
+          title={t("editLabels.editTorrentLabels")}
         >
           {rpcVersion < 16 ? (
             <Text color="red" fz="lg">
-              {t("modals.editLabels.requiresTransmission3")}
+              {t("editLabels.requiresTransmission3")}
             </Text>
           ) : (
             <>
-              <Text mb="md">{t("modals.editLabels.enterNewLabelsFor")}</Text>
+              <Text mb="md">{t("editLabels.enterNewLabelsFor")}</Text>
               <TorrentsNames />
             </>
           )}

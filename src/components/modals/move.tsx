@@ -55,7 +55,7 @@ export function MoveModal(props: ModalState) {
         onError: (e) => {
           console.error("Error moving torrents", e);
           notifications.show({
-            message: t("modals.move.errorMoving"),
+            message: t("move.errorMoving"),
             color: "red",
           });
         },
@@ -89,16 +89,16 @@ export function MoveModal(props: ModalState) {
         <HkModal
           opened={props.opened}
           onClose={props.close}
-          title={t("modals.move.title")}
+          title={t("move.title")}
           centered
           size="lg"
         >
           <Divider my="sm" />
-          <Text mb="md">{t("modals.move.enterNewLocation")}</Text>
+          <Text mb="md">{t("move.enterNewLocation")}</Text>
           <TorrentsNames />
           <TorrentLocation {...location} focusPath />
           <Checkbox
-            label={t("modals.move.moveData")}
+            label={t("move.moveData")}
             checked={moveData}
             onChange={(e) => {
               setMoveData(e.currentTarget.checked);
@@ -108,10 +108,10 @@ export function MoveModal(props: ModalState) {
           <Divider my="sm" />
           <Group position="center" spacing="md">
             <Button onClick={onMove} variant="filled">
-              {t("modals.move.move")}
+              {t("move.move")}
             </Button>
             <Button onClick={props.close} variant="light">
-              {t("modals.move.cancel")}
+              {t("move.cancel")}
             </Button>
           </Group>
         </HkModal>

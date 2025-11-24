@@ -65,7 +65,7 @@ export function RemoveModal(props: ModalState) {
         onError: (e) => {
           console.error("Error removing torrents", e);
           notifications.show({
-            message: t("modals.remove.errorRemoving"),
+            message: t("remove.errorRemoving"),
             color: "red",
           });
         },
@@ -78,15 +78,15 @@ export function RemoveModal(props: ModalState) {
     <HkModal
       opened={props.opened}
       onClose={props.close}
-      title={t("modals.remove.title")}
+      title={t("remove.title")}
       centered
       size="lg"
     >
       <Divider my="sm" />
-      <Text mb="md">{t("modals.remove.confirmation")}</Text>
+      <Text mb="md">{t("remove.confirmation")}</Text>
       <TorrentsNames />
       <Checkbox
-        label={t("modals.remove.deleteData")}
+        label={t("remove.deleteData")}
         checked={deleteData}
         onChange={onDeleteDataChanged}
         my="xl"
@@ -94,10 +94,10 @@ export function RemoveModal(props: ModalState) {
       <Divider my="sm" />
       <Group position="center" spacing="md">
         <Button onClick={onDelete} variant="filled" color="red" data-autofocus>
-          {deleteData ? t("modals.remove.delete") : t("modals.remove.remove")}
+          {deleteData ? t("remove.delete") : t("remove.remove")}
         </Button>
         <Button onClick={props.close} variant="light">
-          {t("modals.remove.cancel")}
+          {t("remove.cancel")}
         </Button>
       </Group>
     </HkModal>

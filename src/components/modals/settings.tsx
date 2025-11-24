@@ -204,14 +204,14 @@ function ServerPanel(props: ServerPanelProps) {
   return (
     <div style={{ flexGrow: 1 }}>
       <TextInput
-        label={t("modals.settings.name")}
+        label={t("settings.name")}
         {...props.form.getInputProps(`servers.${props.current}.name`)}
         autoCorrect="off"
         autoCapitalize="off"
       />
 
       <TextInput
-        label={t("modals.settings.rpcUrl")}
+        label={t("settings.rpcUrl")}
         {...props.form.getInputProps(`servers.${props.current}.connection.url`)}
         placeholder="http://1.2.3.4:9091/transmission/rpc"
         autoComplete="off"
@@ -223,7 +223,7 @@ function ServerPanel(props: ServerPanelProps) {
       <Grid>
         <Grid.Col span={6}>
           <TextInput
-            label={t("modals.settings.username")}
+            label={t("settings.username")}
             {...props.form.getInputProps(
               `servers.${props.current}.connection.username`
             )}
@@ -235,7 +235,7 @@ function ServerPanel(props: ServerPanelProps) {
         </Grid.Col>
         <Grid.Col span={6}>
           <PasswordInput
-            label={t("modals.settings.password")}
+            label={t("settings.password")}
             {...props.form.getInputProps(
               `servers.${props.current}.connection.password`
             )}
@@ -244,7 +244,7 @@ function ServerPanel(props: ServerPanelProps) {
 
         <Grid.Col span={12}>
           <Textarea
-            label={t("modals.settings.pathMappings")}
+            label={t("settings.pathMappings")}
             onChange={(e) => {
               // TODO fix
               const mappings = e.target.value.split("\n").map((line) => {
@@ -307,7 +307,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
 
   return (
     <Grid align="center" gutter="md">
-      <Grid.Col span={6}>{t("modals.settings.deleteAdded")}</Grid.Col>
+      <Grid.Col span={6}>{t("settings.deleteAdded")}</Grid.Col>
       <Grid.Col span={2}>
         <Switch
           onLabel="ON"
@@ -318,7 +318,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
         />
       </Grid.Col>
       <Grid.Col span={4}></Grid.Col>
-      <Grid.Col span={6}>{t("modals.settings.showNotifications")}</Grid.Col>
+      <Grid.Col span={6}>{t("settings.showNotifications")}</Grid.Col>
       <Grid.Col span={2}>
         <Switch
           onLabel="ON"
@@ -330,7 +330,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
           })}
         />
       </Grid.Col>
-      <Grid.Col span={2}>{t("modals.settings.playSound")}</Grid.Col>
+      <Grid.Col span={2}>{t("settings.playSound")}</Grid.Col>
       <Grid.Col span={2}>
         <Switch
           onLabel="ON"
@@ -344,7 +344,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
       </Grid.Col>
       {platform === "Windows" && (
         <>
-          <Grid.Col span={6}>{t("modals.settings.launchOnStartup")}</Grid.Col>
+          <Grid.Col span={6}>{t("settings.launchOnStartup")}</Grid.Col>
           <Grid.Col span={2}>
             <Switch
               onLabel="ON"
@@ -356,20 +356,20 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
             />
           </Grid.Col>
           <Grid.Col span={4}></Grid.Col>
-          <Grid.Col span={6}>{t("modals.settings.associateApp")}</Grid.Col>
+          <Grid.Col span={6}>{t("settings.associateApp")}</Grid.Col>
           <Grid.Col span={3}>
             <Button onClick={associateTorrent}>
-              {t("modals.settings.torrentFiles")}
+              {t("settings.torrentFiles")}
             </Button>
           </Grid.Col>
           <Grid.Col span={3}>
             <Button onClick={associateMagnet}>
-              {t("modals.settings.magnetLinks")}
+              {t("settings.magnetLinks")}
             </Button>
           </Grid.Col>
         </>
       )}
-      <Grid.Col span={6}>{t("modals.settings.showTrayIcon")}</Grid.Col>
+      <Grid.Col span={6}>{t("settings.showTrayIcon")}</Grid.Col>
       <Grid.Col span={2}>
         <Switch
           onLabel="ON"
@@ -386,8 +386,8 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
           }}
         />
       </Grid.Col>
-      <Grid.Col span={4}>{t("modals.settings.restartRequired")}</Grid.Col>
-      <Grid.Col span={6}>{t("modals.settings.whenMinimized")}</Grid.Col>
+      <Grid.Col span={4}>{t("settings.restartRequired")}</Grid.Col>
+      <Grid.Col span={6}>{t("settings.whenMinimized")}</Grid.Col>
       <Grid.Col span={6}>
         <SegmentedControl
           data={WindowMinimizeOptions as unknown as string[]}
@@ -395,7 +395,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
           {...form.getInputProps("app.onMinimize")}
         />
       </Grid.Col>
-      <Grid.Col span={6}>{t("modals.settings.whenClosed")}</Grid.Col>
+      <Grid.Col span={6}>{t("settings.whenClosed")}</Grid.Col>
       <Grid.Col span={6}>
         <SegmentedControl
           data={WindowCloseOptions as unknown as string[]}
@@ -405,7 +405,7 @@ function IntegrationsPanel({ form }: { form: UseFormReturnType<FormValues> }) {
       </Grid.Col>
       <Grid.Col>
         <Text fz="sm" fs="italic">
-          {t("modals.settings.trayHint")}
+          {t("settings.trayHint")}
         </Text>
       </Grid.Col>
     </Grid>
@@ -434,17 +434,17 @@ export function AppSettingsModal(props: AppSettingsModalProps) {
               found = true;
             }
           });
-          return found ? t("modals.settings.serverNamesUnique") : null;
+          return found ? t("settings.serverNamesUnique") : null;
         },
         connection: {
           url: (value) => {
             try {
               const url = new URL(value);
               if (!["http:", "https:"].includes(url.protocol)) {
-                return t("modals.settings.onlyHttp");
+                return t("settings.onlyHttp");
               }
             } catch {
-              return t("modals.settings.invalidUrl");
+              return t("settings.invalidUrl");
             }
             return null;
           },
@@ -490,20 +490,20 @@ export function AppSettingsModal(props: AppSettingsModalProps) {
       onClose={props.close}
       onSave={onSave}
       centered
-      title={t("modals.settings.title")}
+      title={t("settings.title")}
     >
       <form>
         <Tabs mih="33rem" defaultValue="servers">
           <Tabs.List>
             <Tabs.Tab value="servers" p="lg">
-              {t("modals.settings.tabs.servers")}
+              {t("settings.tabs.servers")}
             </Tabs.Tab>
             <Tabs.Tab value="integrations" p="lg">
-              {t("modals.settings.tabs.integrations")}
+              {t("settings.tabs.integrations")}
             </Tabs.Tab>
             {TAURI && (
               <Tabs.Tab value="interface" p="lg">
-                {t("modals.settings.tabs.interface")}
+                {t("settings.tabs.interface")}
               </Tabs.Tab>
             )}
           </Tabs.List>
@@ -534,7 +534,7 @@ export function AppSettingsModal(props: AppSettingsModalProps) {
           )}
         </Tabs>
         <Group position="apart" mt="md">
-          <Text>{t("modals.settings.language")}</Text>
+          <Text>{t("settings.language")}</Text>
           <SegmentedControl
             value={i18n.language ?? "en"}
             onChange={(value) => {
