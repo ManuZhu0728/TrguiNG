@@ -5,7 +5,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const require: any;
 
-const resources: Record<string, { translation: unknown }> = {};
+const resources: Record<string, { translation: any }> = {};
 export const availableLanguages: string[] = [];
 
 try {
