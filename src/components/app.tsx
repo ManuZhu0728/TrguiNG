@@ -18,10 +18,26 @@
 
 import { ConfigContext, ServerConfigContext } from "../config";
 import type { ServerConfig } from "../config";
-import React, { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { Server } from "../components/server";
 import { ClientManager } from "../clientmanager";
-import { ActionIcon, Box, Button, Flex, Menu, Stack, useMantineColorScheme } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Flex,
+  Menu,
+  Stack,
+  useMantineColorScheme,
+} from "@mantine/core";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { queryClient } from "queries";
@@ -35,171 +51,241 @@ import { modKeyString } from "trutil";
 import { ColorSchemeToggle, FontSizeToggle, ShowVersion } from "./miscbuttons";
 import { AppSettingsModal } from "./modals/settings";
 import { ToolbarButton } from "./toolbar";
+import { useTranslation } from "react-i18next";
 
-const { appWindow, invoke, makeCreateTorrentView } = await import(/* webpackChunkName: "taurishim" */"taurishim");
+const { appWindow, invoke, makeCreateTorrentView } = await import(
+  /* webpackChunkName: "taurishim" */ "taurishim"
+);
 
 interface PassEventData {
-    from: string,
-    payload: string,
+  from: string;
+  payload: string;
 }
 
 function CreateTorrentButton() {
-    const config = useContext(ConfigContext);
-    const { colorScheme } = useMantineColorScheme();
+  const config = useContext(ConfigContext);
+  const { colorScheme } = useMantineColorScheme();
+  const { t } = useTranslation();
 
-    useEffect(() => {
-        const unlisten = appWindow.listen<PassEventData>("pass-from-window", ({ payload: data }) => {
-            if (data.payload === "ready") {
-                void invoke("pass_to_window", {
-                    to: data.from,
-                    payload: JSON.stringify({ colorScheme, defaultTrackers: config.values.interface.defaultTrackers }),
-                });
-            }
-        });
-        return () => { void unlisten.then((u) => { u(); }); };
-    }, [colorScheme, config]);
-
-    const onClick = useCallback(() => {
-        void makeCreateTorrentView();
-    }, []);
-
-    useHotkeys([
-        ["mod + T", onClick],
-    ]);
-
-    return (
-        <ActionIcon
-            variant="default"
-            size="lg"
-            onClick={onClick}
-            title={`Create new torrent file (${modKeyString()} + T)`}
-            my="auto"
-        >
-            <Icon.Stars size="1.1rem" />
-        </ActionIcon>
+  useEffect(() => {
+    const unlisten = appWindow.listen<PassEventData>(
+      "pass-from-window",
+      ({ payload: data }) => {
+        if (data.payload === "ready") {
+          void invoke("pass_to_window", {
+            to: data.from,
+            payload: JSON.stringify({
+              colorScheme,
+              defaultTrackers: config.values.interface.defaultTrackers,
+            }),
+          });
+        }
+      }
     );
+    return () => {
+      void unlisten.then((u) => {
+        u();
+      });
+    };
+  }, [colorScheme, config]);
+
+  const onClick = useCallback(() => {
+    void makeCreateTorrentView();
+  }, []);
+
+  useHotkeys([["mod + T", onClick]]);
+
+  return (
+    <ActionIcon
+      variant="default"
+      size="lg"
+      onClick={onClick}
+      title={t("toolbar.createTorrentWithHotkey", { hotkey: modKeyString() })}
+      my="auto"
+    >
+      <Icon.Stars size="1.1rem" />
+    </ActionIcon>
+  );
 }
 
 export function App(props: React.PropsWithChildren) {
-    return (
-        <QueryClientProvider client={queryClient}>
-            <Notifications limit={5} style={{ bottom: "2.5rem" }} />
-            {props.children}
-            <ReactQueryDevtools toggleButtonProps={{ style: { marginBottom: "2rem" } }} />
-        </QueryClientProvider>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Notifications limit={5} style={{ bottom: "2.5rem" }} />
+      {props.children}
+      <ReactQueryDevtools
+        toggleButtonProps={{ style: { marginBottom: "2rem" } }}
+      />
+    </QueryClientProvider>
+  );
 }
 
 export default function TauriApp() {
-    const config = useContext(ConfigContext);
-    const clientManager = useMemo(() => {
-        const cm = new ClientManager(config);
-        config.getOpenTabs().forEach((tab) => {
-            cm.open(tab, config.values.app.toastNotifications, config.values.app.toastNotificationSound);
-        });
-        return cm;
-    }, [config]);
+  const config = useContext(ConfigContext);
+  const clientManager = useMemo(() => {
+    const cm = new ClientManager(config);
+    config.getOpenTabs().forEach((tab) => {
+      cm.open(
+        tab,
+        config.values.app.toastNotifications,
+        config.values.app.toastNotificationSound
+      );
+    });
+    return cm;
+  }, [config]);
 
-    const tabsRef = useRef<ServerTabsRef>(null);
+  const tabsRef = useRef<ServerTabsRef>(null);
 
-    const [currentServer, setCurrentServer] = useState<ServerConfig | undefined>(
-        config.getServer(config.getLastOpenTab()));
-    const [servers, setServers] = useState(config.getServers());
+  const [currentServer, setCurrentServer] = useState<ServerConfig | undefined>(
+    config.getServer(config.getLastOpenTab())
+  );
+  const [servers, setServers] = useState(config.getServers());
 
-    const [showServerConfig, serverConfigHandlers] = useDisclosure(false);
+  const [showServerConfig, serverConfigHandlers] = useDisclosure(false);
 
-    const [serverKey, incServerKey] = useReducer((x => x + 1), 0);
+  const [serverKey, incServerKey] = useReducer((x) => x + 1, 0);
 
-    const onServerSave = useCallback((servers: ServerConfig[]) => {
-        setServers(servers);
-        config.setServers(servers);
-        // force remount of server component to make sure interface settings are applied
-        incServerKey();
-        void config.save();
-    }, [config]);
+  const onServerSave = useCallback(
+    (servers: ServerConfig[]) => {
+      setServers(servers);
+      config.setServers(servers);
+      // force remount of server component to make sure interface settings are applied
+      incServerKey();
+      void config.save();
+    },
+    [config]
+  );
 
-    const [showTabStrip, setShowTabStrip] = useState(config.values.app.showTabStrip);
+  const [showTabStrip, setShowTabStrip] = useState(
+    config.values.app.showTabStrip
+  );
 
-    const toggleTabStrip = useCallback(() => {
-        config.values.app.showTabStrip = !showTabStrip;
-        setShowTabStrip(!showTabStrip);
-    }, [config, showTabStrip]);
+  const toggleTabStrip = useCallback(() => {
+    config.values.app.showTabStrip = !showTabStrip;
+    setShowTabStrip(!showTabStrip);
+  }, [config, showTabStrip]);
 
-    const onCreateTorrent = useCallback(() => {
-        void makeCreateTorrentView();
-    }, []);
+  const onCreateTorrent = useCallback(() => {
+    void makeCreateTorrentView();
+  }, []);
 
-    return (
-        <App>
-            <AppSettingsModal
-                onSave={onServerSave}
-                opened={showServerConfig} close={serverConfigHandlers.close} />
-            <Flex direction="column" h="100%" w="100%" >
-                <ServerTabs ref={tabsRef}
-                    clientManager={clientManager}
-                    servers={servers}
-                    setCurrentServer={setCurrentServer}
-                    visible={showTabStrip}
-                >
-                    <ShowVersion btn="lg" />
-                    <ColorSchemeToggle btn="lg" />
-                    <FontSizeToggle />
-                    <CreateTorrentButton />
-                    <ActionIcon
-                        size="lg" variant="default" my="auto"
-                        title="Configure servers"
-                        onClick={serverConfigHandlers.open}>
-                        <Icon.GearFill size="1.1rem" />
-                    </ActionIcon>
-                </ServerTabs>
-                {currentServer !== undefined
-                    ? <ServerConfigContext.Provider value={currentServer}>
-                        <ClientContext.Provider value={clientManager.getClient(currentServer.name)}>
-                            <Server key={serverKey}
-                                hostname={clientManager.getHostname(currentServer.name)}
-                                tabsRef={tabsRef}
-                                toolbarExtra={!showTabStrip && <>
-                                    <ToolbarButton title={`Create torrent (${modKeyString()} + T)`} onClick={onCreateTorrent}>
-                                        <Icon.Stars size="1.5rem" />
-                                    </ToolbarButton>
-                                    <ToolbarButton title="Configure servers" onClick={serverConfigHandlers.open}>
-                                        <Icon.GearFill size="1.5rem" />
-                                    </ToolbarButton>
-                                    {tabsRef.current?.getOpenTabs() !== undefined && tabsRef.current?.getOpenTabs()?.length > 1 &&
-                                        <Menu shadow="md" width="12rem" withinPortal returnFocus
-                                            middlewares={{ shift: true, flip: true }}>
-                                            <Menu.Target>
-                                                <ToolbarButton title="Switch server">
-                                                    <Icon.Diagram2 size="1.5rem" />
-                                                </ToolbarButton>
-                                            </Menu.Target>
+  const { t } = useTranslation();
 
-                                            <Menu.Dropdown>
-                                                {tabsRef.current?.getOpenTabs().map((tab, index) =>
-                                                    <Menu.Item key={index} onClick={() => { tabsRef.current?.switchTab(index); }}>
-                                                        {tab}
-                                                    </Menu.Item>)}
-                                            </Menu.Dropdown>
-                                        </Menu>}
-                                </>}
-                                toggleTabStrip={toggleTabStrip} />
-                        </ClientContext.Provider>
-                    </ServerConfigContext.Provider>
-                    : <Flex justify="center" align="center" w="100%" h="100%">
-                        <Stack mih="20rem">
-                            {servers.map((s, i) => {
-                                return <Button key={i} variant="subtle"
-                                    onClick={() => tabsRef.current?.openTab(s.name)}>{s.name}
-                                </Button>;
-                            })}
-                            <Box sx={{ flexGrow: 1 }} />
-                            <Button onClick={serverConfigHandlers.open}>
-                                Configure servers
-                            </Button>
-                        </Stack>
-                    </Flex>
+  return (
+    <App>
+      <AppSettingsModal
+        onSave={onServerSave}
+        opened={showServerConfig}
+        close={serverConfigHandlers.close}
+      />
+      <Flex direction="column" h="100%" w="100%">
+        <ServerTabs
+          ref={tabsRef}
+          clientManager={clientManager}
+          servers={servers}
+          setCurrentServer={setCurrentServer}
+          visible={showTabStrip}
+        >
+          <ShowVersion btn="lg" />
+          <ColorSchemeToggle btn="lg" />
+          <FontSizeToggle />
+          <CreateTorrentButton />
+          <ActionIcon
+            size="lg"
+            variant="default"
+            my="auto"
+            title={t("toolbar.configureServers")}
+            onClick={serverConfigHandlers.open}
+          >
+            <Icon.GearFill size="1.1rem" />
+          </ActionIcon>
+        </ServerTabs>
+        {currentServer !== undefined ? (
+          <ServerConfigContext.Provider value={currentServer}>
+            <ClientContext.Provider
+              value={clientManager.getClient(currentServer.name)}
+            >
+              <Server
+                key={serverKey}
+                hostname={clientManager.getHostname(currentServer.name)}
+                tabsRef={tabsRef}
+                toolbarExtra={
+                  !showTabStrip && (
+                    <>
+                      <ToolbarButton
+                        title={`${t(
+                          "toolbar.createTorrent"
+                        )} (${modKeyString()} + T)`}
+                        onClick={onCreateTorrent}
+                      >
+                        <Icon.Stars size="1.5rem" />
+                      </ToolbarButton>
+                      <ToolbarButton
+                        title={t("toolbar.configureServers")}
+                        onClick={serverConfigHandlers.open}
+                      >
+                        <Icon.GearFill size="1.5rem" />
+                      </ToolbarButton>
+                      {tabsRef.current?.getOpenTabs() !== undefined &&
+                        tabsRef.current?.getOpenTabs()?.length > 1 && (
+                          <Menu
+                            shadow="md"
+                            width="12rem"
+                            withinPortal
+                            returnFocus
+                            middlewares={{ shift: true, flip: true }}
+                          >
+                            <Menu.Target>
+                              <ToolbarButton title={t("toolbar.switchServer")}>
+                                <Icon.Diagram2 size="1.5rem" />
+                              </ToolbarButton>
+                            </Menu.Target>
+
+                            <Menu.Dropdown>
+                              {tabsRef.current
+                                ?.getOpenTabs()
+                                .map((tab, index) => (
+                                  <Menu.Item
+                                    key={index}
+                                    onClick={() => {
+                                      tabsRef.current?.switchTab(index);
+                                    }}
+                                  >
+                                    {tab}
+                                  </Menu.Item>
+                                ))}
+                            </Menu.Dropdown>
+                          </Menu>
+                        )}
+                    </>
+                  )
                 }
-            </Flex>
-        </App>
-    );
+                toggleTabStrip={toggleTabStrip}
+              />
+            </ClientContext.Provider>
+          </ServerConfigContext.Provider>
+        ) : (
+          <Flex justify="center" align="center" w="100%" h="100%">
+            <Stack mih="20rem">
+              {servers.map((s, i) => {
+                return (
+                  <Button
+                    key={i}
+                    variant="subtle"
+                    onClick={() => tabsRef.current?.openTab(s.name)}
+                  >
+                    {s.name}
+                  </Button>
+                );
+              })}
+              <Box sx={{ flexGrow: 1 }} />
+              <Button onClick={serverConfigHandlers.open}>
+                {t("toolbar.configureServers")}
+              </Button>
+            </Stack>
+          </Flex>
+        )}
+      </Flex>
+    </App>
+  );
 }
