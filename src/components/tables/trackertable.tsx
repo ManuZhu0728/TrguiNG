@@ -17,7 +17,8 @@
  */
 
 import type { AccessorFn, CellContext, ColumnDef } from "@tanstack/react-table";
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import type { Torrent, TrackerStats } from "rpc/torrent";
 import { getTrackerAnnounceState } from "rpc/torrent";
 import type { TrackerStatsFieldsType } from "rpc/transmission";
@@ -25,67 +26,109 @@ import { secondsToHumanReadableStr } from "trutil";
 import { TrguiTable, useStandardSelect } from "./common";
 
 interface TableFieldProps {
-    entry: TrackerStats,
-    fieldName: TrackerStatsFieldsType,
+  entry: TrackerStats;
+  fieldName: TrackerStatsFieldsType;
 }
 
 interface TableField {
-    name: TrackerStatsFieldsType,
-    label: string,
-    columnId?: string,
-    accessorFn?: AccessorFn<TrackerStats>,
-    component?: React.FunctionComponent<TableFieldProps>,
+  name: TrackerStatsFieldsType;
+  label: string;
+  columnId?: string;
+  accessorFn?: AccessorFn<TrackerStats>;
+  component?: React.FunctionComponent<TableFieldProps>;
 }
 
 const AllFields: readonly TableField[] = [
-    { name: "announce", label: "Announce URL" },
-    { name: "announceState", label: "Status", columnId: "status", accessorFn: getTrackerAnnounceState },
-    { name: "nextAnnounceTime", label: "Next update", component: NextUpdateField },
-    { name: "seederCount", label: "Seeds", component: NumberField },
-    { name: "leecherCount", label: "Peers", component: NumberField },
-    { name: "downloadCount", label: "Downloads", component: NumberField },
+  { name: "announce", label: "tables.headers.announce_url" },
+  {
+    name: "announceState",
+    label: "tables.headers.status",
+    columnId: "status",
+    accessorFn: getTrackerAnnounceState,
+  },
+  {
+    name: "nextAnnounceTime",
+    label: "tables.headers.next_update",
+    component: NextUpdateField,
+  },
+  {
+    name: "seederCount",
+    label: "tables.headers.seeds",
+    component: NumberField,
+  },
+  {
+    name: "leecherCount",
+    label: "tables.headers.peers",
+    component: NumberField,
+  },
+  {
+    name: "downloadCount",
+    label: "tables.headers.downloads",
+    component: NumberField,
+  },
 ] as const;
 
-const Columns = AllFields.map((field): ColumnDef<TrackerStats> => {
-    const cell = (props: CellContext<TrackerStats, unknown>) => {
-        if (field.component !== undefined) {
-            return <field.component entry={props.row.original} fieldName={field.name} />;
-        } else {
+function useColumns() {
+  const { t } = useTranslation();
+  return useMemo(
+    () =>
+      AllFields.map((field): ColumnDef<TrackerStats> => {
+        const cell = (props: CellContext<TrackerStats, unknown>) => {
+          if (field.component !== undefined) {
+            return (
+              <field.component
+                entry={props.row.original}
+                fieldName={field.name}
+              />
+            );
+          } else {
             return <div>{props.getValue() as string}</div>;
-        }
-    };
-    return {
-        header: field.label,
-        accessorKey: field.name,
-        accessorFn: field.accessorFn,
-        cell,
-    };
-});
+          }
+        };
+        return {
+          header: t(field.label),
+          accessorKey: field.name,
+          accessorFn: field.accessorFn,
+          cell,
+        };
+      }),
+    [t]
+  );
+}
 
 function NextUpdateField(props: TableFieldProps) {
-    if (props.entry.announceState !== 1) return <div>-</div>;
-    const seconds = props.entry[props.fieldName] - Math.floor(Date.now() / 1000);
-    if (seconds > 0) return <div>{secondsToHumanReadableStr(seconds)}</div>;
-    return <div>-</div>;
+  if (props.entry.announceState !== 1) return <div>-</div>;
+  const seconds = props.entry[props.fieldName] - Math.floor(Date.now() / 1000);
+  if (seconds > 0) return <div>{secondsToHumanReadableStr(seconds)}</div>;
+  return <div>-</div>;
 }
 
 function NumberField(props: TableFieldProps) {
-    const count = props.entry[props.fieldName] as number;
+  const count = props.entry[props.fieldName] as number;
 
-    return <div style={{ width: "100%", textAlign: "right" }}>{count >= 0 ? count : ""}</div>;
+  return (
+    <div style={{ width: "100%", textAlign: "right" }}>
+      {count >= 0 ? count : ""}
+    </div>
+  );
 }
 
 export function TrackersTable(props: { torrent: Torrent }) {
-    const getRowId = useCallback((t: TrackerStats) => String(t.id), []);
+  const getRowId = useCallback((t: TrackerStats) => String(t.id), []);
 
-    const [selected, selectedReducer] = useStandardSelect();
+  const [selected, selectedReducer] = useStandardSelect();
+  const columns = useColumns();
 
-    return <TrguiTable<TrackerStats> {...{
+  return (
+    <TrguiTable<TrackerStats>
+      {...{
         tablename: "trackers",
-        columns: Columns,
+        columns: columns,
         data: props.torrent.trackerStats,
         selected,
         getRowId,
         selectedReducer,
-    }} />;
+      }}
+    />
+  );
 }

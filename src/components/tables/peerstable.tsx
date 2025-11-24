@@ -18,104 +18,152 @@
 
 import type { AccessorFn, CellContext, ColumnDef } from "@tanstack/react-table";
 import React, { useMemo, useCallback, useContext } from "react";
+import { useTranslation } from "react-i18next";
 import type { Torrent, PeerStats } from "rpc/torrent";
 import { bytesToHumanReadableStr } from "trutil";
 import { TrguiTable, useStandardSelect } from "./common";
 import { ProgressBar } from "components/progressbar";
 import { Flex } from "@mantine/core";
 import { ConfigContext } from "config";
-const { TAURI } = await import(/* webpackChunkName: "taurishim" */"taurishim");
-if (TAURI) await import(/* webpackChunkName: "flag-icons" */"flagsshim");
+const { TAURI } = await import(/* webpackChunkName: "taurishim" */ "taurishim");
+if (TAURI) await import(/* webpackChunkName: "flag-icons" */ "flagsshim");
 
 interface TableFieldProps {
-    entry: PeerStats,
-    fieldName: keyof PeerStats,
+  entry: PeerStats;
+  fieldName: keyof PeerStats;
 }
 
 interface TableField {
-    name: keyof PeerStats,
-    label: string,
-    columnId?: string,
-    accessorFn?: AccessorFn<PeerStats>,
-    component?: React.FunctionComponent<TableFieldProps>,
+  name: keyof PeerStats;
+  label: string;
+  columnId?: string;
+  accessorFn?: AccessorFn<PeerStats>;
+  component?: React.FunctionComponent<TableFieldProps>;
 }
 
 const AllFields: TableField[] = [
-    { name: "address", label: "Address" },
-    { name: "port", label: "Port" },
-    { name: "clientName", label: "Client" },
-    { name: "flagStr", label: "Flags" },
-    { name: "progress", label: "Have", component: PercentField },
-    { name: "rateToPeer", label: "Up speed", component: ByteRateField },
-    { name: "rateToClient", label: "Down speed", component: ByteRateField },
-    { name: "cachedEncrypted", label: "Encrypted" },
-    { name: "cachedFrom", label: "From" },
-    { name: "cachedConnection", label: "Connection" },
-    { name: "cachedProtocol", label: "Protocol" },
-    { name: "cachedStatus", label: "Status" },
+  { name: "address", label: "tables.headers.address" },
+  { name: "port", label: "tables.headers.port" },
+  { name: "clientName", label: "tables.headers.client" },
+  { name: "flagStr", label: "tables.headers.flags" },
+  { name: "progress", label: "tables.headers.have", component: PercentField },
+  {
+    name: "rateToPeer",
+    label: "tables.headers.up_speed",
+    component: ByteRateField,
+  },
+  {
+    name: "rateToClient",
+    label: "tables.headers.down_speed",
+    component: ByteRateField,
+  },
+  { name: "cachedEncrypted", label: "tables.headers.encrypted" },
+  { name: "cachedFrom", label: "tables.headers.from" },
+  { name: "cachedConnection", label: "tables.headers.connection" },
+  { name: "cachedProtocol", label: "tables.headers.protocol" },
+  { name: "cachedStatus", label: "tables.headers.status" },
 ];
 
-if (TAURI) AllFields.splice(1, 0, { name: "cachedCountryName", label: "Country", columnId: "country", component: CountryField });
+if (TAURI)
+  AllFields.splice(1, 0, {
+    name: "cachedCountryName",
+    label: "tables.headers.country",
+    columnId: "country",
+    component: CountryField,
+  });
 
 function CountryField(props: TableFieldProps) {
-    const iso = props.entry.cachedCountryIso;
-    return <Flex gap="sm" style={{ width: "100%" }}>
-        {iso !== undefined && <span className={`fi fi-${iso.toLowerCase()}`} style={{ flexShrink: 0 }} />}
-        <span>{props.entry.cachedCountryName}</span>
-    </Flex>;
+  const iso = props.entry.cachedCountryIso;
+  return (
+    <Flex gap="sm" style={{ width: "100%" }}>
+      {iso !== undefined && (
+        <span
+          className={`fi fi-${iso.toLowerCase()}`}
+          style={{ flexShrink: 0 }}
+        />
+      )}
+      <span>{props.entry.cachedCountryName}</span>
+    </Flex>
+  );
 }
 
 function ByteRateField(props: TableFieldProps) {
-    const field = props.entry[props.fieldName];
-    const stringValue = useMemo(() => {
-        return field > 0 ? `${bytesToHumanReadableStr(field)}/s` : "";
-    }, [field]);
+  const field = props.entry[props.fieldName];
+  const stringValue = useMemo(() => {
+    return field > 0 ? `${bytesToHumanReadableStr(field)}/s` : "";
+  }, [field]);
 
-    return <div style={{ width: "100%", textAlign: "right" }}>{stringValue}</div>;
+  return <div style={{ width: "100%", textAlign: "right" }}>{stringValue}</div>;
 }
 
 function PercentField(props: TableFieldProps) {
-    const config = useContext(ConfigContext);
-    const now = props.entry[props.fieldName] * 100;
-    const active = props.entry.rateToClient > 0 || props.entry.rateToPeer > 0;
+  const config = useContext(ConfigContext);
+  const now = props.entry[props.fieldName] * 100;
+  const active = props.entry.rateToClient > 0 || props.entry.rateToPeer > 0;
 
-    return <ProgressBar
-        now={now}
-        className="white-outline"
-        animate={config.values.interface.animatedProgressbars && active}
-        variant={config.values.interface.colorfulProgressbars && now === 100 ? "green" : "default"}
-    />;
+  return (
+    <ProgressBar
+      now={now}
+      className="white-outline"
+      animate={config.values.interface.animatedProgressbars && active}
+      variant={
+        config.values.interface.colorfulProgressbars && now === 100
+          ? "green"
+          : "default"
+      }
+    />
+  );
 }
 
-const Columns = AllFields.map((field): ColumnDef<PeerStats> => {
-    const cell = (props: CellContext<PeerStats, unknown>) => {
-        if (field.component !== undefined) {
-            return <field.component entry={props.row.original} fieldName={field.name} />;
-        } else {
+function useColumns() {
+  const { t } = useTranslation();
+  return useMemo(
+    () =>
+      AllFields.map((field): ColumnDef<PeerStats> => {
+        const cell = (props: CellContext<PeerStats, unknown>) => {
+          if (field.component !== undefined) {
+            return (
+              <field.component
+                entry={props.row.original}
+                fieldName={field.name}
+              />
+            );
+          } else {
             return <div>{props.getValue() as string}</div>;
-        }
-    };
-    const column: ColumnDef<PeerStats> = {
-        header: field.label,
-        accessorKey: field.name,
-        id: field.columnId,
-        accessorFn: field.accessorFn,
-        cell,
-    };
-    return column;
-});
+          }
+        };
+        const column: ColumnDef<PeerStats> = {
+          header: t(field.label),
+          accessorKey: field.name,
+          id: field.columnId,
+          accessorFn: field.accessorFn,
+          cell,
+        };
+        return column;
+      }),
+    [t]
+  );
+}
 
 export function PeersTable(props: { torrent: Torrent }) {
-    const getRowId = useCallback((t: PeerStats) => `${t.address as string}:${t.port as number}`, []);
+  const getRowId = useCallback(
+    (t: PeerStats) => `${t.address as string}:${t.port as number}`,
+    []
+  );
 
-    const [selected, selectedReducer] = useStandardSelect();
+  const [selected, selectedReducer] = useStandardSelect();
+  const columns = useColumns();
 
-    return <TrguiTable<PeerStats> {...{
+  return (
+    <TrguiTable<PeerStats>
+      {...{
         tablename: "peers",
-        columns: Columns,
+        columns: columns,
         data: props.torrent.peers,
         selected,
         getRowId,
         selectedReducer,
-    }} />;
+      }}
+    />
+  );
 }

@@ -30,6 +30,7 @@ import {
   NativeSelect,
   NumberInput,
   SegmentedControl,
+  Stack,
   Tabs,
   Text,
   TextInput,
@@ -72,12 +73,13 @@ interface FormValues extends InterfaceFormValues {
 }
 
 function PollingPanel({ form }: { form: UseFormReturnType<FormValues> }) {
+  const { t } = useTranslation();
   return (
     <Grid align="center">
       <Grid.Col>
-        <Text>Update intervals (sec)</Text>
+        <Text>{t("modals.daemon.update_intervals")}</Text>
       </Grid.Col>
-      <Grid.Col span={8}>Session</Grid.Col>
+      <Grid.Col span={8}>{t("modals.daemon.session")}</Grid.Col>
       <Grid.Col span={2}>
         <NumberInput
           min={1}
@@ -86,7 +88,7 @@ function PollingPanel({ form }: { form: UseFormReturnType<FormValues> }) {
         />
       </Grid.Col>
       <Grid.Col span={2} />
-      <Grid.Col span={8}>Torrent details</Grid.Col>
+      <Grid.Col span={8}>{t("modals.daemon.torrent_details")}</Grid.Col>
       <Grid.Col span={2}>
         <NumberInput
           min={1}
@@ -95,7 +97,7 @@ function PollingPanel({ form }: { form: UseFormReturnType<FormValues> }) {
         />
       </Grid.Col>
       <Grid.Col span={2} />
-      <Grid.Col span={8}>Torrents active</Grid.Col>
+      <Grid.Col span={8}>{t("modals.daemon.torrents_active")}</Grid.Col>
       <Grid.Col span={2}>
         <NumberInput
           min={1}
@@ -104,7 +106,7 @@ function PollingPanel({ form }: { form: UseFormReturnType<FormValues> }) {
         />
       </Grid.Col>
       <Grid.Col span={2} />
-      <Grid.Col span={8}>Torrents inactive/minimized</Grid.Col>
+      <Grid.Col span={8}>{t("modals.daemon.torrents_inactive")}</Grid.Col>
       <Grid.Col span={2}>
         <NumberInput
           min={1}
@@ -124,11 +126,12 @@ function DownloadPanel({
   form: UseFormReturnType<FormValues>;
   session: SessionInfo;
 }) {
+  const { t } = useTranslation();
   return (
     <Grid align="center">
       <Grid.Col>
         <TextInput
-          label="Default download folder (server setting)"
+          label={t("modals.daemon.default_download_folder")}
           {...form.getInputProps("session.download-dir")}
           autoComplete="off"
           autoCorrect="off"
@@ -141,17 +144,14 @@ function DownloadPanel({
           mt="lg"
           label={
             <Box>
-              <span>Start added torrents</span>
+              <span>{t("modals.daemon.start_added_torrents")}</span>
               <HoverCard width={280} shadow="md">
                 <HoverCard.Target>
                   <Icon.Question />
                 </HoverCard.Target>
                 <HoverCard.Dropdown>
                   <Text size="sm">
-                    This setting only applies to torrents added via the watch
-                    directory or by other clients that do not specify the start
-                    parameter. TrguiNG sets the start parameter based on your
-                    selection in the add torrent/magnet dialog.
+                    {t("modals.daemon.start_added_torrents_tooltip")}
                   </Text>
                 </HoverCard.Dropdown>
               </HoverCard>
@@ -165,7 +165,7 @@ function DownloadPanel({
       <Grid.Col>
         <Checkbox
           mt="lg"
-          label="Add .part extension to incomplete files"
+          label={t("modals.daemon.add_part_extension")}
           {...form.getInputProps("session.rename-partial-files", {
             type: "checkbox",
           })}
@@ -174,7 +174,7 @@ function DownloadPanel({
       <Grid.Col>
         <Checkbox
           mt="lg"
-          label="Use separate directory for incomplete files"
+          label={t("modals.daemon.use_incomplete_dir")}
           {...form.getInputProps("session.incomplete-dir-enabled", {
             type: "checkbox",
           })}
@@ -182,7 +182,7 @@ function DownloadPanel({
       </Grid.Col>
       <Grid.Col>
         <TextInput
-          label="Path for incomplete files"
+          label={t("modals.daemon.incomplete_dir_path")}
           {...form.getInputProps("session.incomplete-dir")}
           disabled={session["incomplete-dir-enabled"] !== true}
           autoComplete="off"
@@ -193,7 +193,7 @@ function DownloadPanel({
       </Grid.Col>
       <Grid.Col span={6}>
         <Checkbox
-          label="Use default seed ratio limit"
+          label={t("modals.daemon.use_default_seed_ratio")}
           {...form.getInputProps("session.seedRatioLimited", {
             type: "checkbox",
           })}
@@ -211,7 +211,7 @@ function DownloadPanel({
       <Grid.Col span={4}></Grid.Col>
       <Grid.Col span={6}>
         <Checkbox
-          label="Stop idle torrents after"
+          label={t("modals.daemon.stop_idle_torrents")}
           {...form.getInputProps("session.idle-seeding-limit-enabled", {
             type: "checkbox",
           })}
@@ -224,12 +224,12 @@ function DownloadPanel({
           disabled={session["idle-seeding-limit-enabled"] !== true}
         />
       </Grid.Col>
-      <Grid.Col span={4}>minutes</Grid.Col>
-      <Grid.Col span={6}>Disk cache size</Grid.Col>
+      <Grid.Col span={4}>{t("modals.daemon.minutes")}</Grid.Col>
+      <Grid.Col span={6}>{t("modals.daemon.disk_cache_size")}</Grid.Col>
       <Grid.Col span={2}>
         <NumberInput min={0} {...form.getInputProps("session.cache-size-mb")} />
       </Grid.Col>
-      <Grid.Col span={4}>MB</Grid.Col>
+      <Grid.Col span={4}>{t("modals.daemon.mb")}</Grid.Col>
     </Grid>
   );
 }
@@ -248,6 +248,7 @@ function NetworkPanel({
   form: UseFormReturnType<FormValues>;
   session: SessionInfo;
 }) {
+  const { t } = useTranslation();
   const [testPortQueryEnbaled, setTestPortQueryEnabled] = useState(false);
   const [testPortResult, setTestPortResult] = useState<PortTestResult>({
     label: "",
@@ -273,11 +274,11 @@ function NetworkPanel({
       setTestPortResult(
         testPort.arguments["port-is-open"] === true
           ? {
-              label: "Port is open",
+              label: t("modals.daemon.port_is_open"),
               color: "green",
             }
           : {
-              label: "Port unreachable",
+              label: t("modals.daemon.port_unreachable"),
               color: "red",
             }
       );
@@ -288,11 +289,11 @@ function NetworkPanel({
       });
     } else {
       setTestPortResult({
-        label: "API error",
+        label: t("modals.daemon.api_error"),
         color: "red",
       });
     }
-  }, [fetchStatus, status, testPort]);
+  }, [fetchStatus, status, testPort, t]);
 
   useEffect(() => {
     if (!opened) {
@@ -311,17 +312,17 @@ function NetworkPanel({
       onError: (e) => {
         console.log(e);
         notifications.show({
-          title: "Error updating blocklist",
+          title: t("modals.daemon.error_updating_blocklist"),
           message: e.message,
           color: "red",
         });
       },
     });
-  }, [updateBlocklist]);
+  }, [updateBlocklist, t]);
 
   return (
     <Grid align="center">
-      <Grid.Col span={3}>Incoming port:</Grid.Col>
+      <Grid.Col span={3}>{t("modals.daemon.incoming_port")}</Grid.Col>
       <Grid.Col span={3}>
         <NumberInput
           min={1}
@@ -331,12 +332,13 @@ function NetworkPanel({
         />
       </Grid.Col>
       <Grid.Col span={3}>
-        <Tooltip
-          withArrow
-          label="Checks currently configured port. If you made changes save them before testing."
-        >
-          <Button w="100%" onClick={onTestPort} title="Test port">
-            Test port
+        <Tooltip withArrow label={t("modals.daemon.test_port_tooltip")}>
+          <Button
+            w="100%"
+            onClick={onTestPort}
+            title={t("modals.daemon.test_port")}
+          >
+            {t("modals.daemon.test_port")}
           </Button>
         </Tooltip>
       </Grid.Col>
@@ -352,7 +354,7 @@ function NetworkPanel({
       <Grid.Col>
         <Checkbox
           mt="lg"
-          label="Let daemon pick a random port"
+          label={t("modals.daemon.random_port_on_start")}
           {...form.getInputProps("session.peer-port-random-on-start", {
             type: "checkbox",
           })}
@@ -361,13 +363,13 @@ function NetworkPanel({
       <Grid.Col>
         <Checkbox
           mt="lg"
-          label="Enable UPnP port forwarding"
+          label={t("modals.daemon.enable_upnp")}
           {...form.getInputProps("session.port-forwarding-enabled", {
             type: "checkbox",
           })}
         />
       </Grid.Col>
-      <Grid.Col span={3}>Encryption:</Grid.Col>
+      <Grid.Col span={3}>{t("modals.daemon.encryption")}</Grid.Col>
       <Grid.Col span={3}>
         <NativeSelect
           data={["tolerated", "preferred", "required"]}
@@ -375,14 +377,14 @@ function NetworkPanel({
         />
       </Grid.Col>
       <Grid.Col span={6}></Grid.Col>
-      <Grid.Col span={3}>Global peer limit:</Grid.Col>
+      <Grid.Col span={3}>{t("modals.daemon.global_peer_limit")}</Grid.Col>
       <Grid.Col span={3}>
         <NumberInput
           min={0}
           {...form.getInputProps("session.peer-limit-global")}
         />
       </Grid.Col>
-      <Grid.Col span={3}>per torrent:</Grid.Col>
+      <Grid.Col span={3}>{t("modals.daemon.per_torrent_peer_limit")}</Grid.Col>
       <Grid.Col span={3}>
         <NumberInput
           min={0}
@@ -392,34 +394,34 @@ function NetworkPanel({
       <Grid.Col span={6}>
         <Checkbox
           mt="lg"
-          label="Enable peer exchange"
+          label={t("modals.daemon.enable_pex")}
           {...form.getInputProps("session.pex-enabled", { type: "checkbox" })}
         />
       </Grid.Col>
       <Grid.Col span={6}>
         <Checkbox
           mt="lg"
-          label="Enable DHT"
+          label={t("modals.daemon.enable_dht")}
           {...form.getInputProps("session.dht-enabled", { type: "checkbox" })}
         />
       </Grid.Col>
       <Grid.Col span={6}>
         <Checkbox
           my="lg"
-          label="Enable local discovery"
+          label={t("modals.daemon.enable_lpd")}
           {...form.getInputProps("session.lpd-enabled", { type: "checkbox" })}
         />
       </Grid.Col>
       <Grid.Col span={6}>
         <Checkbox
           my="lg"
-          label="Enable uTP"
+          label={t("modals.daemon.enable_utp")}
           {...form.getInputProps("session.utp-enabled", { type: "checkbox" })}
         />
       </Grid.Col>
       <Grid.Col span={6}>
         <Checkbox
-          label="Enable blocklist:"
+          label={t("modals.daemon.enable_blocklist")}
           {...form.getInputProps("session.blocklist-enabled", {
             type: "checkbox",
           })}
@@ -437,16 +439,19 @@ function NetworkPanel({
       </Grid.Col>
       <Grid.Col span={6}>
         <Text>
-          Blocklist contains {session["blocklist-size"] as number} entries
+          {t("modals.daemon.blocklist_size", {
+            count: session["blocklist-size"] as number,
+          })}
         </Text>
       </Grid.Col>
       <Grid.Col span={3}>
-        <Tooltip
-          withArrow
-          label="Fetches currently configured blocklist. If you made changes save them before updating."
-        >
-          <Button w="100%" onClick={onUpdateBlocklist} title="Update blocklist">
-            Update
+        <Tooltip withArrow label={t("modals.daemon.update_blocklist_tooltip")}>
+          <Button
+            w="100%"
+            onClick={onUpdateBlocklist}
+            title={t("modals.daemon.update_blocklist")}
+          >
+            {t("modals.daemon.update")}
           </Button>
         </Tooltip>
       </Grid.Col>
@@ -520,14 +525,15 @@ function BandwidthPanel({
   form: UseFormReturnType<FormValues>;
   session: SessionInfo;
 }) {
+  const { t } = useTranslation();
   return (
     <Grid align="center">
       <Grid.Col span={6}></Grid.Col>
-      <Grid.Col span={3}>Normal</Grid.Col>
-      <Grid.Col span={3}>Alternate</Grid.Col>
+      <Grid.Col span={3}>{t("modals.daemon.normal")}</Grid.Col>
+      <Grid.Col span={3}>{t("modals.daemon.alternate")}</Grid.Col>
       <Grid.Col span={6}>
         <Checkbox
-          label="Maximum download speed (KB/s):"
+          label={t("modals.daemon.max_download_speed")}
           {...form.getInputProps("session.speed-limit-down-enabled", {
             type: "checkbox",
           })}
@@ -548,7 +554,7 @@ function BandwidthPanel({
       </Grid.Col>
       <Grid.Col span={6}>
         <Checkbox
-          label="Maximum upload speed (KB/s):"
+          label={t("modals.daemon.max_upload_speed")}
           {...form.getInputProps("session.speed-limit-up-enabled", {
             type: "checkbox",
           })}
@@ -567,7 +573,7 @@ function BandwidthPanel({
       <Grid.Col>
         <Checkbox
           mt="lg"
-          label="Use alternate bandwidth settings"
+          label={t("modals.daemon.use_alt_bandwidth_settings")}
           {...form.getInputProps("session.alt-speed-enabled", {
             type: "checkbox",
           })}
@@ -576,13 +582,13 @@ function BandwidthPanel({
       <Grid.Col>
         <Checkbox
           my="lg"
-          label="Apply alternate bandwidth settings automatically"
+          label={t("modals.daemon.apply_alt_bandwidth_settings_automatically")}
           {...form.getInputProps("session.alt-speed-time-enabled", {
             type: "checkbox",
           })}
         />
       </Grid.Col>
-      <Grid.Col span={2}>From:</Grid.Col>
+      <Grid.Col span={2}>{t("modals.daemon.from")}</Grid.Col>
       <Grid.Col span={3}>
         <TimeInput
           min={0}
@@ -591,7 +597,7 @@ function BandwidthPanel({
           disabled={session["alt-speed-time-enabled"] !== true}
         />
       </Grid.Col>
-      <Grid.Col span={2}>to:</Grid.Col>
+      <Grid.Col span={2}>{t("modals.daemon.to")}</Grid.Col>
       <Grid.Col span={3}>
         <TimeInput
           min={0}
@@ -601,7 +607,7 @@ function BandwidthPanel({
         />
       </Grid.Col>
       <Grid.Col span={2}></Grid.Col>
-      <Grid.Col span={2}>Days:</Grid.Col>
+      <Grid.Col span={2}>{t("modals.daemon.days")}</Grid.Col>
       <Grid.Col span={10}>
         <Group>
           {DaysOfTheWeek.map((_, day) => (
@@ -625,11 +631,12 @@ function QueuePanel({
   form: UseFormReturnType<FormValues>;
   session: SessionInfo;
 }) {
+  const { t } = useTranslation();
   return (
     <Grid align="center">
       <Grid.Col span={8}>
         <Checkbox
-          label="Download queue size"
+          label={t("modals.daemon.download_queue_size")}
           {...form.getInputProps("session.download-queue-enabled", {
             type: "checkbox",
           })}
@@ -645,7 +652,7 @@ function QueuePanel({
       <Grid.Col span={2}></Grid.Col>
       <Grid.Col span={8}>
         <Checkbox
-          label="Seed queue size"
+          label={t("modals.daemon.seed_queue_size")}
           {...form.getInputProps("session.seed-queue-enabled", {
             type: "checkbox",
           })}
@@ -661,7 +668,7 @@ function QueuePanel({
       <Grid.Col span={2}></Grid.Col>
       <Grid.Col span={8}>
         <Checkbox
-          label="Consider torrents as stalled when idle for"
+          label={t("modals.daemon.consider_torrents_stalled")}
           {...form.getInputProps("session.queue-stalled-enabled", {
             type: "checkbox",
           })}
@@ -674,67 +681,47 @@ function QueuePanel({
           disabled={session["queue-stalled-enabled"] !== true}
         />
       </Grid.Col>
-      <Grid.Col span={2}>minutes</Grid.Col>
+      <Grid.Col span={2}>{t("modals.daemon.minutes")}</Grid.Col>
     </Grid>
   );
 }
 
+async function isMagnetHandler() {
+  return false;
+}
+
+async function registerMagnetHandler() {
+  if (TAURI) {
+    const { invoke } = await import("taurishim");
+    await invoke("app_integration", { mode: "magnet" });
+  }
+}
+
 function MagnetHandlerPanel() {
-  const handlerUrl = useMemo(() => {
-    const handlerUrl = new URL(window.location.href);
-    handlerUrl.search = "add=%s";
-    return handlerUrl;
+  const { t } = useTranslation();
+  const [isRegistered, setIsRegistered] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setIsRegistered(await isMagnetHandler());
+    })();
   }, []);
 
-  const registerHandler = useCallback(() => {
-    navigator.registerProtocolHandler("magnet", handlerUrl.toString());
-  }, [handlerUrl]);
-
-  // Unregister handler only exists in some browsers
-  const unregisterHandler = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (navigator as any).unregisterProtocolHandler?.(
-      "magnet",
-      handlerUrl.toString()
-    );
-  }, [handlerUrl]);
-
   return (
-    <Grid align="center">
-      {window.location.protocol === "https:" ? (
-        <>
-          <Grid.Col span={6}>
-            <Text>Register magnet protocol handler</Text>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Flex justify="space-around">
-              <Button onClick={registerHandler}>Register</Button>
-              {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                typeof (navigator as any).unregisterProtocolHandler ===
-                  "function" && (
-                  <Button onClick={unregisterHandler}>Unregister</Button>
-                )
-              }
-            </Flex>
-          </Grid.Col>
-        </>
-      ) : (
-        <Grid.Col>
-          <Text mb="md">
-            Registering magnet protocol handler is currently not available.
-            Browsers support this feature only in secure contexts, i.e. https
-            websites.
-          </Text>
-          <Text>
-            Transmission does not natively support serving the web interface
-            with https but you can setup a reverse proxy with ssl termination in
-            front of it and use a self signed or letsencrypt provided free
-            certificate to secure your transmission web endpoint.
-          </Text>
-        </Grid.Col>
-      )}
-    </Grid>
+    <Stack>
+      <Text>{t("modals.daemon.magnet_handler_desc")}</Text>
+      <Button
+        disabled={isRegistered}
+        onClick={async () => {
+          await registerMagnetHandler();
+          setIsRegistered(await isMagnetHandler());
+        }}
+      >
+        {isRegistered
+          ? t("modals.daemon.magnet_handler_registered")
+          : t("modals.daemon.register_magnet_handler")}
+      </Button>
+    </Stack>
   );
 }
 
@@ -743,7 +730,7 @@ export function DaemonSettingsModal(props: ModalState) {
   const mutation = useMutateSession();
   const config = useContext(ConfigContext);
   const serverConfig = useContext(ServerConfigContext);
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -776,7 +763,7 @@ export function DaemonSettingsModal(props: ModalState) {
       mutation.mutate(form.values.session, {
         onSuccess: () => {
           notifications.show({
-            message: "Session saved successfully",
+            message: t("modals.daemon.notifications.saved"),
             color: "green",
           });
           props.close();
@@ -787,7 +774,7 @@ export function DaemonSettingsModal(props: ModalState) {
         },
         onError: (error) => {
           notifications.show({
-            title: "Failed to update daemon settings",
+            title: t("modals.daemon.notifications.failed"),
             message: String(error),
             color: "red",
           });
@@ -796,7 +783,7 @@ export function DaemonSettingsModal(props: ModalState) {
     } else {
       props.close();
     }
-  }, [form.values, mutation, props, config, serverConfig]);
+  }, [form.values, mutation, props, config, serverConfig, t]);
 
   return (
     <SaveCancelModal
@@ -806,34 +793,34 @@ export function DaemonSettingsModal(props: ModalState) {
       onSave={onSave}
       saveLoading={mutation.isLoading}
       centered
-      title="Server Settings"
+      title={t("modals.daemon.title")}
     >
       <Box pos="relative">
         <LoadingOverlay visible={fetchStatus === "fetching"} overlayBlur={2} />
         <Tabs defaultValue="polling" mih="33rem">
           <Tabs.List>
             <Tabs.Tab value="polling" p="lg">
-              Polling
+              {t("modals.daemon.tabs.polling")}
             </Tabs.Tab>
             <Tabs.Tab value="download" p="lg">
-              Download
+              {t("modals.daemon.tabs.download")}
             </Tabs.Tab>
             <Tabs.Tab value="network" p="lg">
-              Network
+              {t("modals.daemon.tabs.network")}
             </Tabs.Tab>
             <Tabs.Tab value="bandwidth" p="lg">
-              Bandwidth
+              {t("modals.daemon.tabs.bandwidth")}
             </Tabs.Tab>
             <Tabs.Tab value="queue" p="lg">
-              Queue
+              {t("modals.daemon.tabs.queue")}
             </Tabs.Tab>
             {!TAURI && (
               <>
                 <Tabs.Tab value="interface" p="lg">
-                  Interface
+                  {t("modals.daemon.tabs.interface")}
                 </Tabs.Tab>
                 <Tabs.Tab value="magnethandler" p="lg">
-                  Magnet links
+                  {t("modals.daemon.tabs.magnethandler")}
                 </Tabs.Tab>
               </>
             )}
@@ -881,7 +868,7 @@ export function DaemonSettingsModal(props: ModalState) {
         </Tabs>
         {!TAURI && (
           <Group position="apart" mt="md">
-            <Text>Language</Text>
+            <Text>{t("modals.daemon.language")}</Text>
             <SegmentedControl
               value={i18n.language ?? "en"}
               onChange={(value: string) => {
