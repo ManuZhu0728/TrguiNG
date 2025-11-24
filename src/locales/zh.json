@@ -82,9 +82,9 @@
         },
         "section": {
             "status": "状态",
-            "directories": "目录",
+            "directories": "数据目录",
             "labels": "标签",
-            "trackers": "服务器"
+            "trackers": "Tracker 分布"
         }
     },
     "details": {
@@ -95,7 +95,7 @@
             "downloaded": "已下载"
         },
         "wasted": {
-            "hashfails": "哈希校验失败"
+            "hashfails": "Hash 校验失败"
         },
         "downloadSpeed": {
             "average": "平均"
@@ -124,8 +124,8 @@
             "seeds": "做种者:",
             "peers": "用户:",
             "maxPeers": "最大用户数:",
-            "tracker": "服务器:",
-            "trackerUpdateOn": "服务器更新于:",
+            "tracker": "Tracker",
+            "trackerUpdateOn": "Tracker 更新于:",
             "lastActive": "最后活动:"
         },
         "totalSize": {
@@ -135,12 +135,12 @@
             "have": "拥有"
         },
         "torrent": {
-            "fullPath": "完整路径:",
+            "fullPath": "保存路径:",
             "created": "创建于:",
             "by": "由",
             "totalSize": "总大小:",
             "pieces": "分块:",
-            "hash": "哈希:",
+            "hash": "Hash:",
             "comment": "备注:",
             "addedOn": "添加于:",
             "completedOn": "完成于:",
@@ -166,7 +166,7 @@
             "files": "文件",
             "pieces": "分块",
             "peers": "用户",
-            "trackers": "服务器",
+            "trackers": "Tracker",
             "spacer": "分隔符",
             "serverStatistics": "服务器统计"
         }
@@ -410,7 +410,7 @@
             "headers": {
                 "name": "名称",
                 "size": "总大小",
-                "sizeToDownload": "下载大小",
+                "sizeToDownload": "选定大小",
                 "sizeLeft": "剩余大小",
                 "have": "有效",
                 "downloaded": "已下载",
@@ -552,7 +552,7 @@
         "fileCount": "{{count}} 个文件",
         "fileCount_plural": "{{count}} 个文件",
         "pieces": "{{count}} 个分块",
-        "hashing": "哈希计算中，已完成 {{done}} / {{total}}",
+        "hashing": "Hash 计算中，已完成 {{done}} / {{total}}",
         "infohash": "种子 Infohash: {{hash}}",
         "generate": "生成",
         "cancel": "取消",

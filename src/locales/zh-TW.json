@@ -82,9 +82,9 @@
         },
         "section": {
             "status": "狀態",
-            "directories": "目錄",
+            "directories": "資料目錄",
             "labels": "標籤",
-            "trackers": "伺服器"
+            "trackers": "Tracker 分佈"
         }
     },
     "details": {
@@ -95,7 +95,7 @@
             "downloaded": "已下載"
         },
         "wasted": {
-            "hashfails": "雜湊驗證失敗"
+            "hashfails": "Hash 驗證失敗"
         },
         "downloadSpeed": {
             "average": "平均"
@@ -124,8 +124,8 @@
             "seeds": "做種者:",
             "peers": "用戶:",
             "maxPeers": "最大用戶數:",
-            "tracker": "伺服器:",
-            "trackerUpdateOn": "伺服器更新於:",
+            "tracker": "Tracker",
+            "trackerUpdateOn": "Tracker 更新於:",
             "lastActive": "最後活動:"
         },
         "totalSize": {
@@ -135,12 +135,12 @@
             "have": "擁有"
         },
         "torrent": {
-            "fullPath": "完整路徑:",
+            "fullPath": "儲存路徑:",
             "created": "建立於:",
             "by": "由",
             "totalSize": "總大小:",
             "pieces": "區塊:",
-            "hash": "雜湊:",
+            "hash": "Hash:",
             "comment": "備註:",
             "addedOn": "新增於:",
             "completedOn": "完成於:",
@@ -166,7 +166,7 @@
             "files": "檔案",
             "pieces": "區塊",
             "peers": "用戶",
-            "trackers": "伺服器",
+            "trackers": "Tracker",
             "spacer": "分隔符",
             "serverStatistics": "伺服器統計"
         }
@@ -410,7 +410,7 @@
             "headers": {
                 "name": "名稱",
                 "size": "總大小",
-                "sizeToDownload": "下載大小",
+                "sizeToDownload": "選定大小",
                 "sizeLeft": "剩餘大小",
                 "have": "有效",
                 "downloaded": "已下載",
@@ -552,7 +552,7 @@
         "fileCount": "{{count}} 個檔案",
         "fileCount_plural": "{{count}} 個檔案",
         "pieces": "{{count}} 個區塊",
-        "hashing": "雜湊計算中，已完成 {{done}} / {{total}}",
+        "hashing": "Hash 計算中，已完成 {{done}} / {{total}}",
         "infohash": "種子 Infohash: {{hash}}",
         "generate": "產生",
         "cancel": "取消",
