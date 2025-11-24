@@ -649,5 +649,46 @@
                 "language": "Language"
             }
         }
+    },
+    "createtorrent": {
+        "selectFileOrDirectory": "Select file or directory",
+        "file": "File",
+        "directory": "Directory",
+        "torrentName": "Torrent name",
+        "pieceSize": "Piece size",
+        "comment": "Comment",
+        "source": "Source (leave empty unless required by a private tracker)",
+        "privateTorrent": "Private torrent",
+        "trackerList": "Tracker list, one per line, empty line between tiers",
+        "addDefaultList": "Add default list",
+        "webSeeds": "Web seed URLs, one per line",
+        "calculatingSizes": "Calculating sizes...",
+        "fileCount": "{{count}} file",
+        "fileCount_plural": "{{count}} files",
+        "pieces": "{{count}} pieces",
+        "hashing": "Hashing, done {{done}} of {{total}}",
+        "infohash": "Torrent infohash: {{hash}}",
+        "generate": "Generate",
+        "cancel": "Cancel",
+        "save": "Save",
+        "dialog": {
+            "selectFile": "Select file",
+            "selectDirectory": "Select directory",
+            "saveTorrentFile": "Save torrent file"
+        },
+        "error": {
+            "calculateSizes": "Failed to calculate file sizes",
+            "notFound": "Torrent create request not found on backend"
+        }
+    },
+    "server": {
+        "error": {
+            "loadSession": "Failed to load session",
+            "notDaemon": "Server does not appear to be transmission daemon",
+            "versionRequired": "Transmission version 2.40 or higher is required."
+        }
+    },
+    "servertabs": {
+        "connect": "Connect"
     }
 }

@@ -345,15 +345,15 @@
         "torrents": {
             "headers": {
                 "name": "名称",
-                "size": "大小",
+                "size": "总大小",
                 "sizeToDownload": "下载大小",
                 "sizeLeft": "剩余大小",
-                "have": "拥有",
+                "have": "有效",
                 "downloaded": "已下载",
                 "uploaded": "已上传",
                 "ratio": "分享率",
                 "simpleRatio": "上传/下载",
-                "done": "完成",
+                "done": "进度",
                 "downSpeed": "下载速度",
                 "upSpeed": "上传速度",
                 "status": "状态",
@@ -367,14 +367,14 @@
                 "error": "错误",
                 "completedOn": "完成于",
                 "lastActive": "最后活动",
-                "path": "路径",
+                "path": "保存目录",
                 "priority": "优先级",
                 "id": "ID",
                 "queuePosition": "队列位置",
                 "seedingTime": "做种时间",
                 "private": "私有",
                 "labels": "标签",
-                "bandwidthGroup": "带宽组",
+                "bandwidthGroup": "备用带宽",
                 "fileCount": "文件数",
                 "pieceCount": "分块数",
                 "metadata": "元数据"
@@ -454,5 +454,46 @@
             "peers": "用户",
             "downloads": "下载"
         }
+    },
+    "createtorrent": {
+        "selectFileOrDirectory": "选择文件或目录",
+        "file": "文件",
+        "directory": "目录",
+        "torrentName": "种子名称",
+        "pieceSize": "分块大小",
+        "comment": "备注",
+        "source": "来源（除非私有 Tracker 要求，否则留空）",
+        "privateTorrent": "私有种子",
+        "trackerList": "Tracker 列表，每行一个，空行分隔层级",
+        "addDefaultList": "添加默认列表",
+        "webSeeds": "Web 做种 URL，每行一个",
+        "calculatingSizes": "正在计算大小...",
+        "fileCount": "{{count}} 个文件",
+        "fileCount_plural": "{{count}} 个文件",
+        "pieces": "{{count}} 个分块",
+        "hashing": "哈希计算中，已完成 {{done}} / {{total}}",
+        "infohash": "种子 Infohash: {{hash}}",
+        "generate": "生成",
+        "cancel": "取消",
+        "save": "保存",
+        "dialog": {
+            "selectFile": "选择文件",
+            "selectDirectory": "选择目录",
+            "saveTorrentFile": "保存种子文件"
+        },
+        "error": {
+            "calculateSizes": "计算文件大小失败",
+            "notFound": "后端未找到创建种子请求"
+        }
+    },
+    "server": {
+        "error": {
+            "loadSession": "加载会话失败",
+            "notDaemon": "服务器似乎不是 Transmission 守护进程",
+            "versionRequired": "需要 Transmission 2.40 或更高版本。"
+        }
+    },
+    "servertabs": {
+        "connect": "连接"
     }
 }
