@@ -250,10 +250,12 @@ export function Server({
   );
   const [mainSplit, toggleMainSplit] = useToggle<SplitType>([
     config.values.interface.mainSplit,
-    config.values.interface.mainSplit === "vertical"
-      ? "horizontal"
-      : "vertical",
-  ]);
+    ...(config.values.interface.mainSplit === "vertical"
+      ? ["horizontal", "sidebar"]
+      : config.values.interface.mainSplit === "horizontal"
+      ? ["sidebar", "vertical"]
+      : ["vertical", "horizontal"]),
+  ] as SplitType[]);
 
   useEffect(() => {
     config.values.interface.showFiltersPanel = showFiltersPanel;

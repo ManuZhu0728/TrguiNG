@@ -75,7 +75,7 @@ const TableNames = [
 ] as const;
 export type TableName = (typeof TableNames)[number];
 
-export type SplitType = "vertical" | "horizontal";
+export type SplitType = "vertical" | "horizontal" | "sidebar";
 
 const FilterSections = [
   "Status",
@@ -327,6 +327,7 @@ const DefaultSettings: Settings = {
     sashSizes: {
       vertical: [70, 30],
       horizontal: [20, 80],
+      sidebar: [20, 80],
     },
     filterSections: FilterSections.map((section) => ({
       section,
