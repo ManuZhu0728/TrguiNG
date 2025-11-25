@@ -2,8 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const require: any;
+declare const require: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const resources: Record<string, { translation: any }> = {};
 export const availableLanguages: string[] = [];

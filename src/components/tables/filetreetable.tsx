@@ -157,7 +157,7 @@ function NameField(props: TableFieldProps) {
         }
       );
     },
-    [mutation, fileTree, props.entry.fullpath, props.treeName]
+    [mutation, fileTree, props.entry.fullpath, props.treeName, t]
   );
 
   const rpcVersion = useServerRpcVersion();
@@ -361,7 +361,7 @@ function useSelected(
     setSelected(fileTree.getSelected());
   }, [fileTree, searchTerms]);
 
-  const selectAll = useRef(() => {});
+  const selectAll = useRef(() => { });
   const hk = useHotkeysContext();
 
   selectAll.current = useCallback(() => {
@@ -374,7 +374,7 @@ function useSelected(
 
   useEffect(() => {
     return () => {
-      hk.handlers.selectAll = () => {};
+      hk.handlers.selectAll = () => { };
     };
   }, [hk]);
 

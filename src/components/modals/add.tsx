@@ -281,8 +281,8 @@ export function AddMagnet(props: AddCommonModalProps) {
   const common = useCommonProps(props.opened);
   const { close } = props;
   const addMutation = useAddTorrent(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useCallback(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (response: any) => {
         const duplicate = response.arguments["torrent-duplicate"];
         if (duplicate !== undefined) {
@@ -478,15 +478,15 @@ function useTauriReadFile(
         typeof uri === "string"
           ? Promise.resolve(uri)
           : dialogOpen({
-              title: t("modals.add.selectTorrentFile"),
-              filters: [
-                {
-                  name: "Torrent",
-                  extensions: ["torrent"],
-                },
-              ],
-              multiple: true,
-            });
+            title: t("modals.add.selectTorrentFile"),
+            filters: [
+              {
+                name: "Torrent",
+                extensions: ["torrent"],
+              },
+            ],
+            multiple: true,
+          });
 
       pathPromise
         .then(readFile)
@@ -681,8 +681,8 @@ export function AddTorrent(props: AddCommonModalProps) {
   );
 
   const addMutation = useAddTorrent(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useCallback(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (response: any, vars: TorrentAddQueryParams) => {
         const duplicate = response.arguments["torrent-duplicate"];
         if (duplicate !== undefined) {

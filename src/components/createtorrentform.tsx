@@ -178,7 +178,7 @@ export default function CreateTorrentForm() {
           clearInterval(timer.current);
         });
     },
-    [setFieldValue]
+    [setFieldValue, t],
   );
 
   const onBrowseFile = useCallback(() => {
@@ -244,7 +244,7 @@ export default function CreateTorrentForm() {
       .catch((error) => {
         setState({ state: "error", error, hash: "" });
       });
-  }, [form.values]);
+  }, [form.values, t]);
 
   const onCancel = useCallback(() => {
     clearInterval(timer.current);
@@ -280,7 +280,7 @@ export default function CreateTorrentForm() {
         }
       })
       .catch(console.error);
-  }, [form.values.name]);
+  }, [form.values.name, t]);
 
   const addDefaultTrackers = useCallback(() => {
     let list = form.values.announceList;

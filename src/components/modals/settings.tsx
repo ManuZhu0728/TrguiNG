@@ -424,7 +424,7 @@ interface AppSettingsModalProps extends ModalState {
 
 export function AppSettingsModal(props: AppSettingsModalProps) {
   const config = useContext(ConfigContext);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const form = useForm<FormValues>({
     initialValues: {
       servers: config.getServers(),

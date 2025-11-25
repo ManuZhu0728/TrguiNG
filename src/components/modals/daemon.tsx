@@ -29,7 +29,6 @@ import {
   LoadingOverlay,
   NativeSelect,
   NumberInput,
-  SegmentedControl,
   Tabs,
   Text,
   TextInput,
@@ -273,13 +272,13 @@ function NetworkPanel({
       setTestPortResult(
         testPort.arguments["port-is-open"] === true
           ? {
-              label: t("modals.daemon.portOpen"),
-              color: "green",
-            }
+            label: t("modals.daemon.portOpen"),
+            color: "green",
+          }
           : {
-              label: t("modals.daemon.portUnreachable"),
-              color: "red",
-            }
+            label: t("modals.daemon.portUnreachable"),
+            color: "red",
+          }
       );
     } else if (status === "loading") {
       setTestPortResult({
@@ -735,7 +734,7 @@ function MagnetHandlerPanel() {
               {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 typeof (navigator as any).unregisterProtocolHandler ===
-                  "function" && (
+                "function" && (
                   <Button onClick={unregisterHandler}>
                     {t("modals.daemon.unregister")}
                   </Button>
@@ -759,7 +758,7 @@ export function DaemonSettingsModal(props: ModalState) {
   const mutation = useMutateSession();
   const config = useContext(ConfigContext);
   const serverConfig = useContext(ServerConfigContext);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const form = useForm<FormValues>({
     initialValues: {

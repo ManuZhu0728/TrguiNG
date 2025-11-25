@@ -177,7 +177,7 @@ function useButtonHandlers(
         props.modals.current?.daemonSettings();
       },
     };
-  }, [actionMutate, mutateTorrent, props.modals, serverSelected]);
+  }, [actionMutate, mutateTorrent, props.modals, serverSelected, t]);
 
   const sessionMutation = useMutateSession();
 
@@ -199,7 +199,7 @@ function useButtonHandlers(
     hk.handlers = { ...hk.handlers, ...handlers };
     return () => {
       Object.keys(handlers).forEach((k) => {
-        hk.handlers[k as keyof HotkeyHandlers] = () => {};
+        hk.handlers[k as keyof HotkeyHandlers] = () => { };
       });
     };
   }, [hk, handlers]);
@@ -257,7 +257,7 @@ function Toolbar(props: ToolbarProps) {
   useEffect(() => {
     hk.handlers.focusSearch = () => searchRef.current?.focus();
     return () => {
-      hk.handlers.focusSearch = () => {};
+      hk.handlers.focusSearch = () => { };
     };
   }, [hk]);
 

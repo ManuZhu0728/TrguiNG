@@ -386,8 +386,8 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               value={props.form.values.interface.preconfiguredDirs.join("\n")}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                 props.form.setFieldValue(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   "interface.preconfiguredDirs",
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   e.currentTarget.value.split("\n") as any
                 );
               }}
@@ -488,8 +488,8 @@ export function InterfaceSettigsPanel<V extends InterfaceFormValues>(props: {
               value={props.form.values.interface.defaultTrackers.join("\n")}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                 props.form.setFieldValue(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   "interface.defaultTrackers",
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   e.currentTarget.value.split("\n") as any
                 );
               }}

@@ -225,7 +225,6 @@ function filterOnKeyDown(event: React.KeyboardEvent<HTMLElement>) {
 
 const FilterRow = React.memo(function FilterRow(props: FilterRowProps) {
   const serverData = useServerTorrentData();
-  const serverSelected = useServerSelectedTorrents();
   const filterTorrents = useMemo(
     () => serverData.torrents.filter(props.filter.filter),
     [serverData.torrents, props.filter.filter]
@@ -234,8 +233,8 @@ const FilterRow = React.memo(function FilterRow(props: FilterRowProps) {
     () =>
       props.showSize
         ? bytesToHumanReadableStr(
-            filterTorrents.reduce((p, t) => p + (t.sizeWhenDone as number), 0)
-          )
+          filterTorrents.reduce((p, t) => p + (t.sizeWhenDone as number), 0)
+        )
         : "",
     [filterTorrents, props.showSize]
   );
