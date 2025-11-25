@@ -69,7 +69,7 @@ import { useTranslation } from "react-i18next";
 import * as Icon from "react-bootstrap-icons";
 
 const { TAURI, dialogOpen, invoke } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 interface AddCommonProps extends React.PropsWithChildren {

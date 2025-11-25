@@ -54,7 +54,7 @@ import { ToolbarButton } from "./toolbar";
 import { useTranslation } from "react-i18next";
 
 const { appWindow, invoke, makeCreateTorrentView } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 interface PassEventData {

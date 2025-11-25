@@ -54,7 +54,7 @@ import { ConfigContext } from "config";
 import { useTranslation } from "react-i18next";
 
 const { saveJsonFile, loadJsonFile } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 interface ToolbarButtonProps

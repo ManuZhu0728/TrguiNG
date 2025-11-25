@@ -47,7 +47,7 @@ import { useServerSelectedTorrents, useServerTorrentData } from "rpc/torrent";
 import { useHotkeysContext } from "hotkeys";
 import { useTranslation } from "react-i18next";
 const { TAURI, dialogOpen } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 export interface ModalState {

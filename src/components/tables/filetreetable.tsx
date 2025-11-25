@@ -66,7 +66,7 @@ import { useServerRpcVersion } from "rpc/torrent";
 import { FileIcon } from "components/fileicon";
 import { useTranslation } from "react-i18next";
 const { TAURI, invoke } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 type FileDirEntryKey = keyof FileDirEntryView;

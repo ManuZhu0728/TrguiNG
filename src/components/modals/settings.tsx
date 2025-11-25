@@ -59,7 +59,7 @@ import { UAParser } from "ua-parser-js";
 import type { InterfaceFormValues } from "./interfacepanel";
 import { InterfaceSettigsPanel } from "./interfacepanel";
 const { TAURI, invoke } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 interface FormValues extends InterfaceFormValues {

@@ -25,7 +25,7 @@ import type { CSSProperties } from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 const { TAURI, appWindow, invoke } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 const TauriApp = lazy(async () => await import("components/app"));

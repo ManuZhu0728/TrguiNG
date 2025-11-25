@@ -34,7 +34,7 @@ import { useHotkeys } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 
 const { appWindow, invoke } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 interface ServerTabsProps extends React.PropsWithChildren {

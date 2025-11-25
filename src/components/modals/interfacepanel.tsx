@@ -56,7 +56,7 @@ import * as Icon from "react-bootstrap-icons";
 import { useTranslation } from "react-i18next";
 import { availableLanguages } from "../../i18n";
 const { TAURI, invoke } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 const languageOverrides: Record<string, string> = {

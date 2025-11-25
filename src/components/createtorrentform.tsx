@@ -36,7 +36,7 @@ import { appVersion } from "./modals/version";
 import { ProgressBar } from "./progressbar";
 import { bytesToHumanReadableStr } from "trutil";
 const { appWindow, invoke, dialogOpen, dialogSave } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 interface FormValues {

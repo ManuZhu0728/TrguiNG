@@ -26,7 +26,7 @@ import type {
 import type { ColorScheme, DefaultMantineColor } from "@mantine/core";
 import type { PriorityNumberType } from "rpc/transmission";
 const { readConfigText, writeConfigText } = await import(
-    /* webpackChunkName: "taurishim" */ "taurishim",
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 export interface ServerConnection {
