@@ -233,6 +233,11 @@
             "randomPort": "Let daemon pick a random port",
             "upnp": "Enable UPnP port forwarding",
             "encryption": "Encryption:",
+            "encryptionOptions": {
+                "tolerated": "tolerated",
+                "preferred": "preferred",
+                "required": "required"
+            },
             "globalPeerLimit": "Global peer limit:",
             "perTorrent": "per torrent:",
             "pex": "Enable peer exchange",
@@ -245,7 +250,16 @@
             "updateBlocklist": "Update blocklist",
             "update": "Update",
             "errorUpdatingBlocklist": "Error updating blocklist",
-            "days": "Days:",
+            "daysLabel": "Days:",
+            "days": {
+                "sun": "Sunday",
+                "mon": "Monday",
+                "tue": "Tuesday",
+                "wed": "Wednesday",
+                "thu": "Thursday",
+                "fri": "Friday",
+                "sat": "Saturday"
+            },
             "normal": "Normal",
             "alternate": "Alternate",
             "maxDownloadSpeed": "Maximum download speed (KB/s):",

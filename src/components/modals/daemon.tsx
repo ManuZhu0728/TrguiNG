@@ -371,7 +371,20 @@ function NetworkPanel({
       <Grid.Col span={3}>{t("modals.daemon.encryption")}</Grid.Col>
       <Grid.Col span={3}>
         <NativeSelect
-          data={["tolerated", "preferred", "required"]}
+          data={[
+            {
+              label: t("modals.daemon.encryptionOptions.tolerated"),
+              value: "tolerated",
+            },
+            {
+              label: t("modals.daemon.encryptionOptions.preferred"),
+              value: "preferred",
+            },
+            {
+              label: t("modals.daemon.encryptionOptions.required"),
+              value: "required",
+            },
+          ]}
           {...form.getInputProps("session.encryption")}
         />
       </Grid.Col>
@@ -607,7 +620,7 @@ function BandwidthPanel({
         />
       </Grid.Col>
       <Grid.Col span={2}></Grid.Col>
-      <Grid.Col span={2}>{t("modals.daemon.days")}</Grid.Col>
+      <Grid.Col span={2}>{t("modals.daemon.daysLabel")}</Grid.Col>
       <Grid.Col span={10}>
         <Group>
           {DaysOfTheWeek.map((_, day) => (

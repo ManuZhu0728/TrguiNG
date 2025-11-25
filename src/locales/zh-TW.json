@@ -101,12 +101,12 @@
             "average": "平均"
         },
         "seeds": {
-            "of": "共",
-            "connected": "已連接"
+            "of": " / ",
+            "connected": ""
         },
         "peers": {
-            "of": "共",
-            "connected": "已連接"
+            "of": " / ",
+            "connected": ""
         },
         "transfer": {
             "status": "狀態:",
@@ -114,25 +114,25 @@
             "remaining": "剩餘:",
             "downloaded": "已下載:",
             "uploaded": "已上傳:",
-            "wasted": "廢棄:",
+            "wasted": "丟棄:",
             "downloadSpeed": "下載速度:",
             "uploadSpeed": "上傳速度:",
             "shareRatio": "分享率:",
             "downloadLimit": "下載限制:",
             "uploadLimit": "上傳限制:",
-            "bandwidthGroup": "頻寬群組:",
-            "seeds": "做種者:",
-            "peers": "用戶:",
-            "maxPeers": "最大用戶數:",
+            "bandwidthGroup": "頻寬組:",
+            "seeds": "活躍/做種:",
+            "peers": "活躍/下載:",
+            "maxPeers": "最大連線數:",
             "tracker": "Tracker",
-            "trackerUpdateOn": "Tracker 更新於:",
-            "lastActive": "最後活動:"
+            "trackerUpdateOn": "下次回報時間:",
+            "lastActive": "最後活動時間:"
         },
         "totalSize": {
             "done": "已完成"
         },
         "pieces": {
-            "have": "擁有"
+            "have": "已完成"
         },
         "torrent": {
             "fullPath": "儲存路徑:",
@@ -217,9 +217,9 @@
             "startAddedTorrents": "自動開始新增的種子",
             "startAddedTorrentsHint": "此設定僅適用於透過監控目錄或其他未指定開始參數的用戶端新增的種子。TrguiNG 會根據您在新增種子/磁力連結對話方塊中的選擇來設定開始參數。",
             "renamePartialFiles": "為未完成的檔案新增 .part 副檔名",
-            "separateIncompleteDir": "將未完成的檔案存放在單獨的目錄",
-            "incompleteDir": "未完成檔案路徑",
-            "useDefaultSeedRatioLimit": "使用預設分享率限制",
+            "separateIncompleteDir": "將未完成的檔案存放在暫存目錄",
+            "incompleteDir": "暫存目錄",
+            "useDefaultSeedRatioLimit": "預設分享率上限",
             "stopIdleTorrents": "空閒種子停止時間",
             "minutes": "分鐘",
             "diskCacheSize": "磁碟快取大小",
@@ -230,14 +230,19 @@
             "portOpen": "連接埠開放",
             "portUnreachable": "連接埠無法存取",
             "apiError": "API 錯誤",
-            "randomPort": "啟動時隨機選擇連接埠",
+            "randomPort": "啟用隨機連接埠",
             "upnp": "啟用 UPnP 連接埠轉發",
             "encryption": "加密:",
-            "globalPeerLimit": "全域用戶限制:",
-            "perTorrent": "每個種子:",
+            "encryptionOptions": {
+                "tolerated": "容許",
+                "preferred": "首選",
+                "required": "必要"
+            },
+            "globalPeerLimit": "全域最大連線數:",
+            "perTorrent": "單種最大連線數:",
             "pex": "啟用用戶交換 (PEX)",
             "dht": "啟用 DHT",
-            "lpd": "啟用本地發現 (LPD)",
+            "lpd": "啟用本地用戶發現 (LPD)",
             "utp": "啟用 uTP",
             "blocklist": "啟用黑名單:",
             "blocklistEntries": "黑名單包含 {{count}} 個項目",
@@ -245,7 +250,16 @@
             "updateBlocklist": "更新黑名單",
             "update": "更新",
             "errorUpdatingBlocklist": "更新黑名單出錯",
-            "days": "日期:",
+            "daysLabel": "日期:",
+            "days": {
+                "sun": "週日",
+                "mon": "週一",
+                "tue": "週二",
+                "wed": "週三",
+                "thu": "週四",
+                "fri": "週五",
+                "sat": "週六"
+            },
             "normal": "正常",
             "alternate": "替代",
             "maxDownloadSpeed": "最大下載速度 (KB/s):",
@@ -254,9 +268,9 @@
             "autoAltSpeed": "自動套用替代頻寬設定",
             "from": "從:",
             "to": "到:",
-            "downloadQueueSize": "下載佇列大小",
-            "seedQueueSize": "做種佇列大小",
-            "queueStalled": "當空閒超過以下時間時視為停滯",
+            "downloadQueueSize": "啟用下載佇列，最大同時下載數",
+            "seedQueueSize": "啟用做種佇列，最大同時做種數",
+            "queueStalled": "種子超過該時間無流量時，移出佇列",
             "registerMagnet": "註冊磁力連結協定處理常式",
             "register": "註冊",
             "unregister": "登出",
@@ -339,7 +353,7 @@
         "preconfiguredDirectories": "預先設定目錄（每行一個）",
         "preconfiguredLabels": "預先設定標籤",
         "preconfiguredLabelsHint": "這些標籤將始終出現在建議清單和過濾器中，即使沒有現有種子使用它們。",
-        "removeTorrentDialogDeleteDataOption": "移除種子對話方塊刪除資料選項",
+        "removeTorrentDialogDeleteDataOption": "刪除資料選項",
         "ignoredTrackerPrefixes": "忽略的 Tracker 前綴",
         "ignoredTrackerPrefixesHint": "當 Tracker 的子網域看起來像這些字串之一 +（可選）數字時，它將被省略。這會影響過濾器中的分組和表格欄位中的顯示。您可以在此處使用正規表示式進行更進階的過濾，清單將使用 \"|\" 組合。",
         "defaultTrackerList": "預設 Tracker 清單",
@@ -347,8 +361,8 @@
     },
     "move": {
         "title": "移動種子",
-        "enterNewLocation": "輸入新位置",
-        "moveData": "將種子資料移動到新位置",
+        "enterNewLocation": "輸入新目錄",
+        "moveData": "同時移動數據（如果不勾選，則從新目錄下查找數據）",
         "move": "移動",
         "cancel": "取消",
         "errorMoving": "移動種子出錯"
@@ -356,7 +370,7 @@
     "remove": {
         "title": "移除種子",
         "confirmation": "確定要移除以下種子嗎？",
-        "deleteData": "刪除種子資料",
+        "deleteData": "一併刪除資料",
         "delete": "刪除",
         "remove": "移除",
         "cancel": "取消",
@@ -423,8 +437,8 @@
                 "upSpeed": "上傳速度",
                 "status": "狀態",
                 "addedOn": "新增於",
-                "seeds": "做種",
-                "peers": "用戶",
+                "seeds": "活躍/做種:",
+                "peers": "活躍/下載:",
                 "eta": "剩餘時間",
                 "tracker": "Tracker",
                 "trackerStatus": "Tracker 狀態",
@@ -455,14 +469,14 @@
                 "start": "開始",
                 "pause": "暫停",
                 "verify": "驗證",
-                "reannounce": "重新公告",
+                "reannounce": "重新匯報",
                 "copyMagnetLink": "複製磁力連結",
                 "copyMagnetLinks": "複製磁力連結",
                 "queue": "佇列",
-                "move": "移動...",
+                "move": "移動種子...",
                 "setLabels": "設定標籤...",
-                "remove": "移除...",
-                "trackers": "Trackers...",
+                "remove": "刪除...",
+                "trackers": "修改Tracker...",
                 "properties": "屬性..."
             },
             "notifications": {
@@ -472,7 +486,7 @@
                 "started": "種子已開始",
                 "stopped": "種子已停止",
                 "verificationStarted": "種子驗證已開始",
-                "reannounced": "種子已重新公告",
+                "reannounced": "種子已重新匯報",
                 "failedToRename": "重新命名種子失敗",
                 "errorOpeningPath": "開啟路徑出錯"
             }
@@ -529,7 +543,7 @@
             "country": "國家/地區"
         },
         "trackers": {
-            "announce_url": "公告 URL",
+            "announce_url": "URL",
             "status": "狀態",
             "next_update": "下次更新",
             "seeds": "做種",

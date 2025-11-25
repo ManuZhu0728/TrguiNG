@@ -101,12 +101,12 @@
             "average": "平均"
         },
         "seeds": {
-            "of": "共",
-            "connected": "已连接"
+            "of": " / ",
+            "connected": ""
         },
         "peers": {
-            "of": "共",
-            "connected": "已连接"
+            "of": " / ",
+            "connected": ""
         },
         "transfer": {
             "status": "状态:",
@@ -114,25 +114,25 @@
             "remaining": "剩余:",
             "downloaded": "已下载:",
             "uploaded": "已上传:",
-            "wasted": "废弃:",
+            "wasted": "丢弃:",
             "downloadSpeed": "下载速度:",
             "uploadSpeed": "上传速度:",
             "shareRatio": "分享率:",
             "downloadLimit": "下载限制:",
             "uploadLimit": "上传限制:",
             "bandwidthGroup": "带宽组:",
-            "seeds": "做种者:",
-            "peers": "用户:",
-            "maxPeers": "最大用户数:",
+            "seeds": "活跃/做种:",
+            "peers": "活跃/下载:",
+            "maxPeers": "最大链接数:",
             "tracker": "Tracker",
-            "trackerUpdateOn": "Tracker 更新于:",
-            "lastActive": "最后活动:"
+            "trackerUpdateOn": "下次汇报时间:",
+            "lastActive": "最后活动时间:"
         },
         "totalSize": {
             "done": "已完成"
         },
         "pieces": {
-            "have": "拥有"
+            "have": "已完成"
         },
         "torrent": {
             "fullPath": "保存路径:",
@@ -217,27 +217,32 @@
             "startAddedTorrents": "自动开始添加的种子",
             "startAddedTorrentsHint": "此设置仅适用于通过监控目录或其他未指定开始参数的客户端添加的种子。TrguiNG 会根据您在添加种子/磁力链接对话框中的选择来设置开始参数。",
             "renamePartialFiles": "为未完成的文件添加 .part 扩展名",
-            "separateIncompleteDir": "将未完成的文件存放在单独的目录",
-            "incompleteDir": "未完成文件路径",
-            "useDefaultSeedRatioLimit": "使用默认分享率限制",
+            "separateIncompleteDir": "将未完成的文件存放在临时目录",
+            "incompleteDir": "临时目录",
+            "useDefaultSeedRatioLimit": "默认分享率上限",
             "stopIdleTorrents": "空闲种子停止时间",
             "minutes": "分钟",
             "diskCacheSize": "磁盘缓存大小",
             "mb": "MB",
-            "incomingPort": "传入端口:",
+            "incomingPort": "连接端口号:",
             "testPortHint": "检查当前配置的端口。如果您进行了更改，请在测试前保存。",
             "testPort": "测试端口",
             "portOpen": "端口开放",
             "portUnreachable": "端口无法访问",
             "apiError": "API 错误",
-            "randomPort": "启动时随机选择端口",
-            "upnp": "启用 UPnP 端口转发",
+            "randomPort": "启用随机端口",
+            "upnp": "启用端口转发(UPnP)",
             "encryption": "加密:",
-            "globalPeerLimit": "全局用户限制:",
-            "perTorrent": "每个种子:",
+            "encryptionOptions": {
+                "tolerated": "允许加密",
+                "preferred": "优先加密",
+                "required": "强制加密"
+            },
+            "globalPeerLimit": "全局最大链接数:",
+            "perTorrent": "单种最大链接数:",
             "pex": "启用用户交换 (PEX)",
             "dht": "启用 DHT",
-            "lpd": "启用本地发现 (LPD)",
+            "lpd": "启用本地用户发现 (LPD)",
             "utp": "启用 uTP",
             "blocklist": "启用黑名单:",
             "blocklistEntries": "黑名单包含 {{count}} 个条目",
@@ -245,18 +250,27 @@
             "updateBlocklist": "更新黑名单",
             "update": "更新",
             "errorUpdatingBlocklist": "更新黑名单出错",
-            "days": "日期:",
+            "daysLabel": "日期:",
+            "days": {
+                "sun": "周日",
+                "mon": "周一",
+                "tue": "周二",
+                "wed": "周三",
+                "thu": "周四",
+                "fri": "周五",
+                "sat": "周六"
+            },
             "normal": "正常",
             "alternate": "备用",
             "maxDownloadSpeed": "最大下载速度 (KB/s):",
             "maxUploadSpeed": "最大上传速度 (KB/s):",
-            "useAltSpeed": "使用备用带宽设置",
-            "autoAltSpeed": "自动应用备用带宽设置",
+            "useAltSpeed": "启用备用带宽",
+            "autoAltSpeed": "自动启用备用带宽",
             "from": "从:",
             "to": "到:",
-            "downloadQueueSize": "下载队列大小",
-            "seedQueueSize": "做种队列大小",
-            "queueStalled": "当空闲超过以下时间时视为停滞",
+            "downloadQueueSize": "启用下载队列，最大同时下载数",
+            "seedQueueSize": "启用做种队列，最大同时做种数",
+            "queueStalled": "种子超过该时间无流量，移出队列",
             "registerMagnet": "注册磁力链接协议处理程序",
             "register": "注册",
             "unregister": "注销",
@@ -339,7 +353,7 @@
         "preconfiguredDirectories": "预配置目录（每行一个）",
         "preconfiguredLabels": "预配置标签",
         "preconfiguredLabelsHint": "这些标签将始终出现在建议列表和过滤器中，即使没有现有种子使用它们。",
-        "removeTorrentDialogDeleteDataOption": "移除种子对话框删除数据选项",
+        "removeTorrentDialogDeleteDataOption": "删除数据文件",
         "ignoredTrackerPrefixes": "忽略的 Tracker 前缀",
         "ignoredTrackerPrefixesHint": "当 Tracker 的子域名看起来像这些字符串之一 +（可选）数字时，它将被省略。这会影响过滤器中的分组和表格列中的显示。您可以在此处使用正则表达式进行更高级的过滤，列表将使用 \"|\" 组合。",
         "defaultTrackerList": "默认 Tracker 列表",
@@ -347,20 +361,20 @@
     },
     "move": {
         "title": "移动种子",
-        "enterNewLocation": "输入新位置",
-        "moveData": "将种子数据移动到新位置",
+        "enterNewLocation": "输入新目录",
+        "moveData": "同时移动数据（如果不勾选，则从新目录下查找数据）",
         "move": "移动",
         "cancel": "取消",
         "errorMoving": "移动种子出错"
     },
     "remove": {
-        "title": "移除种子",
-        "confirmation": "确定要移除以下种子吗？",
-        "deleteData": "删除种子数据",
+        "title": "删除种子",
+        "confirmation": "确定要删除以下种子吗？",
+        "deleteData": "同时删除数据",
         "delete": "删除",
-        "remove": "移除",
+        "remove": "删除",
         "cancel": "取消",
-        "errorRemoving": "移除种子出错"
+        "errorRemoving": "删除种子出错"
     },
     "settings": {
         "title": "应用设置",
@@ -423,8 +437,8 @@
                 "upSpeed": "上传速度",
                 "status": "状态",
                 "addedOn": "添加于",
-                "seeds": "做种",
-                "peers": "用户",
+                "seeds": "活跃/做种",
+                "peers": "活跃/下载",
                 "eta": "剩余时间",
                 "tracker": "Tracker",
                 "trackerStatus": "Tracker 状态",
@@ -454,15 +468,15 @@
                 "forceStart": "强制开始",
                 "start": "开始",
                 "pause": "暂停",
-                "verify": "校验",
-                "reannounce": "重新公告",
+                "verify": "重新校验",
+                "reannounce": "重新汇报",
                 "copyMagnetLink": "复制磁力链接",
                 "copyMagnetLinks": "复制磁力链接",
                 "queue": "队列",
-                "move": "移动...",
+                "move": "移动种子...",
                 "setLabels": "设置标签...",
-                "remove": "移除...",
-                "trackers": "Trackers...",
+                "remove": "删除...",
+                "trackers": "修改Tracker...",
                 "properties": "属性..."
             },
             "notifications": {
@@ -472,7 +486,7 @@
                 "started": "种子已开始",
                 "stopped": "种子已停止",
                 "verificationStarted": "种子校验已开始",
-                "reannounced": "种子已重新公告",
+                "reannounced": "种子已重新汇报",
                 "failedToRename": "重命名种子失败",
                 "errorOpeningPath": "打开路径出错"
             }
@@ -529,7 +543,7 @@
             "country": "国家/地区"
         },
         "trackers": {
-            "announce_url": "公告 URL",
+            "announce_url": "URL",
             "status": "状态",
             "next_update": "下次更新",
             "seeds": "做种",
