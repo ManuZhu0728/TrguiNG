@@ -18,58 +18,58 @@
 
 import "css/torrenttable.css";
 import React, {
-  memo,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+    memo,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 import type { Torrent } from "rpc/torrent";
 import {
-  useServerTorrentData,
-  useServerRpcVersion,
-  useServerSelectedTorrents,
+    useServerTorrentData,
+    useServerRpcVersion,
+    useServerSelectedTorrents,
 } from "rpc/torrent";
 import type { TorrentAllFieldsType, TorrentFieldsType } from "rpc/transmission";
 import {
-  PriorityColors,
-  PriorityStrings,
-  Status,
-  StatusStrings,
-  TorrentMinimumFields,
+    PriorityColors,
+    PriorityStrings,
+    Status,
+    StatusStrings,
+    TorrentMinimumFields,
 } from "rpc/transmission";
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import {
-  bytesToHumanReadableStr,
-  fileSystemSafeName,
-  modKeyString,
-  pathMapFromServer,
-  secondsToHumanReadableStr,
-  timestampToDateString,
-  torrentProgressbarStyle,
+    bytesToHumanReadableStr,
+    fileSystemSafeName,
+    modKeyString,
+    pathMapFromServer,
+    secondsToHumanReadableStr,
+    timestampToDateString,
+    torrentProgressbarStyle,
 } from "trutil";
 import { ProgressBar } from "../progressbar";
 import type { AccessorFn, CellContext } from "@tanstack/table-core";
 import type { TableSelectReducer } from "./common";
 import { EditableNameField, TrguiTable } from "./common";
 import {
-  Badge,
-  Box,
-  Button,
-  Kbd,
-  Menu,
-  Portal,
-  Text,
-  useMantineTheme,
+    Badge,
+    Box,
+    Button,
+    Kbd,
+    Menu,
+    Portal,
+    Text,
+    useMantineTheme,
 } from "@mantine/core";
 import { ConfigContext, ServerConfigContext } from "config";
 import {
-  StatusIconMap,
-  Error as StatusIconError,
-  Magnetizing,
-  CompletedStopped,
+    StatusIconMap,
+    Error as StatusIconError,
+    Magnetizing,
+    CompletedStopped,
 } from "components/statusicons";
 import { useMutateTorrentPath, useTorrentAction } from "queries";
 import { notifications } from "@mantine/notifications";
@@ -81,1024 +81,1024 @@ import * as Icon from "react-bootstrap-icons";
 import { useHotkeysContext } from "hotkeys";
 import { useTranslation } from "react-i18next";
 const { TAURI, invoke, copyToClipboard } = await import(
-  /* webpackChunkName: "taurishim" */ "taurishim"
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 interface TableFieldProps {
-  torrent: Torrent;
-  fieldName: TorrentAllFieldsType;
+    torrent: Torrent,
+    fieldName: TorrentAllFieldsType,
 }
 
 interface TableFieldSimple {
-  name: TorrentFieldsType;
-  label: string;
-  component:
+    name: TorrentFieldsType,
+    label: string,
+    component:
     | React.FunctionComponent<TableFieldProps>
-    | React.NamedExoticComponent<TableFieldProps>;
-  requiredFields?: TorrentFieldsType[];
+    | React.NamedExoticComponent<TableFieldProps>,
+    requiredFields?: TorrentFieldsType[],
 }
 
 interface TableFieldWithAccessor extends TableFieldSimple {
-  columnId: string;
-  accessorFn: AccessorFn<Torrent>;
+    columnId: string,
+    accessorFn: AccessorFn<Torrent>,
 }
 
 type TableField = TableFieldSimple | TableFieldWithAccessor;
 
 function isTableFieldWithAccessor(f: TableField): f is TableFieldWithAccessor {
-  return (f as TableFieldWithAccessor).accessorFn !== undefined;
+    return (f as TableFieldWithAccessor).accessorFn !== undefined;
 }
 
 const TimeField = memo(
-  function TimeField(props: TableFieldProps) {
-    if (props.fieldName in props.torrent) {
-      return (
-        <div>{secondsToHumanReadableStr(props.torrent[props.fieldName])}</div>
-      );
-    } else {
-      return <></>;
-    }
-  },
-  (prev, next) => {
-    const previousValue = prev.torrent[prev.fieldName] as number;
-    const nextValue = next.torrent[next.fieldName] as number;
-    return Math.abs((previousValue - nextValue) / nextValue) < 1 / 60 / 60;
-  }
+    function TimeField(props: TableFieldProps) {
+        if (props.fieldName in props.torrent) {
+            return (
+                <div>{secondsToHumanReadableStr(props.torrent[props.fieldName])}</div>
+            );
+        } else {
+            return <></>;
+        }
+    },
+    (prev, next) => {
+        const previousValue = prev.torrent[prev.fieldName] as number;
+        const nextValue = next.torrent[next.fieldName] as number;
+        return Math.abs((previousValue - nextValue) / nextValue) < 1 / 60 / 60;
+    },
 );
 
 const AllFields: readonly TableField[] = [
-  {
-    name: "name",
-    label: "tables.torrents.headers.name",
-    component: NameField,
-    requiredFields: [
-      "name",
-      "error",
-      "trackerStats",
-      "leftUntilDone",
-      "downloadDir",
-    ] as TorrentFieldsType[],
-  },
-  {
-    name: "totalSize",
-    label: "tables.torrents.headers.size",
-    component: ByteSizeField,
-  },
-  {
-    name: "sizeWhenDone",
-    label: "tables.torrents.headers.sizeToDownload",
-    component: ByteSizeField,
-  },
-  {
-    name: "leftUntilDone",
-    label: "tables.torrents.headers.sizeLeft",
-    component: ByteSizeField,
-  },
-  {
-    name: "haveValid",
-    label: "tables.torrents.headers.have",
-    component: ByteSizeField,
-  },
-  {
-    name: "downloadedEver",
-    label: "tables.torrents.headers.downloaded",
-    component: ByteSizeField,
-  },
-  {
-    name: "uploadedEver",
-    label: "tables.torrents.headers.uploaded",
-    component: ByteSizeField,
-  },
-  {
-    name: "uploadedEver",
-    label: "tables.torrents.headers.simpleRatio",
-    component: UploadRatioField,
-    accessorFn: (t) =>
-      t.uploadedEver === 0 ? 0 : t.uploadedEver / t.downloadedEver,
-    columnId: "simpleRatio",
-    requiredFields: ["uploadedEver", "downloadedEver"] as TorrentFieldsType[],
-  },
-  {
-    name: "percentDone",
-    label: "tables.torrents.headers.done",
-    component: PercentBarField,
-    requiredFields: [
-      "percentDone",
-      "rateDownload",
-      "rateUpload",
-    ] as TorrentFieldsType[],
-  },
-  {
-    name: "rateDownload",
-    label: "tables.torrents.headers.downSpeed",
-    component: ByteRateField,
-  },
-  {
-    name: "rateUpload",
-    label: "tables.torrents.headers.upSpeed",
-    component: ByteRateField,
-  },
-  {
-    name: "status",
-    label: "tables.torrents.headers.status",
-    component: StatusField,
-  },
-  {
-    name: "addedDate",
-    label: "tables.torrents.headers.addedOn",
-    component: DateField,
-  },
-  {
-    name: "peersSendingToUs",
-    label: "tables.torrents.headers.seeds",
-    component: SeedsField,
-    columnId: "peersSendingToUs",
-    accessorFn: (t) => t.peersSendingToUs * 1e6 + t.cachedSeedsTotal,
-  },
-  {
-    name: "peersGettingFromUs",
-    label: "tables.torrents.headers.peers",
-    component: PeersField,
-    columnId: "peersGettingFromUs",
-    accessorFn: (t) => t.peersGettingFromUs * 1e6 + t.cachedPeersTotal,
-  },
-  { name: "eta", label: "tables.torrents.headers.eta", component: EtaField },
-  {
-    name: "uploadRatio",
-    label: "tables.torrents.headers.ratio",
-    component: FixedDecimalField,
-  },
-  {
-    name: "trackerStats",
-    label: "tables.torrents.headers.tracker",
-    component: TrackerField,
-    columnId: "tracker",
-    accessorFn: (t) => t.cachedMainTracker,
-  },
-  {
-    name: "trackerStats",
-    label: "tables.torrents.headers.trackerStatus",
-    component: TrackerStatusField,
-    columnId: "trackerStatus",
-    accessorFn: (t) => t.cachedTrackerStatus,
-  },
-  {
-    name: "trackerStats",
-    label: "tables.torrents.headers.trackerDownloads",
-    component: TrackerDownloadsField,
-    columnId: "trackerDownloads",
-    accessorFn: (t) => t.cachedTrackerDlCount,
-  },
-  {
-    name: "errorString",
-    label: "tables.torrents.headers.error",
-    component: ErrorField,
-    columnId: "error",
-    accessorFn: (t) => t.cachedError,
-  },
-  {
-    name: "doneDate",
-    label: "tables.torrents.headers.completedOn",
-    component: DateField,
-  },
-  {
-    name: "activityDate",
-    label: "tables.torrents.headers.lastActive",
-    component: DateDiffField,
-  },
-  {
-    name: "downloadDir",
-    label: "tables.torrents.headers.path",
-    component: StringField,
-  },
-  {
-    name: "bandwidthPriority",
-    label: "tables.torrents.headers.priority",
-    component: PriorityField,
-  },
-  {
-    name: "id",
-    label: "tables.torrents.headers.id",
-    component: PositiveNumberField,
-  },
-  {
-    name: "queuePosition",
-    label: "tables.torrents.headers.queuePosition",
-    component: PositiveNumberField,
-  },
-  {
-    name: "secondsSeeding",
-    label: "tables.torrents.headers.seedingTime",
-    component: TimeField,
-  },
-  {
-    name: "isPrivate",
-    label: "tables.torrents.headers.private",
-    component: StringField,
-  },
-  {
-    name: "labels",
-    label: "tables.torrents.headers.labels",
-    component: LabelsField,
-  },
-  {
-    name: "group",
-    label: "tables.torrents.headers.bandwidthGroup",
-    component: StringField,
-  },
-  {
-    name: "file-count",
-    label: "tables.torrents.headers.fileCount",
-    component: PositiveNumberField,
-  },
-  {
-    name: "pieceCount",
-    label: "tables.torrents.headers.pieceCount",
-    component: PositiveNumberField,
-  },
-  {
-    name: "metadataPercentComplete",
-    label: "tables.torrents.headers.metadata",
-    component: PercentBarField,
-  },
+    {
+        name: "name",
+        label: "tables.torrents.headers.name",
+        component: NameField,
+        requiredFields: [
+            "name",
+            "error",
+            "trackerStats",
+            "leftUntilDone",
+            "downloadDir",
+        ] as TorrentFieldsType[],
+    },
+    {
+        name: "totalSize",
+        label: "tables.torrents.headers.size",
+        component: ByteSizeField,
+    },
+    {
+        name: "sizeWhenDone",
+        label: "tables.torrents.headers.sizeToDownload",
+        component: ByteSizeField,
+    },
+    {
+        name: "leftUntilDone",
+        label: "tables.torrents.headers.sizeLeft",
+        component: ByteSizeField,
+    },
+    {
+        name: "haveValid",
+        label: "tables.torrents.headers.have",
+        component: ByteSizeField,
+    },
+    {
+        name: "downloadedEver",
+        label: "tables.torrents.headers.downloaded",
+        component: ByteSizeField,
+    },
+    {
+        name: "uploadedEver",
+        label: "tables.torrents.headers.uploaded",
+        component: ByteSizeField,
+    },
+    {
+        name: "uploadedEver",
+        label: "tables.torrents.headers.simpleRatio",
+        component: UploadRatioField,
+        accessorFn: (t) =>
+            t.uploadedEver === 0 ? 0 : t.uploadedEver / t.downloadedEver,
+        columnId: "simpleRatio",
+        requiredFields: ["uploadedEver", "downloadedEver"] as TorrentFieldsType[],
+    },
+    {
+        name: "percentDone",
+        label: "tables.torrents.headers.done",
+        component: PercentBarField,
+        requiredFields: [
+            "percentDone",
+            "rateDownload",
+            "rateUpload",
+        ] as TorrentFieldsType[],
+    },
+    {
+        name: "rateDownload",
+        label: "tables.torrents.headers.downSpeed",
+        component: ByteRateField,
+    },
+    {
+        name: "rateUpload",
+        label: "tables.torrents.headers.upSpeed",
+        component: ByteRateField,
+    },
+    {
+        name: "status",
+        label: "tables.torrents.headers.status",
+        component: StatusField,
+    },
+    {
+        name: "addedDate",
+        label: "tables.torrents.headers.addedOn",
+        component: DateField,
+    },
+    {
+        name: "peersSendingToUs",
+        label: "tables.torrents.headers.seeds",
+        component: SeedsField,
+        columnId: "peersSendingToUs",
+        accessorFn: (t) => t.peersSendingToUs * 1e6 + t.cachedSeedsTotal,
+    },
+    {
+        name: "peersGettingFromUs",
+        label: "tables.torrents.headers.peers",
+        component: PeersField,
+        columnId: "peersGettingFromUs",
+        accessorFn: (t) => t.peersGettingFromUs * 1e6 + t.cachedPeersTotal,
+    },
+    { name: "eta", label: "tables.torrents.headers.eta", component: EtaField },
+    {
+        name: "uploadRatio",
+        label: "tables.torrents.headers.ratio",
+        component: FixedDecimalField,
+    },
+    {
+        name: "trackerStats",
+        label: "tables.torrents.headers.tracker",
+        component: TrackerField,
+        columnId: "tracker",
+        accessorFn: (t) => t.cachedMainTracker,
+    },
+    {
+        name: "trackerStats",
+        label: "tables.torrents.headers.trackerStatus",
+        component: TrackerStatusField,
+        columnId: "trackerStatus",
+        accessorFn: (t) => t.cachedTrackerStatus,
+    },
+    {
+        name: "trackerStats",
+        label: "tables.torrents.headers.trackerDownloads",
+        component: TrackerDownloadsField,
+        columnId: "trackerDownloads",
+        accessorFn: (t) => t.cachedTrackerDlCount,
+    },
+    {
+        name: "errorString",
+        label: "tables.torrents.headers.error",
+        component: ErrorField,
+        columnId: "error",
+        accessorFn: (t) => t.cachedError,
+    },
+    {
+        name: "doneDate",
+        label: "tables.torrents.headers.completedOn",
+        component: DateField,
+    },
+    {
+        name: "activityDate",
+        label: "tables.torrents.headers.lastActive",
+        component: DateDiffField,
+    },
+    {
+        name: "downloadDir",
+        label: "tables.torrents.headers.path",
+        component: StringField,
+    },
+    {
+        name: "bandwidthPriority",
+        label: "tables.torrents.headers.priority",
+        component: PriorityField,
+    },
+    {
+        name: "id",
+        label: "tables.torrents.headers.id",
+        component: PositiveNumberField,
+    },
+    {
+        name: "queuePosition",
+        label: "tables.torrents.headers.queuePosition",
+        component: PositiveNumberField,
+    },
+    {
+        name: "secondsSeeding",
+        label: "tables.torrents.headers.seedingTime",
+        component: TimeField,
+    },
+    {
+        name: "isPrivate",
+        label: "tables.torrents.headers.private",
+        component: StringField,
+    },
+    {
+        name: "labels",
+        label: "tables.torrents.headers.labels",
+        component: LabelsField,
+    },
+    {
+        name: "group",
+        label: "tables.torrents.headers.bandwidthGroup",
+        component: StringField,
+    },
+    {
+        name: "file-count",
+        label: "tables.torrents.headers.fileCount",
+        component: PositiveNumberField,
+    },
+    {
+        name: "pieceCount",
+        label: "tables.torrents.headers.pieceCount",
+        component: PositiveNumberField,
+    },
+    {
+        name: "metadataPercentComplete",
+        label: "tables.torrents.headers.metadata",
+        component: PercentBarField,
+    },
 ] as const;
 
 function NameField(props: TableFieldProps) {
-  const { t } = useTranslation();
-  let StatusIcon = StatusIconMap[props.torrent.status];
-  if (
-    props.torrent.status === Status.downloading &&
+    const { t } = useTranslation();
+    let StatusIcon = StatusIconMap[props.torrent.status];
+    if (
+        props.torrent.status === Status.downloading &&
     props.torrent.pieceCount === 0
-  ) {
-    StatusIcon = Magnetizing;
-  }
-  if (
-    props.torrent.status === Status.stopped &&
+    ) {
+        StatusIcon = Magnetizing;
+    }
+    if (
+        props.torrent.status === Status.stopped &&
     props.torrent.sizeWhenDone > 0 &&
     props.torrent.leftUntilDone === 0
-  ) {
-    StatusIcon = CompletedStopped;
-  }
+    ) {
+        StatusIcon = CompletedStopped;
+    }
 
-  if (
-    (props.torrent.error !== undefined && props.torrent.error > 0) ||
+    if (
+        (props.torrent.error !== undefined && props.torrent.error > 0) ||
     props.torrent.cachedError !== ""
-  ) {
-    StatusIcon = StatusIconError;
-  }
+    ) {
+        StatusIcon = StatusIconError;
+    }
 
-  const currentName = useMemo(
-    () => props.torrent[props.fieldName],
-    [props.fieldName, props.torrent]
-  );
+    const currentName = useMemo(
+        () => props.torrent[props.fieldName],
+        [props.fieldName, props.torrent],
+    );
 
-  const mutation = useMutateTorrentPath();
+    const mutation = useMutateTorrentPath();
 
-  const updateTorrentName = useCallback(
-    (name: string, onStart: () => void, onEnd: () => void) => {
-      onStart();
-      const path = fileSystemSafeName(props.torrent.name);
-      name = fileSystemSafeName(name);
-      if (name === path) {
-        onEnd();
-      } else {
-        mutation.mutate(
-          { torrentId: props.torrent.id, path, name },
-          {
-            onSettled: onEnd,
-            onError: () => {
-              notifications.show({
-                color: "red",
-                message: t("tables.torrents.notifications.failedToRename"),
-              });
-            },
-          }
-        );
-      }
-    },
-    [mutation, props.torrent.id, props.torrent.name, t]
-  );
+    const updateTorrentName = useCallback(
+        (name: string, onStart: () => void, onEnd: () => void) => {
+            onStart();
+            const path = fileSystemSafeName(props.torrent.name);
+            name = fileSystemSafeName(name);
+            if (name === path) {
+                onEnd();
+            } else {
+                mutation.mutate(
+                    { torrentId: props.torrent.id, path, name },
+                    {
+                        onSettled: onEnd,
+                        onError: () => {
+                            notifications.show({
+                                color: "red",
+                                message: t("tables.torrents.notifications.failedToRename"),
+                            });
+                        },
+                    },
+                );
+            }
+        },
+        [mutation, props.torrent.id, props.torrent.name, t],
+    );
 
-  const rpcVersion = useServerRpcVersion();
+    const rpcVersion = useServerRpcVersion();
 
-  return (
-    <EditableNameField
-      currentName={currentName}
-      onUpdate={rpcVersion >= 15 ? updateTorrentName : undefined}
-    >
-      <Box pb="xs" className="icon-container">
-        <StatusIcon />
-      </Box>
-    </EditableNameField>
-  );
+    return (
+        <EditableNameField
+            currentName={currentName}
+            onUpdate={rpcVersion >= 15 ? updateTorrentName : undefined}
+        >
+            <Box pb="xs" className="icon-container">
+                <StatusIcon />
+            </Box>
+        </EditableNameField>
+    );
 }
 
 function StringField(props: TableFieldProps) {
-  return <div>{props.torrent[props.fieldName]}</div>;
+    return <div>{props.torrent[props.fieldName]}</div>;
 }
 
 function PositiveNumberField(props: TableFieldProps) {
-  const num = props.torrent[props.fieldName];
-  return (
-    <div style={{ width: "100%", textAlign: "right" }}>
-      {num < 0 ? "" : num}
-    </div>
-  );
+    const num = props.torrent[props.fieldName];
+    return (
+        <div style={{ width: "100%", textAlign: "right" }}>
+            {num < 0 ? "" : num}
+        </div>
+    );
 }
 
 function FixedDecimalField(props: TableFieldProps) {
-  const num = props.torrent[props.fieldName];
-  return (
-    <div style={{ width: "100%", textAlign: "right" }}>
-      {num < 0 ? "" : Number(num).toFixed(2)}
-    </div>
-  );
+    const num = props.torrent[props.fieldName];
+    return (
+        <div style={{ width: "100%", textAlign: "right" }}>
+            {num < 0 ? "" : Number(num).toFixed(2)}
+        </div>
+    );
 }
 
 function UploadRatioField(props: TableFieldProps) {
-  return (
-    <div style={{ width: "100%", textAlign: "right" }}>
-      {props.torrent.uploadedEver === 0
-        ? "-"
-        : props.torrent.downloadedEver === 0
-        ? "∞"
-        : (props.torrent.uploadedEver / props.torrent.downloadedEver).toFixed(
-            2
-          )}
-    </div>
-  );
+    return (
+        <div style={{ width: "100%", textAlign: "right" }}>
+            {props.torrent.uploadedEver === 0
+                ? "-"
+                : props.torrent.downloadedEver === 0
+                    ? "∞"
+                    : (props.torrent.uploadedEver / props.torrent.downloadedEver).toFixed(
+                        2,
+                    )}
+        </div>
+    );
 }
 
 function SeedsField(props: TableFieldProps) {
-  const sending = props.torrent.peersSendingToUs as number;
-  const totalSeeds = props.torrent.cachedSeedsTotal;
-  return (
-    <div style={{ width: "100%", textAlign: "right" }}>
-      {totalSeeds < 0 ? `${sending}` : `${sending} / ${totalSeeds}`}
-    </div>
-  );
+    const sending = props.torrent.peersSendingToUs as number;
+    const totalSeeds = props.torrent.cachedSeedsTotal;
+    return (
+        <div style={{ width: "100%", textAlign: "right" }}>
+            {totalSeeds < 0 ? `${sending}` : `${sending} / ${totalSeeds}`}
+        </div>
+    );
 }
 
 function PeersField(props: TableFieldProps) {
-  const getting = props.torrent.peersGettingFromUs as number;
-  const totalPeers = props.torrent.cachedPeersTotal;
-  return (
-    <div style={{ width: "100%", textAlign: "right" }}>
-      {totalPeers < 0 ? `${getting}` : `${getting} / ${totalPeers}`}
-    </div>
-  );
+    const getting = props.torrent.peersGettingFromUs as number;
+    const totalPeers = props.torrent.cachedPeersTotal;
+    return (
+        <div style={{ width: "100%", textAlign: "right" }}>
+            {totalPeers < 0 ? `${getting}` : `${getting} / ${totalPeers}`}
+        </div>
+    );
 }
 
 export function EtaField(props: TableFieldProps) {
-  const seconds = props.torrent[props.fieldName];
-  if (seconds >= 0) return <TimeField {...props} />;
-  else if (seconds === -1) return <></>;
-  else return <div>∞</div>;
+    const seconds = props.torrent[props.fieldName];
+    if (seconds >= 0) return <TimeField {...props} />;
+    else if (seconds === -1) return <></>;
+    else return <div>∞</div>;
 }
 
 export function TrackerField(props: TableFieldProps) {
-  return <div>{props.torrent.cachedMainTracker}</div>;
+    return <div>{props.torrent.cachedMainTracker}</div>;
 }
 
 function TrackerStatusField(props: TableFieldProps) {
-  return <div>{props.torrent.cachedTrackerStatus}</div>;
+    return <div>{props.torrent.cachedTrackerStatus}</div>;
 }
 
 function TrackerDownloadsField(props: TableFieldProps) {
-  return (
-    <div style={{ width: "100%", textAlign: "right" }}>
-      {props.torrent.cachedTrackerDlCount >= 0
-        ? props.torrent.cachedTrackerDlCount
-        : ""}
-    </div>
-  );
+    return (
+        <div style={{ width: "100%", textAlign: "right" }}>
+            {props.torrent.cachedTrackerDlCount >= 0
+                ? props.torrent.cachedTrackerDlCount
+                : ""}
+        </div>
+    );
 }
 
 function ErrorField(props: TableFieldProps) {
-  return <div>{props.torrent.cachedError}</div>;
+    return <div>{props.torrent.cachedError}</div>;
 }
 
 function PriorityField(props: TableFieldProps) {
-  const { t } = useTranslation();
-  const priority = props.torrent[props.fieldName];
-  let label = PriorityStrings.get(priority);
-  if (priority === -1) label = t("priority.low");
-  else if (priority === 0) label = t("priority.normal");
-  else if (priority === 1) label = t("priority.high");
+    const { t } = useTranslation();
+    const priority = props.torrent[props.fieldName];
+    let label = PriorityStrings.get(priority);
+    if (priority === -1) label = t("priority.low");
+    else if (priority === 0) label = t("priority.normal");
+    else if (priority === 1) label = t("priority.high");
 
-  return (
-    <Badge radius="md" variant="filled" bg={PriorityColors.get(priority)}>
-      {label}
-    </Badge>
-  );
+    return (
+        <Badge radius="md" variant="filled" bg={PriorityColors.get(priority)}>
+            {label}
+        </Badge>
+    );
 }
 
 export function LabelsField(props: TableFieldProps) {
-  const labels: string[] | undefined = props.torrent.labels;
-  return (
-    <>
-      {labels?.map((label) => (
-        <Badge
-          key={label}
-          radius="md"
-          variant="filled"
-          className="torrent-label white-outline"
-        >
-          {label}
-        </Badge>
-      ))}
-    </>
-  );
+    const labels: string[] | undefined = props.torrent.labels;
+    return (
+        <>
+            {labels?.map((label) => (
+                <Badge
+                    key={label}
+                    radius="md"
+                    variant="filled"
+                    className="torrent-label white-outline"
+                >
+                    {label}
+                </Badge>
+            ))}
+        </>
+    );
 }
 
 export function StatusField(props: TableFieldProps) {
-  const { t } = useTranslation();
-  let status: string;
-  switch (props.torrent.status) {
-    case Status.stopped:
-      status = t("status.stopped");
-      break;
-    case Status.queuedToVerify:
-      status = t("status.queuedToVerify");
-      break;
-    case Status.verifying:
-      status = t("status.verifying");
-      break;
-    case Status.queuedToDownload:
-      status = t("status.queuedToDownload");
-      break;
-    case Status.downloading:
-      status = t("status.downloading");
-      break;
-    case Status.queuedToSeed:
-      status = t("status.queuedToSeed");
-      break;
-    case Status.seeding:
-      status = t("status.seeding");
-      break;
-    default:
-      status = StatusStrings[props.torrent.status];
-  }
+    const { t } = useTranslation();
+    let status: string;
+    switch (props.torrent.status) {
+        case Status.stopped:
+            status = t("status.stopped");
+            break;
+        case Status.queuedToVerify:
+            status = t("status.queuedToVerify");
+            break;
+        case Status.verifying:
+            status = t("status.verifying");
+            break;
+        case Status.queuedToDownload:
+            status = t("status.queuedToDownload");
+            break;
+        case Status.downloading:
+            status = t("status.downloading");
+            break;
+        case Status.queuedToSeed:
+            status = t("status.queuedToSeed");
+            break;
+        case Status.seeding:
+            status = t("status.seeding");
+            break;
+        default:
+            status = StatusStrings[props.torrent.status];
+    }
 
-  if (
-    props.torrent.status === Status.downloading &&
+    if (
+        props.torrent.status === Status.downloading &&
     props.torrent.pieceCount === 0
-  )
-    status = t("status.magnetizing");
+    )
+        status = t("status.magnetizing");
 
-  const sequential =
+    const sequential =
     props.torrent.status === Status.downloading &&
     props.torrent.sequentialDownload === true
-      ? t("status.sequentially")
-      : "";
-  return <div>{status + sequential}</div>;
+        ? t("status.sequentially")
+        : "";
+    return <div>{status + sequential}</div>;
 }
 
 export function DateField(props: TableFieldProps) {
-  const config = useContext(ConfigContext);
-  const date =
+    const config = useContext(ConfigContext);
+    const date =
     props.torrent[props.fieldName] > 0
-      ? timestampToDateString(props.torrent[props.fieldName], config)
-      : "";
-  return <div>{date}</div>;
+        ? timestampToDateString(props.torrent[props.fieldName], config)
+        : "";
+    return <div>{date}</div>;
 }
 
 export function DateDiffField(props: TableFieldProps) {
-  const { t } = useTranslation();
-  const config = useContext(ConfigContext);
-  const date =
+    const { t } = useTranslation();
+    const config = useContext(ConfigContext);
+    const date =
     props.torrent[props.fieldName] > 0
-      ? timestampToDateString(props.torrent[props.fieldName], config)
-      : "";
-  const seconds =
+        ? timestampToDateString(props.torrent[props.fieldName], config)
+        : "";
+    const seconds =
     Math.floor(Date.now() / 1000) - props.torrent[props.fieldName];
-  return (
-    <div title={date} style={{ width: "100%", textAlign: "right" }}>
-      {seconds < 30
-        ? t("units.now")
-        : date === ""
-        ? ""
-        : `${secondsToHumanReadableStr(seconds)} ${t("units.ago")}`}
-    </div>
-  );
+    return (
+        <div title={date} style={{ width: "100%", textAlign: "right" }}>
+            {seconds < 30
+                ? t("units.now")
+                : date === ""
+                    ? ""
+                    : `${secondsToHumanReadableStr(seconds)} ${t("units.ago")}`}
+        </div>
+    );
 }
 
 function ByteSizeField(props: TableFieldProps) {
-  const field = props.torrent[props.fieldName];
-  const stringValue = useMemo(() => {
-    return bytesToHumanReadableStr(field);
-  }, [field]);
+    const field = props.torrent[props.fieldName];
+    const stringValue = useMemo(() => {
+        return bytesToHumanReadableStr(field);
+    }, [field]);
 
-  return <div style={{ width: "100%", textAlign: "right" }}>{stringValue}</div>;
+    return <div style={{ width: "100%", textAlign: "right" }}>{stringValue}</div>;
 }
 
 function ByteRateField(props: TableFieldProps) {
-  const field = props.torrent[props.fieldName];
-  const stringValue = useMemo(() => {
-    return field > 0 ? `${bytesToHumanReadableStr(field)}/s` : "";
-  }, [field]);
+    const field = props.torrent[props.fieldName];
+    const stringValue = useMemo(() => {
+        return field > 0 ? `${bytesToHumanReadableStr(field)}/s` : "";
+    }, [field]);
 
-  return <div style={{ width: "100%", textAlign: "right" }}>{stringValue}</div>;
+    return <div style={{ width: "100%", textAlign: "right" }}>{stringValue}</div>;
 }
 
 function PercentBarField(props: TableFieldProps) {
-  const config = useContext(ConfigContext);
-  const now = props.torrent[props.fieldName] * 100;
-  const progressbarStyle = torrentProgressbarStyle(props.torrent, config);
+    const config = useContext(ConfigContext);
+    const now = props.torrent[props.fieldName] * 100;
+    const progressbarStyle = torrentProgressbarStyle(props.torrent, config);
 
-  return (
-    <ProgressBar now={now} className="white-outline" {...progressbarStyle} />
-  );
+    return (
+        <ProgressBar now={now} className="white-outline" {...progressbarStyle} />
+    );
 }
 
 const ColumnRequiredFields = AllFields.map((f) => ({
-  id: (f as TableFieldWithAccessor).columnId ?? f.name,
-  requires: f.requiredFields ?? [f.name],
+    id: (f as TableFieldWithAccessor).columnId ?? f.name,
+    requires: f.requiredFields ?? [f.name],
 }));
 
 function getRequiredFields(
-  visibilityState: VisibilityState
+    visibilityState: VisibilityState,
 ): TorrentFieldsType[] {
-  const set = ColumnRequiredFields.reduce((set: Set<TorrentFieldsType>, f) => {
-    if (!(f.id in visibilityState) || visibilityState[f.id]) {
-      f.requires.forEach((r) => set.add(r));
-    }
-    return set;
-  }, new Set<TorrentFieldsType>());
+    const set = ColumnRequiredFields.reduce((set: Set<TorrentFieldsType>, f) => {
+        if (!(f.id in visibilityState) || visibilityState[f.id]) {
+            f.requires.forEach((r) => set.add(r));
+        }
+        return set;
+    }, new Set<TorrentFieldsType>());
 
-  // add bare minimum fields
-  TorrentMinimumFields.forEach((f) => set.add(f));
-  if (TAURI) set.add("hashString");
+    // add bare minimum fields
+    TorrentMinimumFields.forEach((f) => set.add(f));
+    if (TAURI) set.add("hashString");
 
-  return Array.from(set).sort();
+    return Array.from(set).sort();
 }
 
 export function useInitialTorrentRequiredFields() {
-  const config = useContext(ConfigContext);
+    const config = useContext(ConfigContext);
 
-  return useMemo(
-    () => getRequiredFields(config.getTableColumnVisibility("torrents")),
-    [config]
-  );
+    return useMemo(
+        () => getRequiredFields(config.getTableColumnVisibility("torrents")),
+        [config],
+    );
 }
 
 export function TorrentTable(props: {
-  modals: React.RefObject<ModalCallbacks>;
-  torrents: Torrent[];
-  setCurrentTorrent: (id: string) => void;
-  selectedTorrents: Set<number>;
-  selectedReducer: TableSelectReducer;
-  onColumnVisibilityChange: React.Dispatch<TorrentFieldsType[]>;
-  scrollToRow?: { id: string };
+    modals: React.RefObject<ModalCallbacks>,
+    torrents: Torrent[],
+    setCurrentTorrent: (id: string) => void,
+    selectedTorrents: Set<number>,
+    selectedReducer: TableSelectReducer,
+    onColumnVisibilityChange: React.Dispatch<TorrentFieldsType[]>,
+    scrollToRow?: { id: string },
 }) {
-  const { t } = useTranslation();
-  const columns = useMemo(
-    () =>
-      AllFields.map((f): ColumnDef<Torrent> => {
-        const cell = (props: CellContext<Torrent, unknown>) => {
-          return (
-            <f.component fieldName={f.name} torrent={props.row.original} />
-          );
-        };
-        const header = t(f.label);
-        if (isTableFieldWithAccessor(f)) {
-          return {
-            header,
-            accessorFn: f.accessorFn,
-            id: f.columnId,
-            cell,
-          };
-        }
-        return {
-          header,
-          accessorKey: f.name,
-          cell,
-        };
-      }),
-    [t]
-  );
+    const { t } = useTranslation();
+    const columns = useMemo(
+        () =>
+            AllFields.map((f): ColumnDef<Torrent> => {
+                const cell = (props: CellContext<Torrent, unknown>) => {
+                    return (
+                        <f.component fieldName={f.name} torrent={props.row.original} />
+                    );
+                };
+                const header = t(f.label);
+                if (isTableFieldWithAccessor(f)) {
+                    return {
+                        header,
+                        accessorFn: f.accessorFn,
+                        id: f.columnId,
+                        cell,
+                    };
+                }
+                return {
+                    header,
+                    accessorKey: f.name,
+                    cell,
+                };
+            }),
+        [t],
+    );
 
-  const serverConfig = useContext(ServerConfigContext);
+    const serverConfig = useContext(ServerConfigContext);
 
-  const getRowId = useCallback((t: Torrent) => String(t.id), []);
+    const getRowId = useCallback((t: Torrent) => String(t.id), []);
 
-  const { onColumnVisibilityChange } = props;
-  const onVisibilityChange = useCallback(
-    (visibility: VisibilityState) => {
-      onColumnVisibilityChange(getRequiredFields(visibility));
-    },
-    [onColumnVisibilityChange]
-  );
+    const { onColumnVisibilityChange } = props;
+    const onVisibilityChange = useCallback(
+        (visibility: VisibilityState) => {
+            onColumnVisibilityChange(getRequiredFields(visibility));
+        },
+        [onColumnVisibilityChange],
+    );
 
-  const onRowDoubleClick = useCallback(
-    (torrent: Torrent, reveal: boolean = false) => {
-      if (TAURI) {
-        if (torrent.downloadDir === undefined || torrent.downloadDir === "")
-          return;
-        let path = torrent.downloadDir as string;
-        if (!path.endsWith("/") && !path.endsWith("\\")) {
-          path = path + "/";
-        }
-        path = path + fileSystemSafeName(torrent.name);
-        path = pathMapFromServer(path, serverConfig);
-        invoke("shell_open", { path, reveal }).catch(() => {
-          notifications.show({
-            title: "Error opening path",
-            message: path,
-            color: "red",
-          });
-        });
-      } else {
-        props.modals.current?.editTorrent();
-      }
-    },
-    [props.modals, serverConfig]
-  );
+    const onRowDoubleClick = useCallback(
+        (torrent: Torrent, reveal: boolean = false) => {
+            if (TAURI) {
+                if (torrent.downloadDir === undefined || torrent.downloadDir === "")
+                    return;
+                let path = torrent.downloadDir as string;
+                if (!path.endsWith("/") && !path.endsWith("\\")) {
+                    path = path + "/";
+                }
+                path = path + fileSystemSafeName(torrent.name);
+                path = pathMapFromServer(path, serverConfig);
+                invoke("shell_open", { path, reveal }).catch(() => {
+                    notifications.show({
+                        title: "Error opening path",
+                        message: path,
+                        color: "red",
+                    });
+                });
+            } else {
+                props.modals.current?.editTorrent();
+            }
+        },
+        [props.modals, serverConfig],
+    );
 
-  const serverSelected = useServerSelectedTorrents();
-  const selected = useMemo(
-    () => Array.from(serverSelected).map(String),
-    [serverSelected]
-  );
+    const serverSelected = useServerSelectedTorrents();
+    const selected = useMemo(
+        () => Array.from(serverSelected).map(String),
+        [serverSelected],
+    );
 
-  const [info, setInfo, handler] = useContextMenu();
+    const [info, setInfo, handler] = useContextMenu();
 
-  return (
-    <Box w="100%" h="100%" onContextMenu={handler}>
-      <MemoizedTorrentContextMenu
-        contextMenuInfo={info}
-        setContextMenuInfo={setInfo}
-        modals={props.modals}
-        onRowDoubleClick={onRowDoubleClick}
-      />
-      <TrguiTable<Torrent>
-        {...{
-          tablename: "torrents",
-          columns,
-          data: props.torrents,
-          getRowId,
-          selected,
-          selectedReducer: props.selectedReducer,
-          setCurrent: props.setCurrentTorrent,
-          onVisibilityChange,
-          onRowDoubleClick,
-          scrollToRow: props.scrollToRow,
-        }}
-      />
-    </Box>
-  );
+    return (
+        <Box w="100%" h="100%" onContextMenu={handler}>
+            <MemoizedTorrentContextMenu
+                contextMenuInfo={info}
+                setContextMenuInfo={setInfo}
+                modals={props.modals}
+                onRowDoubleClick={onRowDoubleClick}
+            />
+            <TrguiTable<Torrent>
+                {...{
+                    tablename: "torrents",
+                    columns,
+                    data: props.torrents,
+                    getRowId,
+                    selected,
+                    selectedReducer: props.selectedReducer,
+                    setCurrent: props.setCurrentTorrent,
+                    onVisibilityChange,
+                    onRowDoubleClick,
+                    scrollToRow: props.scrollToRow,
+                }}
+            />
+        </Box>
+    );
 }
 
 function TorrentContextMenu(props: {
-  contextMenuInfo: ContextMenuInfo;
-  setContextMenuInfo: (i: ContextMenuInfo) => void;
-  modals: React.RefObject<ModalCallbacks>;
-  onRowDoubleClick: (t: Torrent, reveal: boolean) => void;
+    contextMenuInfo: ContextMenuInfo,
+    setContextMenuInfo: (i: ContextMenuInfo) => void,
+    modals: React.RefObject<ModalCallbacks>,
+    onRowDoubleClick: (t: Torrent, reveal: boolean) => void,
 }) {
-  const { t } = useTranslation();
-  const serverData = useServerTorrentData();
-  const serverSelected = useServerSelectedTorrents();
-  const rpcVersion = useServerRpcVersion();
+    const { t } = useTranslation();
+    const serverData = useServerTorrentData();
+    const serverSelected = useServerSelectedTorrents();
+    const rpcVersion = useServerRpcVersion();
 
-  const { onRowDoubleClick } = props;
-  const onOpen = useCallback(
-    (reveal: boolean) => {
-      const torrent = serverData.torrents.find(
-        (t) => t.id === serverData.current
-      );
-      if (torrent === undefined) return;
-      onRowDoubleClick(torrent, reveal);
-    },
-    [onRowDoubleClick, serverData]
-  );
-
-  const mutate = useTorrentAction();
-
-  const torrentAction = useCallback(
-    (method: TorrentActionMethodsType, successMessage: string) => {
-      mutate(
-        {
-          method,
-          torrentIds: Array.from(serverSelected),
+    const { onRowDoubleClick } = props;
+    const onOpen = useCallback(
+        (reveal: boolean) => {
+            const torrent = serverData.torrents.find(
+                (t) => t.id === serverData.current,
+            );
+            if (torrent === undefined) return;
+            onRowDoubleClick(torrent, reveal);
         },
-        {
-          onSuccess: () => {
-            notifications.show({
-              message: successMessage,
-              color: "green",
-            });
-          },
-        }
-      );
-    },
-    [mutate, serverSelected]
-  );
+        [onRowDoubleClick, serverData],
+    );
 
-  const [queueSubmenuOpened, setQueueSubmenuOpened] = useState(false);
-  const queueRef = useRef<HTMLButtonElement>(null);
-  const [queueItemRect, setQueueItemRect] = useState<DOMRect>(
-    () => new DOMRect(0, -100, 0, 0)
-  );
+    const mutate = useTorrentAction();
 
-  const openQueueSubmenu = useCallback(() => {
-    if (queueRef.current == null || serverSelected.size === 0) return;
-    setQueueItemRect(queueRef.current.getBoundingClientRect());
-    setQueueSubmenuOpened(true);
-  }, [serverSelected]);
+    const torrentAction = useCallback(
+        (method: TorrentActionMethodsType, successMessage: string) => {
+            mutate(
+                {
+                    method,
+                    torrentIds: Array.from(serverSelected),
+                },
+                {
+                    onSuccess: () => {
+                        notifications.show({
+                            message: successMessage,
+                            color: "green",
+                        });
+                    },
+                },
+            );
+        },
+        [mutate, serverSelected],
+    );
 
-  const closeQueueSubmenu = useCallback(() => {
-    setQueueSubmenuOpened(false);
-    setQueueItemRect(new DOMRect(0, -100, 0, 0));
-  }, []);
+    const [queueSubmenuOpened, setQueueSubmenuOpened] = useState(false);
+    const queueRef = useRef<HTMLButtonElement>(null);
+    const [queueItemRect, setQueueItemRect] = useState<DOMRect>(
+        () => new DOMRect(0, -100, 0, 0),
+    );
 
-  const copyMagnetLinks = useCallback(() => {
-    if (serverSelected.size === 0) return;
+    const openQueueSubmenu = useCallback(() => {
+        if (queueRef.current == null || serverSelected.size === 0) return;
+        setQueueItemRect(queueRef.current.getBoundingClientRect());
+        setQueueSubmenuOpened(true);
+    }, [serverSelected]);
 
-    const links = serverData.torrents
-      .filter((t) => serverSelected.has(t.id))
-      .map((t) => t.magnetLink);
+    const closeQueueSubmenu = useCallback(() => {
+        setQueueSubmenuOpened(false);
+        setQueueItemRect(new DOMRect(0, -100, 0, 0));
+    }, []);
 
-    copyToClipboard(links.join("\n"));
+    const copyMagnetLinks = useCallback(() => {
+        if (serverSelected.size === 0) return;
 
-    notifications.show({
-      message: `Magnet ${
-        serverSelected.size > 1 ? "links" : "link"
-      } copied to clipboard`,
-      color: "green",
-    });
-  }, [serverData.torrents, serverSelected]);
+        const links = serverData.torrents
+            .filter((t) => serverSelected.has(t.id))
+            .map((t) => t.magnetLink);
 
-  const hk = useHotkeysContext();
+        copyToClipboard(links.join("\n"));
 
-  useEffect(() => {
-    hk.handlers.copyToClipboard = copyMagnetLinks;
-    return () => {
-      hk.handlers.copyToClipboard = () => {};
-    };
-  }, [copyMagnetLinks, hk]);
+        notifications.show({
+            message: `Magnet ${
+                serverSelected.size > 1 ? "links" : "link"
+            } copied to clipboard`,
+            color: "green",
+        });
+    }, [serverData.torrents, serverSelected]);
 
-  const theme = useMantineTheme();
+    const hk = useHotkeysContext();
 
-  return (
-    <>
-      <Menu
-        openDelay={100}
-        closeDelay={400}
-        opened={queueSubmenuOpened}
-        onChange={setQueueSubmenuOpened}
-        middlewares={{ shift: true, flip: true }}
-        position="right-start"
-        zIndex={301}
-      >
-        <Portal>
-          <Box
-            onMouseDown={closeQueueSubmenu}
-            sx={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              height: "100vh",
-              width: "100vw",
-              zIndex: queueSubmenuOpened ? 100 : -1,
-            }}
-          />
-          <Menu.Target>
-            <Button
-              unstyled
-              sx={{
-                position: "absolute",
-                border: 0,
-                padding: 0,
-                background: "transparent",
-              }}
-              style={{
-                left: queueItemRect.x,
-                top: queueItemRect.y,
-                width: `calc(${queueItemRect.width}px + 0.5em)`,
-                height: queueItemRect.height,
-              }}
-            />
-          </Menu.Target>
-          <Menu.Dropdown miw="10rem">
-            <Menu.Item
-              onClick={() => {
-                torrentAction(
-                  "queue-move-top",
-                  t("tables.torrents.notifications.queueUpdated")
-                );
-              }}
-              icon={<Icon.ChevronDoubleUp size="1.1rem" />}
+    useEffect(() => {
+        hk.handlers.copyToClipboard = copyMagnetLinks;
+        return () => {
+            hk.handlers.copyToClipboard = () => {};
+        };
+    }, [copyMagnetLinks, hk]);
+
+    const theme = useMantineTheme();
+
+    return (
+        <>
+            <Menu
+                openDelay={100}
+                closeDelay={400}
+                opened={queueSubmenuOpened}
+                onChange={setQueueSubmenuOpened}
+                middlewares={{ shift: true, flip: true }}
+                position="right-start"
+                zIndex={301}
             >
-              {t("tables.torrents.contextMenu.moveToTop")}
-            </Menu.Item>
-            <Menu.Item
-              onClick={() => {
-                torrentAction(
-                  "queue-move-up",
-                  t("tables.torrents.notifications.queueUpdated")
-                );
-              }}
-              icon={<Icon.ChevronUp size="1.1rem" />}
+                <Portal>
+                    <Box
+                        onMouseDown={closeQueueSubmenu}
+                        sx={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            height: "100vh",
+                            width: "100vw",
+                            zIndex: queueSubmenuOpened ? 100 : -1,
+                        }}
+                    />
+                    <Menu.Target>
+                        <Button
+                            unstyled
+                            sx={{
+                                position: "absolute",
+                                border: 0,
+                                padding: 0,
+                                background: "transparent",
+                            }}
+                            style={{
+                                left: queueItemRect.x,
+                                top: queueItemRect.y,
+                                width: `calc(${queueItemRect.width}px + 0.5em)`,
+                                height: queueItemRect.height,
+                            }}
+                        />
+                    </Menu.Target>
+                    <Menu.Dropdown miw="10rem">
+                        <Menu.Item
+                            onClick={() => {
+                                torrentAction(
+                                    "queue-move-top",
+                                    t("tables.torrents.notifications.queueUpdated"),
+                                );
+                            }}
+                            icon={<Icon.ChevronDoubleUp size="1.1rem" />}
+                        >
+                            {t("tables.torrents.contextMenu.moveToTop")}
+                        </Menu.Item>
+                        <Menu.Item
+                            onClick={() => {
+                                torrentAction(
+                                    "queue-move-up",
+                                    t("tables.torrents.notifications.queueUpdated"),
+                                );
+                            }}
+                            icon={<Icon.ChevronUp size="1.1rem" />}
+                        >
+                            {t("tables.torrents.contextMenu.moveUp")}
+                        </Menu.Item>
+                        <Menu.Item
+                            onClick={() => {
+                                torrentAction(
+                                    "queue-move-down",
+                                    t("tables.torrents.notifications.queueUpdated"),
+                                );
+                            }}
+                            icon={<Icon.ChevronDown size="1.1rem" />}
+                        >
+                            {t("tables.torrents.contextMenu.moveDown")}
+                        </Menu.Item>
+                        <Menu.Item
+                            onClick={() => {
+                                torrentAction(
+                                    "queue-move-bottom",
+                                    t("tables.torrents.notifications.queueUpdated"),
+                                );
+                            }}
+                            icon={<Icon.ChevronDoubleDown size="1.1rem" />}
+                        >
+                            {t("tables.torrents.contextMenu.moveToBottom")}
+                        </Menu.Item>
+                    </Menu.Dropdown>
+                </Portal>
+            </Menu>
+            <ContextMenu
+                contextMenuInfo={props.contextMenuInfo}
+                setContextMenuInfo={props.setContextMenuInfo}
             >
-              {t("tables.torrents.contextMenu.moveUp")}
-            </Menu.Item>
-            <Menu.Item
-              onClick={() => {
-                torrentAction(
-                  "queue-move-down",
-                  t("tables.torrents.notifications.queueUpdated")
-                );
-              }}
-              icon={<Icon.ChevronDown size="1.1rem" />}
-            >
-              {t("tables.torrents.contextMenu.moveDown")}
-            </Menu.Item>
-            <Menu.Item
-              onClick={() => {
-                torrentAction(
-                  "queue-move-bottom",
-                  t("tables.torrents.notifications.queueUpdated")
-                );
-              }}
-              icon={<Icon.ChevronDoubleDown size="1.1rem" />}
-            >
-              {t("tables.torrents.contextMenu.moveToBottom")}
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Portal>
-      </Menu>
-      <ContextMenu
-        contextMenuInfo={props.contextMenuInfo}
-        setContextMenuInfo={props.setContextMenuInfo}
-      >
-        <Box miw="14rem">
-          {TAURI && (
-            <>
-              <Menu.Item
-                onClick={() => {
-                  onOpen(false);
-                }}
-                onMouseEnter={closeQueueSubmenu}
-                icon={<Icon.BoxArrowUpRight size="1.1rem" />}
-                disabled={serverData.current === undefined}
-              >
-                <Text weight="bold">
-                  {t("tables.torrents.contextMenu.open")}
-                </Text>
-              </Menu.Item>
-              <Menu.Item
-                onClick={() => {
-                  onOpen(true);
-                }}
-                onMouseEnter={closeQueueSubmenu}
-                icon={<Icon.Folder2Open size="1.1rem" />}
-                disabled={serverData.current === undefined}
-              >
-                <Text>{t("tables.torrents.contextMenu.openFolder")}</Text>
-              </Menu.Item>
-              <Menu.Divider />
-            </>
-          )}
-          <Menu.Item
-            onClick={() => {
-              torrentAction(
-                "torrent-start-now",
-                t("tables.torrents.notifications.started")
-              );
-            }}
-            onMouseEnter={closeQueueSubmenu}
-            icon={<Icon.LightningFill size="1.1rem" />}
-            disabled={serverSelected.size === 0}
-          >
-            {t("tables.torrents.contextMenu.forceStart")}
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => {
-              torrentAction(
-                "torrent-start",
-                t("tables.torrents.notifications.started")
-              );
-            }}
-            onMouseEnter={closeQueueSubmenu}
-            icon={<Icon.PlayCircleFill size="1.1rem" />}
-            rightSection={<Kbd>F3</Kbd>}
-            disabled={serverSelected.size === 0}
-          >
-            {t("tables.torrents.contextMenu.start")}
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => {
-              torrentAction(
-                "torrent-stop",
-                t("tables.torrents.notifications.stopped")
-              );
-            }}
-            onMouseEnter={closeQueueSubmenu}
-            icon={<Icon.PauseCircleFill size="1.1rem" />}
-            rightSection={<Kbd>F4</Kbd>}
-            disabled={serverSelected.size === 0}
-          >
-            {t("tables.torrents.contextMenu.pause")}
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => {
-              torrentAction(
-                "torrent-verify",
-                t("tables.torrents.notifications.verificationStarted")
-              );
-            }}
-            onMouseEnter={closeQueueSubmenu}
-            icon={<Icon.CheckAll size="1.1rem" />}
-            disabled={serverSelected.size === 0}
-          >
-            {t("tables.torrents.contextMenu.verify")}
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => {
-              torrentAction(
-                "torrent-reannounce",
-                t("tables.torrents.notifications.reannounced")
-              );
-            }}
-            onMouseEnter={closeQueueSubmenu}
-            icon={<Icon.Wifi size="1.1rem" />}
-            disabled={serverSelected.size === 0}
-          >
-            {t("tables.torrents.contextMenu.reannounce")}
-          </Menu.Item>
-          <Menu.Item
-            onClick={copyMagnetLinks}
-            onMouseEnter={closeQueueSubmenu}
-            icon={<Icon.MagnetFill size="1.1rem" />}
-            disabled={serverSelected.size === 0}
-            rightSection={<Kbd>{`${modKeyString()} C`}</Kbd>}
-          >
-            {serverSelected.size > 1
-              ? t("tables.torrents.contextMenu.copyMagnetLinks")
-              : t("tables.torrents.contextMenu.copyMagnetLink")}
-          </Menu.Item>
-          <Menu.Item
-            ref={queueRef}
-            icon={<Icon.ThreeDots size="1.1rem" />}
-            rightSection={<Icon.ChevronRight size="0.8rem" />}
-            onMouseEnter={openQueueSubmenu}
-            disabled={serverSelected.size === 0}
-          >
-            {t("tables.torrents.contextMenu.queue")}
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => props.modals.current?.move()}
-            onMouseEnter={closeQueueSubmenu}
-            icon={<Icon.FolderFill size="1.1rem" />}
-            disabled={serverSelected.size === 0}
-            rightSection={<Kbd>F6</Kbd>}
-          >
-            {t("tables.torrents.contextMenu.move")}
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => props.modals.current?.setLabels()}
-            onMouseEnter={closeQueueSubmenu}
-            icon={<Icon.TagsFill size="1.1rem" />}
-            disabled={serverSelected.size === 0}
-            rightSection={<Kbd>F7</Kbd>}
-          >
-            {t("tables.torrents.contextMenu.setLabels")}
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => props.modals.current?.remove()}
-            onMouseEnter={closeQueueSubmenu}
-            icon={
-              <Icon.XCircleFill size="1.1rem" color={theme.colors.red[6]} />
-            }
-            disabled={serverSelected.size === 0}
-            rightSection={<Kbd>del</Kbd>}
-          >
-            {t("tables.torrents.contextMenu.remove")}
-          </Menu.Item>
-          <Menu.Divider />
-          <Menu.Item
-            onClick={() => props.modals.current?.editTrackers()}
-            icon={<Icon.Wifi size="1.1rem" />}
-            onMouseEnter={closeQueueSubmenu}
-            disabled={
-              serverSelected.size === 0 ||
+                <Box miw="14rem">
+                    {TAURI && (
+                        <>
+                            <Menu.Item
+                                onClick={() => {
+                                    onOpen(false);
+                                }}
+                                onMouseEnter={closeQueueSubmenu}
+                                icon={<Icon.BoxArrowUpRight size="1.1rem" />}
+                                disabled={serverData.current === undefined}
+                            >
+                                <Text weight="bold">
+                                    {t("tables.torrents.contextMenu.open")}
+                                </Text>
+                            </Menu.Item>
+                            <Menu.Item
+                                onClick={() => {
+                                    onOpen(true);
+                                }}
+                                onMouseEnter={closeQueueSubmenu}
+                                icon={<Icon.Folder2Open size="1.1rem" />}
+                                disabled={serverData.current === undefined}
+                            >
+                                <Text>{t("tables.torrents.contextMenu.openFolder")}</Text>
+                            </Menu.Item>
+                            <Menu.Divider />
+                        </>
+                    )}
+                    <Menu.Item
+                        onClick={() => {
+                            torrentAction(
+                                "torrent-start-now",
+                                t("tables.torrents.notifications.started"),
+                            );
+                        }}
+                        onMouseEnter={closeQueueSubmenu}
+                        icon={<Icon.LightningFill size="1.1rem" />}
+                        disabled={serverSelected.size === 0}
+                    >
+                        {t("tables.torrents.contextMenu.forceStart")}
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={() => {
+                            torrentAction(
+                                "torrent-start",
+                                t("tables.torrents.notifications.started"),
+                            );
+                        }}
+                        onMouseEnter={closeQueueSubmenu}
+                        icon={<Icon.PlayCircleFill size="1.1rem" />}
+                        rightSection={<Kbd>F3</Kbd>}
+                        disabled={serverSelected.size === 0}
+                    >
+                        {t("tables.torrents.contextMenu.start")}
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={() => {
+                            torrentAction(
+                                "torrent-stop",
+                                t("tables.torrents.notifications.stopped"),
+                            );
+                        }}
+                        onMouseEnter={closeQueueSubmenu}
+                        icon={<Icon.PauseCircleFill size="1.1rem" />}
+                        rightSection={<Kbd>F4</Kbd>}
+                        disabled={serverSelected.size === 0}
+                    >
+                        {t("tables.torrents.contextMenu.pause")}
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={() => {
+                            torrentAction(
+                                "torrent-verify",
+                                t("tables.torrents.notifications.verificationStarted"),
+                            );
+                        }}
+                        onMouseEnter={closeQueueSubmenu}
+                        icon={<Icon.CheckAll size="1.1rem" />}
+                        disabled={serverSelected.size === 0}
+                    >
+                        {t("tables.torrents.contextMenu.verify")}
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={() => {
+                            torrentAction(
+                                "torrent-reannounce",
+                                t("tables.torrents.notifications.reannounced"),
+                            );
+                        }}
+                        onMouseEnter={closeQueueSubmenu}
+                        icon={<Icon.Wifi size="1.1rem" />}
+                        disabled={serverSelected.size === 0}
+                    >
+                        {t("tables.torrents.contextMenu.reannounce")}
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={copyMagnetLinks}
+                        onMouseEnter={closeQueueSubmenu}
+                        icon={<Icon.MagnetFill size="1.1rem" />}
+                        disabled={serverSelected.size === 0}
+                        rightSection={<Kbd>{`${modKeyString()} C`}</Kbd>}
+                    >
+                        {serverSelected.size > 1
+                            ? t("tables.torrents.contextMenu.copyMagnetLinks")
+                            : t("tables.torrents.contextMenu.copyMagnetLink")}
+                    </Menu.Item>
+                    <Menu.Item
+                        ref={queueRef}
+                        icon={<Icon.ThreeDots size="1.1rem" />}
+                        rightSection={<Icon.ChevronRight size="0.8rem" />}
+                        onMouseEnter={openQueueSubmenu}
+                        disabled={serverSelected.size === 0}
+                    >
+                        {t("tables.torrents.contextMenu.queue")}
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={() => props.modals.current?.move()}
+                        onMouseEnter={closeQueueSubmenu}
+                        icon={<Icon.FolderFill size="1.1rem" />}
+                        disabled={serverSelected.size === 0}
+                        rightSection={<Kbd>F6</Kbd>}
+                    >
+                        {t("tables.torrents.contextMenu.move")}
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={() => props.modals.current?.setLabels()}
+                        onMouseEnter={closeQueueSubmenu}
+                        icon={<Icon.TagsFill size="1.1rem" />}
+                        disabled={serverSelected.size === 0}
+                        rightSection={<Kbd>F7</Kbd>}
+                    >
+                        {t("tables.torrents.contextMenu.setLabels")}
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={() => props.modals.current?.remove()}
+                        onMouseEnter={closeQueueSubmenu}
+                        icon={
+                            <Icon.XCircleFill size="1.1rem" color={theme.colors.red[6]} />
+                        }
+                        disabled={serverSelected.size === 0}
+                        rightSection={<Kbd>del</Kbd>}
+                    >
+                        {t("tables.torrents.contextMenu.remove")}
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item
+                        onClick={() => props.modals.current?.editTrackers()}
+                        icon={<Icon.Wifi size="1.1rem" />}
+                        onMouseEnter={closeQueueSubmenu}
+                        disabled={
+                            serverSelected.size === 0 ||
               (serverSelected.size > 1 && rpcVersion < 17)
-            }
-          >
-            {t("tables.torrents.contextMenu.trackers")}
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => props.modals.current?.editTorrent()}
-            icon={<Icon.GearFill size="1.1rem" />}
-            onMouseEnter={closeQueueSubmenu}
-            disabled={serverSelected.size === 0}
-          >
-            {t("tables.torrents.contextMenu.properties")}
-          </Menu.Item>
-        </Box>
-      </ContextMenu>
-    </>
-  );
+                        }
+                    >
+                        {t("tables.torrents.contextMenu.trackers")}
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={() => props.modals.current?.editTorrent()}
+                        icon={<Icon.GearFill size="1.1rem" />}
+                        onMouseEnter={closeQueueSubmenu}
+                        disabled={serverSelected.size === 0}
+                    >
+                        {t("tables.torrents.contextMenu.properties")}
+                    </Menu.Item>
+                </Box>
+            </ContextMenu>
+        </>
+    );
 }
 
 const MemoizedTorrentContextMenu = memo(TorrentContextMenu);

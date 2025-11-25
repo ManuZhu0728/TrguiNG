@@ -17,23 +17,23 @@
  */
 
 import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useReducer,
+    useRef,
+    useState,
 } from "react";
 import type { Row, ColumnDef, CellContext } from "@tanstack/react-table";
 import type { CachedFileTree, FileDirEntryView } from "../../cachedfiletree";
 import { isDirEntry } from "../../cachedfiletree";
 import { ConfigContext, ServerConfigContext } from "../../config";
-import { PriorityColors, PriorityStrings } from "../../rpc/transmission";
+import { PriorityColors } from "../../rpc/transmission";
 import {
-  bytesToHumanReadableStr,
-  fileSystemSafeName,
-  pathMapFromServer,
+    bytesToHumanReadableStr,
+    fileSystemSafeName,
+    pathMapFromServer,
 } from "../../trutil";
 import type { ProgressBarVariant } from "../progressbar";
 import { ProgressBar } from "../progressbar";
@@ -41,21 +41,21 @@ import * as Icon from "react-bootstrap-icons";
 import type { TrguiTableRef } from "./common";
 import { EditableNameField, TrguiTable } from "./common";
 import {
-  ActionIcon,
-  Badge,
-  Box,
-  Checkbox,
-  Flex,
-  Loader,
-  Menu,
-  Text,
-  TextInput,
-  useMantineTheme,
+    ActionIcon,
+    Badge,
+    Box,
+    Checkbox,
+    Flex,
+    Loader,
+    Menu,
+    Text,
+    TextInput,
+    useMantineTheme,
 } from "@mantine/core";
 import {
-  refreshFileTree,
-  useMutateTorrent,
-  useMutateTorrentPath,
+    refreshFileTree,
+    useMutateTorrent,
+    useMutateTorrentPath,
 } from "queries";
 import { notifications } from "@mantine/notifications";
 import type { ContextMenuInfo } from "components/contextmenu";
@@ -66,773 +66,773 @@ import { useServerRpcVersion } from "rpc/torrent";
 import { FileIcon } from "components/fileicon";
 import { useTranslation } from "react-i18next";
 const { TAURI, invoke } = await import(
-  /* webpackChunkName: "taurishim" */ "taurishim"
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 type FileDirEntryKey = keyof FileDirEntryView;
 type EntryWantedChangeHandler = (entryPath: string, state: boolean) => void;
 
 interface TableFieldProps {
-  fileTree: CachedFileTree;
-  entry: FileDirEntryView;
-  row: Row<FileDirEntryView>;
-  fieldName: FileDirEntryKey;
-  treeName: string;
-  onCheckboxChange: EntryWantedChangeHandler;
+    fileTree: CachedFileTree,
+    entry: FileDirEntryView,
+    row: Row<FileDirEntryView>,
+    fieldName: FileDirEntryKey,
+    treeName: string,
+    onCheckboxChange: EntryWantedChangeHandler,
 }
 
 interface TableField {
-  name: FileDirEntryKey;
-  label: string;
-  component: React.FunctionComponent<TableFieldProps>;
-  briefField?: boolean;
+    name: FileDirEntryKey,
+    label: string,
+    component: React.FunctionComponent<TableFieldProps>,
+    briefField?: boolean,
 }
 
 const AllFields: readonly TableField[] = [
-  {
-    name: "name",
-    label: "tables.filetree.headers.name",
-    component: NameField,
-    briefField: true,
-  },
-  {
-    name: "size",
-    label: "tables.filetree.headers.size",
-    component: ByteSizeField,
-    briefField: true,
-  },
-  {
-    name: "done",
-    label: "tables.filetree.headers.done",
-    component: ByteSizeField,
-  },
-  {
-    name: "percent",
-    label: "tables.filetree.headers.percent",
-    component: PercentBarField,
-  },
-  {
-    name: "priority",
-    label: "tables.filetree.headers.priority",
-    component: PriorityField,
-  },
+    {
+        name: "name",
+        label: "tables.filetree.headers.name",
+        component: NameField,
+        briefField: true,
+    },
+    {
+        name: "size",
+        label: "tables.filetree.headers.size",
+        component: ByteSizeField,
+        briefField: true,
+    },
+    {
+        name: "done",
+        label: "tables.filetree.headers.done",
+        component: ByteSizeField,
+    },
+    {
+        name: "percent",
+        label: "tables.filetree.headers.percent",
+        component: PercentBarField,
+    },
+    {
+        name: "priority",
+        label: "tables.filetree.headers.priority",
+        component: PriorityField,
+    },
 ] as const;
 
 function NameField(props: TableFieldProps) {
-  const { t } = useTranslation();
-  const { entry, fileTree } = props;
-  const isDir = entry.subrows.length > 0;
+    const { t } = useTranslation();
+    const { entry, fileTree } = props;
+    const isDir = entry.subrows.length > 0;
 
-  const onToggleExpand = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      props.row.toggleExpanded();
-    },
-    [props]
-  );
+    const onToggleExpand = useCallback(
+        (e: React.MouseEvent) => {
+            e.stopPropagation();
+            props.row.toggleExpanded();
+        },
+        [props],
+    );
 
-  const theme = useMantineTheme();
+    const theme = useMantineTheme();
 
-  const mutation = useMutateTorrentPath();
+    const mutation = useMutateTorrentPath();
 
-  const updatePath = useCallback(
-    (name: string, onStart: () => void, onEnd: () => void) => {
-      onStart();
-      name = fileSystemSafeName(name);
+    const updatePath = useCallback(
+        (name: string, onStart: () => void, onEnd: () => void) => {
+            onStart();
+            name = fileSystemSafeName(name);
 
-      mutation.mutate(
-        { torrentId: fileTree.torrentId, path: props.entry.fullpath, name },
-        {
-          onSettled: onEnd,
-          onError: () => {
-            notifications.show({
-              color: "red",
-              message: t("tables.filetree.notifications.failedToUpdatePath"),
-            });
-          },
-          onSuccess: () => {
-            fileTree.updatePath(props.entry.fullpath, name);
-            refreshFileTree(props.treeName);
-          },
-        }
-      );
-    },
-    [mutation, fileTree, props.entry.fullpath, props.treeName]
-  );
+            mutation.mutate(
+                { torrentId: fileTree.torrentId, path: props.entry.fullpath, name },
+                {
+                    onSettled: onEnd,
+                    onError: () => {
+                        notifications.show({
+                            color: "red",
+                            message: t("tables.filetree.notifications.failedToUpdatePath"),
+                        });
+                    },
+                    onSuccess: () => {
+                        fileTree.updatePath(props.entry.fullpath, name);
+                        refreshFileTree(props.treeName);
+                    },
+                },
+            );
+        },
+        [mutation, fileTree, props.entry.fullpath, props.treeName, t],
+    );
 
-  const rpcVersion = useServerRpcVersion();
+    const rpcVersion = useServerRpcVersion();
 
-  const onArrowLeftRight = useCallback(
-    (key: string) => {
-      if (props.row.subRows.length === 0) return;
-      if (key === "ArrowLeft" && props.row.getIsExpanded())
-        props.row.toggleExpanded();
-      if (key === "ArrowRight" && !props.row.getIsExpanded())
-        props.row.toggleExpanded();
-    },
-    [props.row]
-  );
+    const onArrowLeftRight = useCallback(
+        (key: string) => {
+            if (props.row.subRows.length === 0) return;
+            if (key === "ArrowLeft" && props.row.getIsExpanded())
+                props.row.toggleExpanded();
+            if (key === "ArrowRight" && !props.row.getIsExpanded())
+                props.row.toggleExpanded();
+        },
+        [props.row],
+    );
 
-  return (
-    <EditableNameField
-      currentName={props.entry.name}
-      onArrowLeftRight={onArrowLeftRight}
-      onUpdate={
-        props.treeName === "filetree" && rpcVersion >= 15
-          ? updatePath
-          : undefined
-      }
-    >
-      <Box sx={{ width: `${props.entry.level * 1.6}rem`, flexShrink: 0 }} />
-      <Box w="1.4rem" mx="auto" sx={{ flexShrink: 0 }}>
-        {props.entry.wantedUpdating ? (
-          <Loader
-            size="1.2rem"
-            color={
-              theme.colorScheme === "dark"
-                ? theme.colors.cyan[4]
-                : theme.colors.cyan[9]
+    return (
+        <EditableNameField
+            currentName={props.entry.name}
+            onArrowLeftRight={onArrowLeftRight}
+            onUpdate={
+                props.treeName === "filetree" && rpcVersion >= 15
+                    ? updatePath
+                    : undefined
             }
-          />
-        ) : (
-          <Checkbox
-            checked={
-              props.entry.want === true || props.entry.want === undefined
-            }
-            indeterminate={props.entry.want === undefined}
-            onChange={(e) => {
-              props.onCheckboxChange(
-                props.entry.fullpath,
-                e.currentTarget.checked
-              );
-              refreshFileTree(props.treeName);
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-            }}
-          />
-        )}
-      </Box>
-      <Box ml="xs" className="icon-container">
-        {isDir ? (
-          props.row.getIsExpanded() ? (
-            <Icon.DashSquare
-              size="1.1rem"
-              onClick={onToggleExpand}
-              style={{ cursor: "pointer" }}
-            />
-          ) : (
-            <Icon.PlusSquare
-              size="1.1rem"
-              onClick={onToggleExpand}
-              style={{ cursor: "pointer" }}
-            />
-          )
-        ) : (
-          <FileIcon name={props.entry.name} />
-        )}
-      </Box>
-    </EditableNameField>
-  );
+        >
+            <Box sx={{ width: `${props.entry.level * 1.6}rem`, flexShrink: 0 }} />
+            <Box w="1.4rem" mx="auto" sx={{ flexShrink: 0 }}>
+                {props.entry.wantedUpdating ? (
+                    <Loader
+                        size="1.2rem"
+                        color={
+                            theme.colorScheme === "dark"
+                                ? theme.colors.cyan[4]
+                                : theme.colors.cyan[9]
+                        }
+                    />
+                ) : (
+                    <Checkbox
+                        checked={
+                            props.entry.want === true || props.entry.want === undefined
+                        }
+                        indeterminate={props.entry.want === undefined}
+                        onChange={(e) => {
+                            props.onCheckboxChange(
+                                props.entry.fullpath,
+                                e.currentTarget.checked,
+                            );
+                            refreshFileTree(props.treeName);
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                        onDoubleClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                    />
+                )}
+            </Box>
+            <Box ml="xs" className="icon-container">
+                {isDir ? (
+                    props.row.getIsExpanded() ? (
+                        <Icon.DashSquare
+                            size="1.1rem"
+                            onClick={onToggleExpand}
+                            style={{ cursor: "pointer" }}
+                        />
+                    ) : (
+                        <Icon.PlusSquare
+                            size="1.1rem"
+                            onClick={onToggleExpand}
+                            style={{ cursor: "pointer" }}
+                        />
+                    )
+                ) : (
+                    <FileIcon name={props.entry.name} />
+                )}
+            </Box>
+        </EditableNameField>
+    );
 }
 
 function ByteSizeField(props: TableFieldProps) {
-  const stringValue = useMemo(() => {
-    return bytesToHumanReadableStr(props.entry[props.fieldName] as number);
-  }, [props]);
+    const stringValue = useMemo(() => {
+        return bytesToHumanReadableStr(props.entry[props.fieldName] as number);
+    }, [props]);
 
-  return <div>{stringValue}</div>;
+    return <div>{stringValue}</div>;
 }
 
 function PercentBarField(props: TableFieldProps) {
-  const config = useContext(ConfigContext);
-  const now = props.entry.percent ?? 0;
-  let variant: ProgressBarVariant = "default";
-  if (config.values.interface.colorfulProgressbars) {
-    if (props.entry.want === false) variant = "grey";
-    else if (now === 100) variant = "green";
-  }
+    const config = useContext(ConfigContext);
+    const now = props.entry.percent ?? 0;
+    let variant: ProgressBarVariant = "default";
+    if (config.values.interface.colorfulProgressbars) {
+        if (props.entry.want === false) variant = "grey";
+        else if (now === 100) variant = "green";
+    }
 
-  return <ProgressBar now={now} className="white-outline" variant={variant} />;
+    return <ProgressBar now={now} className="white-outline" variant={variant} />;
 }
 
 function PriorityField(props: TableFieldProps) {
-  const { t } = useTranslation();
-  const priority = props.entry.priority;
+    const { t } = useTranslation();
+    const priority = props.entry.priority;
 
-  let label = t("priority.mixed");
-  if (priority === -1) label = t("priority.low");
-  else if (priority === 0) label = t("priority.normal");
-  else if (priority === 1) label = t("priority.high");
+    let label = t("priority.mixed");
+    if (priority === -1) label = t("priority.low");
+    else if (priority === 0) label = t("priority.normal");
+    else if (priority === 1) label = t("priority.high");
 
-  return (
-    <Badge
-      radius="md"
-      variant="filled"
-      bg={priority === undefined ? "gray" : PriorityColors.get(priority)}
-    >
-      {label}
-    </Badge>
-  );
+    return (
+        <Badge
+            radius="md"
+            variant="filled"
+            bg={priority === undefined ? "gray" : PriorityColors.get(priority)}
+        >
+            {label}
+        </Badge>
+    );
 }
 
 interface FileTreeTableProps {
-  fileTree: CachedFileTree;
-  data: FileDirEntryView[];
-  onCheckboxChange: EntryWantedChangeHandler;
-  downloadDir?: string;
-  brief?: boolean;
+    fileTree: CachedFileTree,
+    data: FileDirEntryView[],
+    onCheckboxChange: EntryWantedChangeHandler,
+    downloadDir?: string,
+    brief?: boolean,
 }
 
 function entryMatchesSearchTerms(
-  entry: FileDirEntryView,
-  searchTerms: string[]
+    entry: FileDirEntryView,
+    searchTerms: string[],
 ) {
-  const path = entry.fullpath
-    .toLowerCase()
-    .substring(entry.fullpath.indexOf("/") + 1);
-  return searchTerms.every((term) => path.includes(term));
+    const path = entry.fullpath
+        .toLowerCase()
+        .substring(entry.fullpath.indexOf("/") + 1);
+    return searchTerms.every((term) => path.includes(term));
 }
 
 export function useUnwantedFiles(
-  ft: CachedFileTree,
-  setUpdating: boolean
+    ft: CachedFileTree,
+    setUpdating: boolean,
 ): EntryWantedChangeHandler {
-  const changeHandler = useCallback(
-    (entryPath: string, state: boolean) => {
-      ft.setWanted(entryPath, state, setUpdating);
-    },
-    [ft, setUpdating]
-  );
+    const changeHandler = useCallback(
+        (entryPath: string, state: boolean) => {
+            ft.setWanted(entryPath, state, setUpdating);
+        },
+        [ft, setUpdating],
+    );
 
-  return changeHandler;
+    return changeHandler;
 }
 
 function useSelected(
-  data: FileDirEntryView[],
-  fileTree: CachedFileTree,
-  searchTerms: string[]
+    data: FileDirEntryView[],
+    fileTree: CachedFileTree,
+    searchTerms: string[],
 ) {
-  const [selected, setSelected] = useReducer(
-    (prev: string[], next: string[]) => {
-      if (prev.length === next.length) {
-        for (let i = 0; i < prev.length; i++) {
-          if (prev[i] !== next[i]) return next;
-        }
-        return prev;
-      }
-      return next;
-    },
-    []
-  );
+    const [selected, setSelected] = useReducer(
+        (prev: string[], next: string[]) => {
+            if (prev.length === next.length) {
+                for (let i = 0; i < prev.length; i++) {
+                    if (prev[i] !== next[i]) return next;
+                }
+                return prev;
+            }
+            return next;
+        },
+        [],
+    );
 
-  const deriveNewSelection = useRef<(s: boolean) => string[]>(() => []);
-  deriveNewSelection.current = useCallback(
-    (selectAll: boolean) => {
-      const result: string[] = [];
-      const recurse = (entry: FileDirEntryView) => {
-        if (
-          (selectAll ||
-            fileTree.findEntry(entry.fullpath)?.isSelected === true) &&
-          (entry.subrows.length === 0 ||
-            entryMatchesSearchTerms(entry, searchTerms))
-        ) {
-          result.push(entry.fullpath);
-          return;
-        }
-        entry.subrows.forEach(recurse);
-      };
-      data.forEach(recurse);
-      return result;
-    },
-    [data, fileTree, searchTerms]
-  );
+    const deriveNewSelection = useRef<(s: boolean) => string[]>(() => []);
+    deriveNewSelection.current = useCallback(
+        (selectAll: boolean) => {
+            const result: string[] = [];
+            const recurse = (entry: FileDirEntryView) => {
+                if (
+                    (selectAll ||
+                        fileTree.findEntry(entry.fullpath)?.isSelected === true) &&
+                    (entry.subrows.length === 0 ||
+                        entryMatchesSearchTerms(entry, searchTerms))
+                ) {
+                    result.push(entry.fullpath);
+                    return;
+                }
+                entry.subrows.forEach(recurse);
+            };
+            data.forEach(recurse);
+            return result;
+        },
+        [data, fileTree, searchTerms],
+    );
 
-  useEffect(() => {
-    if (searchTerms.length === 0) return;
+    useEffect(() => {
+        if (searchTerms.length === 0) return;
 
-    fileTree.selectAction({
-      verb: "set",
-      ids: deriveNewSelection.current(false),
-    });
-    setSelected(fileTree.getSelected());
-  }, [fileTree, searchTerms]);
+        fileTree.selectAction({
+            verb: "set",
+            ids: deriveNewSelection.current(false),
+        });
+        setSelected(fileTree.getSelected());
+    }, [fileTree, searchTerms]);
 
-  const selectAll = useRef(() => {});
-  const hk = useHotkeysContext();
+    const selectAll = useRef(() => { });
+    const hk = useHotkeysContext();
 
-  selectAll.current = useCallback(() => {
-    fileTree.selectAction({
-      verb: "set",
-      ids: deriveNewSelection.current(true),
-    });
-    setSelected(fileTree.getSelected());
-  }, [fileTree]);
+    selectAll.current = useCallback(() => {
+        fileTree.selectAction({
+            verb: "set",
+            ids: deriveNewSelection.current(true),
+        });
+        setSelected(fileTree.getSelected());
+    }, [fileTree]);
 
-  useEffect(() => {
-    return () => {
-      hk.handlers.selectAll = () => {};
-    };
-  }, [hk]);
-
-  const selectedReducer = useCallback(
-    (action: {
-      verb: "add" | "set" | "toggle";
-      ids: string[];
-      isReset?: boolean;
-    }) => {
-      fileTree.selectAction(action);
-      setSelected(fileTree.getSelected());
-      if (action.isReset !== true) {
-        hk.handlers.selectAll = () => {
-          selectAll.current?.();
+    useEffect(() => {
+        return () => {
+            hk.handlers.selectAll = () => { };
         };
-      }
-    },
-    [fileTree, hk]
-  );
+    }, [hk]);
 
-  return { selected, selectedReducer };
+    const selectedReducer = useCallback(
+        (action: {
+            verb: "add" | "set" | "toggle",
+            ids: string[],
+            isReset?: boolean,
+        }) => {
+            fileTree.selectAction(action);
+            setSelected(fileTree.getSelected());
+            if (action.isReset !== true) {
+                hk.handlers.selectAll = () => {
+                    selectAll.current?.();
+                };
+            }
+        },
+        [fileTree, hk],
+    );
+
+    return { selected, selectedReducer };
 }
 
 function SearchBox({
-  setSearchTerms,
+    setSearchTerms,
 }: {
-  setSearchTerms: (terms: string[]) => void;
+    setSearchTerms: (terms: string[]) => void,
 }) {
-  const { t } = useTranslation();
-  const theme = useMantineTheme();
+    const { t } = useTranslation();
+    const theme = useMantineTheme();
 
-  const debouncedSetSearchTerms = useMemo(
-    () => debounce(setSearchTerms, 500, { trailing: true, leading: false }),
-    [setSearchTerms]
-  );
+    const debouncedSetSearchTerms = useMemo(
+        () => debounce(setSearchTerms, 500, { trailing: true, leading: false }),
+        [setSearchTerms],
+    );
 
-  const searchRef = useRef<HTMLInputElement>(null);
+    const searchRef = useRef<HTMLInputElement>(null);
 
-  const onSearchClear = useCallback(() => {
-    if (searchRef.current != null) searchRef.current.value = "";
-    setSearchTerms([]);
-  }, [setSearchTerms]);
+    const onSearchClear = useCallback(() => {
+        if (searchRef.current != null) searchRef.current.value = "";
+        setSearchTerms([]);
+    }, [setSearchTerms]);
 
-  const onSearchInput = useCallback(
-    (e: React.FormEvent<HTMLInputElement>) => {
-      debouncedSetSearchTerms(
-        e.currentTarget.value
-          .split(" ")
-          .map((s) => s.trim().toLowerCase())
-          .filter((s) => s !== "")
-      );
-    },
-    [debouncedSetSearchTerms]
-  );
+    const onSearchInput = useCallback(
+        (e: React.FormEvent<HTMLInputElement>) => {
+            debouncedSetSearchTerms(
+                e.currentTarget.value
+                    .split(" ")
+                    .map((s) => s.trim().toLowerCase())
+                    .filter((s) => s !== ""),
+            );
+        },
+        [debouncedSetSearchTerms],
+    );
 
-  return (
-    <Box>
-      <TextInput
-        ref={searchRef}
-        icon={<Icon.Search size="1rem" />}
-        rightSection={
-          <ActionIcon
-            onClick={onSearchClear}
-            title={t("tables.filetree.search.clear")}
-          >
-            <Icon.XLg size="1rem" color={theme.colors.red[6]} />
-          </ActionIcon>
-        }
-        placeholder={t("tables.filetree.search.placeholder")}
-        onInput={onSearchInput}
-        styles={{
-          root: {
-            height: "1.5rem",
-          },
-          input: {
-            minHeight: "1.5rem",
-            height: "1.5rem",
-            lineHeight: "1rem",
-          },
-        }}
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck="false"
-      />
-    </Box>
-  );
+    return (
+        <Box>
+            <TextInput
+                ref={searchRef}
+                icon={<Icon.Search size="1rem" />}
+                rightSection={
+                    <ActionIcon
+                        onClick={onSearchClear}
+                        title={t("tables.filetree.search.clear")}
+                    >
+                        <Icon.XLg size="1rem" color={theme.colors.red[6]} />
+                    </ActionIcon>
+                }
+                placeholder={t("tables.filetree.search.placeholder")}
+                onInput={onSearchInput}
+                styles={{
+                    root: {
+                        height: "1.5rem",
+                    },
+                    input: {
+                        minHeight: "1.5rem",
+                        height: "1.5rem",
+                        lineHeight: "1rem",
+                    },
+                }}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+            />
+        </Box>
+    );
 }
 
 export function FileTreeTable(props: FileTreeTableProps) {
-  const { t } = useTranslation();
-  const config = useContext(ConfigContext);
-  const serverConfig = useContext(ServerConfigContext);
-  const onCheckboxChange = props.onCheckboxChange;
+    const { t } = useTranslation();
+    const config = useContext(ConfigContext);
+    const serverConfig = useContext(ServerConfigContext);
+    const onCheckboxChange = props.onCheckboxChange;
 
-  const nameSortFunc = useCallback(
-    (rowa: Row<FileDirEntryView>, rowb: Row<FileDirEntryView>) => {
-      const [a, b] = [rowa.original, rowb.original];
-      return a.fullpath < b.fullpath ? -1 : 1;
-    },
-    []
-  );
+    const nameSortFunc = useCallback(
+        (rowa: Row<FileDirEntryView>, rowb: Row<FileDirEntryView>) => {
+            const [a, b] = [rowa.original, rowb.original];
+            return a.fullpath < b.fullpath ? -1 : 1;
+        },
+        [],
+    );
 
-  const columns = useMemo(
-    () =>
-      AllFields.filter(
-        (field) => field.briefField === true || props.brief !== true
-      ).map((field): ColumnDef<FileDirEntryView> => {
-        const cell = (cellProps: CellContext<FileDirEntryView, unknown>) => {
-          return (
-            <field.component
-              fileTree={props.fileTree}
-              fieldName={field.name}
-              entry={cellProps.row.original}
-              row={cellProps.row}
-              treeName={props.brief === true ? "filetreebrief" : "filetree"}
-              onCheckboxChange={onCheckboxChange}
-            />
-          );
+    const columns = useMemo(
+        () =>
+            AllFields.filter(
+                (field) => field.briefField === true || props.brief !== true,
+            ).map((field): ColumnDef<FileDirEntryView> => {
+                const cell = (cellProps: CellContext<FileDirEntryView, unknown>) => {
+                    return (
+                        <field.component
+                            fileTree={props.fileTree}
+                            fieldName={field.name}
+                            entry={cellProps.row.original}
+                            row={cellProps.row}
+                            treeName={props.brief === true ? "filetreebrief" : "filetree"}
+                            onCheckboxChange={onCheckboxChange}
+                        />
+                    );
+                };
+                const column: ColumnDef<FileDirEntryView> = {
+                    header: t(field.label),
+                    accessorKey: field.name,
+                    cell,
+                };
+                if (field.name === "name") column.sortingFn = nameSortFunc;
+                return column;
+            }),
+        [props.brief, props.fileTree, nameSortFunc, onCheckboxChange, t],
+    );
+
+    const getRowId = useCallback((row: FileDirEntryView) => row.fullpath, []);
+    const getSubRows = useCallback((row: FileDirEntryView) => row.subrows, []);
+
+    const onEntryOpen = useCallback(
+        (rowPath: string, reveal: boolean = false) => {
+            if (TAURI) {
+                if (props.downloadDir === undefined || props.downloadDir === "") return;
+                let path = props.downloadDir;
+                if (!path.endsWith("/") && !path.endsWith("\\")) {
+                    path = path + "/";
+                }
+                path = path + rowPath;
+                path = pathMapFromServer(path, serverConfig);
+                invoke("shell_open", { path, reveal }).catch(() => {
+                    notifications.show({
+                        title: t("tables.filetree.notifications.errorOpeningPath"),
+                        message: path,
+                        color: "red",
+                    });
+                });
+            }
+        },
+        [props.downloadDir, serverConfig, t],
+    );
+
+    const onRowDoubleClick = useCallback(
+        (row: FileDirEntryView) => {
+            const rowPath = row.fullpath + (row.subrows.length > 0 ? "/" : "");
+            onEntryOpen(rowPath);
+        },
+        [onEntryOpen],
+    );
+
+    const [info, setInfo, handler] = useContextMenu();
+
+    const tableRef = useRef<TrguiTableRef>();
+
+    const [searchTerms, setSearchTerms] = useState<string[]>([]);
+
+    const data = useMemo(() => {
+        if (searchTerms.length === 0) return props.data;
+
+        const filter = (entries: FileDirEntryView[]) => {
+            const result: FileDirEntryView[] = [];
+            entries.forEach((entry) => {
+                if (entry.subrows.length > 0) {
+                    const copy = { ...entry };
+                    copy.subrows = filter(copy.subrows);
+                    if (
+                        copy.subrows.length > 0 ||
+                        entryMatchesSearchTerms(copy, searchTerms)
+                    ) {
+                        result.push(copy);
+                    }
+                } else if (entryMatchesSearchTerms(entry, searchTerms)) {
+                    result.push(entry);
+                }
+            });
+            return result;
         };
-        const column: ColumnDef<FileDirEntryView> = {
-          header: t(field.label),
-          accessorKey: field.name,
-          cell,
-        };
-        if (field.name === "name") column.sortingFn = nameSortFunc;
-        return column;
-      }),
-    [props.brief, props.fileTree, nameSortFunc, onCheckboxChange, t]
-  );
 
-  const getRowId = useCallback((row: FileDirEntryView) => row.fullpath, []);
-  const getSubRows = useCallback((row: FileDirEntryView) => row.subrows, []);
+        return filter(props.data);
+    }, [searchTerms, props.data]);
 
-  const onEntryOpen = useCallback(
-    (rowPath: string, reveal: boolean = false) => {
-      if (TAURI) {
-        if (props.downloadDir === undefined || props.downloadDir === "") return;
-        let path = props.downloadDir;
-        if (!path.endsWith("/") && !path.endsWith("\\")) {
-          path = path + "/";
-        }
-        path = path + rowPath;
-        path = pathMapFromServer(path, serverConfig);
-        invoke("shell_open", { path, reveal }).catch(() => {
-          notifications.show({
-            title: t("tables.filetree.notifications.errorOpeningPath"),
-            message: path,
-            color: "red",
-          });
-        });
-      }
-    },
-    [props.downloadDir, serverConfig]
-  );
+    useEffect(() => {
+        if (searchTerms.length > 0) tableRef.current?.setExpanded(true);
+        else tableRef.current?.setExpanded(false);
+    }, [searchTerms]);
 
-  const onRowDoubleClick = useCallback(
-    (row: FileDirEntryView) => {
-      const rowPath = row.fullpath + (row.subrows.length > 0 ? "/" : "");
-      onEntryOpen(rowPath);
-    },
-    [onEntryOpen]
-  );
+    const [current, setCurrent] = useState("");
+    const { selected, selectedReducer } = useSelected(
+        data,
+        props.fileTree,
+        searchTerms,
+    );
 
-  const [info, setInfo, handler] = useContextMenu();
+    useEffect(() => {
+        selectedReducer({ verb: "set", ids: [], isReset: true });
+        setCurrent("");
+    }, [props.fileTree.torrenthash, selectedReducer]);
 
-  const tableRef = useRef<TrguiTableRef>();
+    const [showFileSearchBox, toggleFileSearchBox] = useReducer(
+        (shown: boolean) => {
+            const show = !shown;
+            if (!show) setSearchTerms([]);
+            config.values.interface.showFilesSearchBox = show;
+            return show;
+        },
+        config.values.interface.showFilesSearchBox,
+    );
 
-  const [searchTerms, setSearchTerms] = useState<string[]>([]);
-
-  const data = useMemo(() => {
-    if (searchTerms.length === 0) return props.data;
-
-    const filter = (entries: FileDirEntryView[]) => {
-      const result: FileDirEntryView[] = [];
-      entries.forEach((entry) => {
-        if (entry.subrows.length > 0) {
-          const copy = { ...entry };
-          copy.subrows = filter(copy.subrows);
-          if (
-            copy.subrows.length > 0 ||
-            entryMatchesSearchTerms(copy, searchTerms)
-          ) {
-            result.push(copy);
-          }
-        } else if (entryMatchesSearchTerms(entry, searchTerms)) {
-          result.push(entry);
-        }
-      });
-      return result;
-    };
-
-    return filter(props.data);
-  }, [searchTerms, props.data]);
-
-  useEffect(() => {
-    if (searchTerms.length > 0) tableRef.current?.setExpanded(true);
-    else tableRef.current?.setExpanded(false);
-  }, [searchTerms]);
-
-  const [current, setCurrent] = useState("");
-  const { selected, selectedReducer } = useSelected(
-    data,
-    props.fileTree,
-    searchTerms
-  );
-
-  useEffect(() => {
-    selectedReducer({ verb: "set", ids: [], isReset: true });
-    setCurrent("");
-  }, [props.fileTree.torrenthash, selectedReducer]);
-
-  const [showFileSearchBox, toggleFileSearchBox] = useReducer(
-    (shown: boolean) => {
-      const show = !shown;
-      if (!show) setSearchTerms([]);
-      config.values.interface.showFilesSearchBox = show;
-      return show;
-    },
-    config.values.interface.showFilesSearchBox
-  );
-
-  return (
-    <Flex w="100%" h="100%" onContextMenu={handler} direction="column">
-      {props.brief === true ? (
-        <></>
-      ) : (
-        <FiletreeContextMenu
-          contextMenuInfo={info}
-          setContextMenuInfo={setInfo}
-          fileTree={props.fileTree}
-          selected={selected}
-          currentRow={current}
-          onEntryOpen={onEntryOpen}
-          setExpanded={tableRef.current?.setExpanded}
-          toggleFileSearchBox={toggleFileSearchBox}
-        />
-      )}
-      {showFileSearchBox && <SearchBox setSearchTerms={setSearchTerms} />}
-      <div style={{ flexGrow: 1 }}>
-        <TrguiTable<FileDirEntryView>
-          {...{
-            tablename: props.brief === true ? "filetreebrief" : "filetree",
-            tableRef,
-            columns,
-            data,
-            selected,
-            getRowId,
-            getSubRows,
-            selectedReducer,
-            setCurrent,
-            onRowDoubleClick,
-          }}
-        />
-      </div>
-    </Flex>
-  );
+    return (
+        <Flex w="100%" h="100%" onContextMenu={handler} direction="column">
+            {props.brief === true ? (
+                <></>
+            ) : (
+                <FiletreeContextMenu
+                    contextMenuInfo={info}
+                    setContextMenuInfo={setInfo}
+                    fileTree={props.fileTree}
+                    selected={selected}
+                    currentRow={current}
+                    onEntryOpen={onEntryOpen}
+                    setExpanded={tableRef.current?.setExpanded}
+                    toggleFileSearchBox={toggleFileSearchBox}
+                />
+            )}
+            {showFileSearchBox && <SearchBox setSearchTerms={setSearchTerms} />}
+            <div style={{ flexGrow: 1 }}>
+                <TrguiTable<FileDirEntryView>
+                    {...{
+                        tablename: props.brief === true ? "filetreebrief" : "filetree",
+                        tableRef,
+                        columns,
+                        data,
+                        selected,
+                        getRowId,
+                        getSubRows,
+                        selectedReducer,
+                        setCurrent,
+                        onRowDoubleClick,
+                    }}
+                />
+            </div>
+        </Flex>
+    );
 }
 
 function FiletreeContextMenu(props: {
-  contextMenuInfo: ContextMenuInfo;
-  setContextMenuInfo: (i: ContextMenuInfo) => void;
-  fileTree: CachedFileTree;
-  selected: string[];
-  currentRow: string;
-  onEntryOpen: (rowPath: string, reveal: boolean) => void;
-  setExpanded?: (state: boolean) => void;
-  toggleFileSearchBox: () => void;
+    contextMenuInfo: ContextMenuInfo,
+    setContextMenuInfo: (i: ContextMenuInfo) => void,
+    fileTree: CachedFileTree,
+    selected: string[],
+    currentRow: string,
+    onEntryOpen: (rowPath: string, reveal: boolean) => void,
+    setExpanded?: (state: boolean) => void,
+    toggleFileSearchBox: () => void,
 }) {
-  const { t } = useTranslation();
-  const config = useContext(ConfigContext);
+    const { t } = useTranslation();
+    const config = useContext(ConfigContext);
 
-  const { onEntryOpen } = props;
-  const onOpen = useCallback(
-    (reveal: boolean) => {
-      const entry = props.fileTree.findEntry(props.currentRow);
-      if (entry === undefined) return;
-      const rowPath = entry.fullpath + (isDirEntry(entry) ? "/" : "");
-      onEntryOpen(rowPath, reveal);
-    },
-    [onEntryOpen, props.fileTree, props.currentRow]
-  );
-
-  const { mutate } = useMutateTorrent();
-
-  const setPriority = useCallback(
-    (priority: "priority-high" | "priority-normal" | "priority-low") => {
-      const fileIds = Array.from(
-        props.selected
-          .map((path) => props.fileTree.getChildFilesIndexes(path))
-          .reduce((set, curIds) => {
-            curIds.forEach((id) => set.add(id));
-            return set;
-          }, new Set<number>())
-      );
-
-      mutate(
-        {
-          torrentIds: [props.fileTree.torrentId],
-          fields: {
-            [priority]: fileIds,
-          },
+    const { onEntryOpen } = props;
+    const onOpen = useCallback(
+        (reveal: boolean) => {
+            const entry = props.fileTree.findEntry(props.currentRow);
+            if (entry === undefined) return;
+            const rowPath = entry.fullpath + (isDirEntry(entry) ? "/" : "");
+            onEntryOpen(rowPath, reveal);
         },
-        {
-          onSuccess: () => {
-            notifications.show({
-              message: t("tables.filetree.notifications.priorityUpdated"),
-              color: "green",
-            });
-          },
-        }
-      );
-    },
-    [mutate, props.fileTree, props.selected, t]
-  );
+        [onEntryOpen, props.fileTree, props.currentRow],
+    );
 
-  const setWanted = useCallback(
-    (wanted: boolean) => {
-      const fileIds = Array.from(
-        props.selected
-          .map((path) => props.fileTree.getChildFilesIndexes(path))
-          .reduce((set, curIds) => {
-            curIds.forEach((id) => set.add(id));
-            return set;
-          }, new Set<number>())
-      );
+    const { mutate } = useMutateTorrent();
 
-      mutate(
-        {
-          torrentIds: [props.fileTree.torrentId],
-          fields: {
-            [wanted ? "files-wanted" : "files-unwanted"]: fileIds,
-          },
+    const setPriority = useCallback(
+        (priority: "priority-high" | "priority-normal" | "priority-low") => {
+            const fileIds = Array.from(
+                props.selected
+                    .map((path) => props.fileTree.getChildFilesIndexes(path))
+                    .reduce((set, curIds) => {
+                        curIds.forEach((id) => set.add(id));
+                        return set;
+                    }, new Set<number>()),
+            );
+
+            mutate(
+                {
+                    torrentIds: [props.fileTree.torrentId],
+                    fields: {
+                        [priority]: fileIds,
+                    },
+                },
+                {
+                    onSuccess: () => {
+                        notifications.show({
+                            message: t("tables.filetree.notifications.priorityUpdated"),
+                            color: "green",
+                        });
+                    },
+                },
+            );
         },
-        {
-          onSuccess: () => {
-            notifications.show({
-              message: t("tables.filetree.notifications.filesUpdated"),
-              color: "green",
-            });
-          },
-        }
-      );
-    },
-    [mutate, props.fileTree, props.selected, t]
-  );
+        [mutate, props.fileTree, props.selected, t],
+    );
 
-  const [flatFileTree, toggleFlatFileTree] = useReducer((value: boolean) => {
-    value = !value;
-    config.values.interface.flatFileTree = value;
-    refreshFileTree("filetree");
-    return value;
-  }, config.values.interface.flatFileTree);
+    const setWanted = useCallback(
+        (wanted: boolean) => {
+            const fileIds = Array.from(
+                props.selected
+                    .map((path) => props.fileTree.getChildFilesIndexes(path))
+                    .reduce((set, curIds) => {
+                        curIds.forEach((id) => set.add(id));
+                        return set;
+                    }, new Set<number>()),
+            );
 
-  return (
-    <ContextMenu
-      contextMenuInfo={props.contextMenuInfo}
-      setContextMenuInfo={props.setContextMenuInfo}
-    >
-      {TAURI && (
-        <>
-          <Menu.Item
-            onClick={() => {
-              onOpen(false);
-            }}
-            icon={<Icon.BoxArrowUpRight size="1.1rem" />}
-            disabled={props.currentRow === ""}
-          >
-            <Text weight="bold">{t("tables.filetree.contextMenu.open")}</Text>
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => {
-              onOpen(true);
-            }}
-            icon={<Icon.Folder2Open size="1.1rem" />}
-            disabled={props.currentRow === ""}
-          >
-            <Text>{t("tables.filetree.contextMenu.openFolder")}</Text>
-          </Menu.Item>
-          <Menu.Divider />
-        </>
-      )}
-      <Menu.Item
-        onClick={() => {
-          setPriority("priority-high");
-        }}
-        icon={<Icon.CircleFill color="tomato" size="1.1rem" />}
-        disabled={props.selected.length === 0}
-      >
-        {t("tables.filetree.contextMenu.highPriority")}
-      </Menu.Item>
-      <Menu.Item
-        onClick={() => {
-          setPriority("priority-normal");
-        }}
-        icon={<Icon.CircleFill color="seagreen" size="1.1rem" />}
-        disabled={props.selected.length === 0}
-      >
-        {t("tables.filetree.contextMenu.normalPriority")}
-      </Menu.Item>
-      <Menu.Item
-        onClick={() => {
-          setPriority("priority-low");
-        }}
-        icon={<Icon.CircleFill color="gold" size="1.1rem" />}
-        disabled={props.selected.length === 0}
-      >
-        {t("tables.filetree.contextMenu.lowPriority")}
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item
-        onClick={() => {
-          setWanted(true);
-        }}
-        icon={<Checkbox checked readOnly />}
-        disabled={props.selected.length === 0}
-      >
-        {t("tables.filetree.contextMenu.setWanted")}
-      </Menu.Item>
-      <Menu.Item
-        onClick={() => {
-          setWanted(false);
-        }}
-        icon={<Checkbox readOnly />}
-        disabled={props.selected.length === 0}
-      >
-        {t("tables.filetree.contextMenu.setUnwanted")}
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item
-        onClick={() => {
-          props.setExpanded?.(true);
-        }}
-        icon={<Icon.PlusSquare size="1.1rem" />}
-      >
-        {t("tables.filetree.contextMenu.expandAll")}
-      </Menu.Item>
-      <Menu.Item
-        onClick={() => {
-          props.setExpanded?.(false);
-        }}
-        icon={<Icon.DashSquare size="1.1rem" />}
-      >
-        {t("tables.filetree.contextMenu.collapseAll")}
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item
-        onClick={props.toggleFileSearchBox}
-        icon={<Icon.Search size="1.1rem" />}
-      >
-        {t("tables.filetree.contextMenu.toggleSearch")}
-      </Menu.Item>
-      <Menu.Item
-        onClick={toggleFlatFileTree}
-        icon={<Checkbox checked={!flatFileTree} readOnly />}
-      >
-        {t("tables.filetree.contextMenu.showAsTree")}
-      </Menu.Item>
-    </ContextMenu>
-  );
+            mutate(
+                {
+                    torrentIds: [props.fileTree.torrentId],
+                    fields: {
+                        [wanted ? "files-wanted" : "files-unwanted"]: fileIds,
+                    },
+                },
+                {
+                    onSuccess: () => {
+                        notifications.show({
+                            message: t("tables.filetree.notifications.filesUpdated"),
+                            color: "green",
+                        });
+                    },
+                },
+            );
+        },
+        [mutate, props.fileTree, props.selected, t],
+    );
+
+    const [flatFileTree, toggleFlatFileTree] = useReducer((value: boolean) => {
+        value = !value;
+        config.values.interface.flatFileTree = value;
+        refreshFileTree("filetree");
+        return value;
+    }, config.values.interface.flatFileTree);
+
+    return (
+        <ContextMenu
+            contextMenuInfo={props.contextMenuInfo}
+            setContextMenuInfo={props.setContextMenuInfo}
+        >
+            {TAURI && (
+                <>
+                    <Menu.Item
+                        onClick={() => {
+                            onOpen(false);
+                        }}
+                        icon={<Icon.BoxArrowUpRight size="1.1rem" />}
+                        disabled={props.currentRow === ""}
+                    >
+                        <Text weight="bold">{t("tables.filetree.contextMenu.open")}</Text>
+                    </Menu.Item>
+                    <Menu.Item
+                        onClick={() => {
+                            onOpen(true);
+                        }}
+                        icon={<Icon.Folder2Open size="1.1rem" />}
+                        disabled={props.currentRow === ""}
+                    >
+                        <Text>{t("tables.filetree.contextMenu.openFolder")}</Text>
+                    </Menu.Item>
+                    <Menu.Divider />
+                </>
+            )}
+            <Menu.Item
+                onClick={() => {
+                    setPriority("priority-high");
+                }}
+                icon={<Icon.CircleFill color="tomato" size="1.1rem" />}
+                disabled={props.selected.length === 0}
+            >
+                {t("tables.filetree.contextMenu.highPriority")}
+            </Menu.Item>
+            <Menu.Item
+                onClick={() => {
+                    setPriority("priority-normal");
+                }}
+                icon={<Icon.CircleFill color="seagreen" size="1.1rem" />}
+                disabled={props.selected.length === 0}
+            >
+                {t("tables.filetree.contextMenu.normalPriority")}
+            </Menu.Item>
+            <Menu.Item
+                onClick={() => {
+                    setPriority("priority-low");
+                }}
+                icon={<Icon.CircleFill color="gold" size="1.1rem" />}
+                disabled={props.selected.length === 0}
+            >
+                {t("tables.filetree.contextMenu.lowPriority")}
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item
+                onClick={() => {
+                    setWanted(true);
+                }}
+                icon={<Checkbox checked readOnly />}
+                disabled={props.selected.length === 0}
+            >
+                {t("tables.filetree.contextMenu.setWanted")}
+            </Menu.Item>
+            <Menu.Item
+                onClick={() => {
+                    setWanted(false);
+                }}
+                icon={<Checkbox readOnly />}
+                disabled={props.selected.length === 0}
+            >
+                {t("tables.filetree.contextMenu.setUnwanted")}
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item
+                onClick={() => {
+                    props.setExpanded?.(true);
+                }}
+                icon={<Icon.PlusSquare size="1.1rem" />}
+            >
+                {t("tables.filetree.contextMenu.expandAll")}
+            </Menu.Item>
+            <Menu.Item
+                onClick={() => {
+                    props.setExpanded?.(false);
+                }}
+                icon={<Icon.DashSquare size="1.1rem" />}
+            >
+                {t("tables.filetree.contextMenu.collapseAll")}
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item
+                onClick={props.toggleFileSearchBox}
+                icon={<Icon.Search size="1.1rem" />}
+            >
+                {t("tables.filetree.contextMenu.toggleSearch")}
+            </Menu.Item>
+            <Menu.Item
+                onClick={toggleFlatFileTree}
+                icon={<Checkbox checked={!flatFileTree} readOnly />}
+            >
+                {t("tables.filetree.contextMenu.showAsTree")}
+            </Menu.Item>
+        </ContextMenu>
+    );
 }

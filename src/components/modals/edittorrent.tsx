@@ -24,209 +24,209 @@ import { useMutateTorrent, useTorrentDetails } from "queries";
 import { notifications } from "@mantine/notifications";
 import { Checkbox, Grid, LoadingOverlay, NumberInput } from "@mantine/core";
 import {
-  useServerRpcVersion,
-  useServerSelectedTorrents,
-  useServerTorrentData,
+    useServerRpcVersion,
+    useServerSelectedTorrents,
+    useServerTorrentData,
 } from "rpc/torrent";
 import { useTranslation } from "react-i18next";
 
 interface FormValues {
-  downloadLimited?: boolean;
-  downloadLimit: number;
-  uploadLimited?: boolean;
-  uploadLimit: number;
-  peerLimit: number;
-  seedRatioMode: number;
-  seedRatioLimit: number;
-  seedIdleMode: number;
-  seedIdleLimit: number;
-  honorsSessionLimits: boolean;
-  sequentialDownload: boolean;
+    downloadLimited?: boolean,
+    downloadLimit: number,
+    uploadLimited?: boolean,
+    uploadLimit: number,
+    peerLimit: number,
+    seedRatioMode: number,
+    seedRatioLimit: number,
+    seedIdleMode: number,
+    seedIdleLimit: number,
+    honorsSessionLimits: boolean,
+    sequentialDownload: boolean,
 }
 
 export function EditTorrent(props: ModalState) {
-  const rpcVersion = useServerRpcVersion();
-  const serverData = useServerTorrentData();
-  const selected = useServerSelectedTorrents();
-  const { t } = useTranslation();
+    const rpcVersion = useServerRpcVersion();
+    const serverData = useServerTorrentData();
+    const selected = useServerSelectedTorrents();
+    const { t } = useTranslation();
 
-  const torrentId = useMemo(() => {
-    if (serverData.current === undefined || !selected.has(serverData.current)) {
-      return [...selected][0];
-    }
-    return serverData.current;
-  }, [selected, serverData]);
+    const torrentId = useMemo(() => {
+        if (serverData.current === undefined || !selected.has(serverData.current)) {
+            return [...selected][0];
+        }
+        return serverData.current;
+    }, [selected, serverData]);
 
-  const { data: torrent, isLoading } = useTorrentDetails(
-    torrentId ?? -1,
-    torrentId !== undefined && props.opened,
-    false,
-    true
-  );
-
-  const form = useForm<FormValues>({});
-
-  const { setValues } = form;
-  useEffect(() => {
-    if (torrent === undefined) return;
-    setValues({
-      downloadLimited: torrent.downloadLimited,
-      downloadLimit: torrent.downloadLimit,
-      uploadLimited: torrent.uploadLimited,
-      uploadLimit: torrent.uploadLimit,
-      peerLimit: torrent["peer-limit"],
-      seedRatioMode: torrent.seedRatioMode,
-      seedRatioLimit: torrent.seedRatioLimit,
-      seedIdleMode: torrent.seedIdleMode,
-      seedIdleLimit: torrent.seedIdleLimit,
-      honorsSessionLimits: torrent.honorsSessionLimits,
-      sequentialDownload: torrent.sequentialDownload,
-    });
-  }, [setValues, torrent]);
-
-  const { mutate } = useMutateTorrent();
-
-  const onSave = useCallback(() => {
-    if (torrentId === undefined || torrent === undefined) return;
-
-    mutate(
-      {
-        torrentIds: [...selected],
-        fields: {
-          ...form.values,
-          "peer-limit": form.values.peerLimit,
-        },
-      },
-      {
-        onError: (e) => {
-          console.error("Failed to update torrent properties", e);
-          notifications.show({
-            message: t("editTorrent.errorUpdatingTorrent"),
-            color: "red",
-          });
-        },
-      }
+    const { data: torrent, isLoading } = useTorrentDetails(
+        torrentId ?? -1,
+        torrentId !== undefined && props.opened,
+        false,
+        true,
     );
-    props.close();
-  }, [torrentId, torrent, mutate, selected, form.values, props, t]);
 
-  return (
-    <>
-      {props.opened && (
-        <SaveCancelModal
-          opened={props.opened}
-          size="lg"
-          onClose={props.close}
-          onSave={onSave}
-          centered
-          title={t("editTorrent.editTorrentProperties")}
-          mih="25rem"
-        >
-          <LoadingOverlay visible={isLoading} />
-          <Grid align="center">
-            <Grid.Col>
-              <TorrentsNames />
-            </Grid.Col>
-            <Grid.Col span={8}>
-              <Checkbox
-                my="sm"
-                label={t("editTorrent.honorSessionUploadLimit")}
-                {...form.getInputProps("honorsSessionLimits", {
-                  type: "checkbox",
-                })}
-              />
-            </Grid.Col>
-            <Grid.Col span={4}>
-              {rpcVersion >= 18 && (
-                <Checkbox
-                  my="sm"
-                  label={t("editTorrent.sequentialDownload")}
-                  {...form.getInputProps("sequentialDownload", {
-                    type: "checkbox",
-                  })}
-                />
-              )}
-            </Grid.Col>
-            <Grid.Col span={8}>
-              <Checkbox
-                label={t("editTorrent.maxDownloadSpeed")}
-                {...form.getInputProps("downloadLimited", { type: "checkbox" })}
-              />
-            </Grid.Col>
-            <Grid.Col span={2}>
-              <NumberInput
-                min={0}
-                {...form.getInputProps("downloadLimit")}
-                disabled={form.values.downloadLimited !== true}
-              />
-            </Grid.Col>
-            <Grid.Col span={2}>{t("editTorrent.kbs")}</Grid.Col>
-            <Grid.Col span={8}>
-              <Checkbox
-                label={t("editTorrent.maxUploadSpeed")}
-                {...form.getInputProps("uploadLimited", { type: "checkbox" })}
-              />
-            </Grid.Col>
-            <Grid.Col span={2}>
-              <NumberInput
-                min={0}
-                {...form.getInputProps("uploadLimit")}
-                disabled={form.values.uploadLimited !== true}
-              />
-            </Grid.Col>
-            <Grid.Col span={2}>{t("editTorrent.kbs")}</Grid.Col>
-            <Grid.Col span={8}>{t("editTorrent.peerLimit")}</Grid.Col>
-            <Grid.Col span={2}>
-              <NumberInput min={0} {...form.getInputProps("peerLimit")} />
-            </Grid.Col>
-            <Grid.Col span={2} />
-            <Grid.Col span={8}>
-              <Checkbox
-                label={t("editTorrent.seedRatio")}
-                checked={form.values.seedRatioMode < 2}
-                indeterminate={form.values.seedRatioMode === 0}
-                onChange={() => {
-                  form.setFieldValue(
-                    "seedRatioMode",
-                    (form.values.seedRatioMode + 1) % 3
-                  );
-                }}
-              />
-            </Grid.Col>
-            <Grid.Col span={2}>
-              <NumberInput
-                min={0}
-                step={0.05}
-                precision={2}
-                {...form.getInputProps("seedRatioLimit")}
-                disabled={form.values.seedRatioMode !== 1}
-              />
-            </Grid.Col>
-            <Grid.Col span={2} />
-            <Grid.Col span={8}>
-              <Checkbox
-                label={t("editTorrent.stopSeedingWhenInactiveFor")}
-                checked={form.values.seedIdleMode < 2}
-                indeterminate={form.values.seedIdleMode === 0}
-                onChange={() => {
-                  form.setFieldValue(
-                    "seedIdleMode",
-                    (form.values.seedIdleMode + 1) % 3
-                  );
-                }}
-              />
-            </Grid.Col>
-            <Grid.Col span={2}>
-              <NumberInput
-                min={0}
-                {...form.getInputProps("seedIdleLimit")}
-                disabled={form.values.seedIdleMode !== 1}
-              />
-            </Grid.Col>
-            <Grid.Col span={2}>{t("editTorrent.minutes")}</Grid.Col>
-          </Grid>
-        </SaveCancelModal>
-      )}
-    </>
-  );
+    const form = useForm<FormValues>({});
+
+    const { setValues } = form;
+    useEffect(() => {
+        if (torrent === undefined) return;
+        setValues({
+            downloadLimited: torrent.downloadLimited,
+            downloadLimit: torrent.downloadLimit,
+            uploadLimited: torrent.uploadLimited,
+            uploadLimit: torrent.uploadLimit,
+            peerLimit: torrent["peer-limit"],
+            seedRatioMode: torrent.seedRatioMode,
+            seedRatioLimit: torrent.seedRatioLimit,
+            seedIdleMode: torrent.seedIdleMode,
+            seedIdleLimit: torrent.seedIdleLimit,
+            honorsSessionLimits: torrent.honorsSessionLimits,
+            sequentialDownload: torrent.sequentialDownload,
+        });
+    }, [setValues, torrent]);
+
+    const { mutate } = useMutateTorrent();
+
+    const onSave = useCallback(() => {
+        if (torrentId === undefined || torrent === undefined) return;
+
+        mutate(
+            {
+                torrentIds: [...selected],
+                fields: {
+                    ...form.values,
+                    "peer-limit": form.values.peerLimit,
+                },
+            },
+            {
+                onError: (e) => {
+                    console.error("Failed to update torrent properties", e);
+                    notifications.show({
+                        message: t("editTorrent.errorUpdatingTorrent"),
+                        color: "red",
+                    });
+                },
+            },
+        );
+        props.close();
+    }, [torrentId, torrent, mutate, selected, form.values, props, t]);
+
+    return (
+        <>
+            {props.opened && (
+                <SaveCancelModal
+                    opened={props.opened}
+                    size="lg"
+                    onClose={props.close}
+                    onSave={onSave}
+                    centered
+                    title={t("editTorrent.editTorrentProperties")}
+                    mih="25rem"
+                >
+                    <LoadingOverlay visible={isLoading} />
+                    <Grid align="center">
+                        <Grid.Col>
+                            <TorrentsNames />
+                        </Grid.Col>
+                        <Grid.Col span={8}>
+                            <Checkbox
+                                my="sm"
+                                label={t("editTorrent.honorSessionUploadLimit")}
+                                {...form.getInputProps("honorsSessionLimits", {
+                                    type: "checkbox",
+                                })}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={4}>
+                            {rpcVersion >= 18 && (
+                                <Checkbox
+                                    my="sm"
+                                    label={t("editTorrent.sequentialDownload")}
+                                    {...form.getInputProps("sequentialDownload", {
+                                        type: "checkbox",
+                                    })}
+                                />
+                            )}
+                        </Grid.Col>
+                        <Grid.Col span={8}>
+                            <Checkbox
+                                label={t("editTorrent.maxDownloadSpeed")}
+                                {...form.getInputProps("downloadLimited", { type: "checkbox" })}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={2}>
+                            <NumberInput
+                                min={0}
+                                {...form.getInputProps("downloadLimit")}
+                                disabled={form.values.downloadLimited !== true}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={2}>{t("editTorrent.kbs")}</Grid.Col>
+                        <Grid.Col span={8}>
+                            <Checkbox
+                                label={t("editTorrent.maxUploadSpeed")}
+                                {...form.getInputProps("uploadLimited", { type: "checkbox" })}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={2}>
+                            <NumberInput
+                                min={0}
+                                {...form.getInputProps("uploadLimit")}
+                                disabled={form.values.uploadLimited !== true}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={2}>{t("editTorrent.kbs")}</Grid.Col>
+                        <Grid.Col span={8}>{t("editTorrent.peerLimit")}</Grid.Col>
+                        <Grid.Col span={2}>
+                            <NumberInput min={0} {...form.getInputProps("peerLimit")} />
+                        </Grid.Col>
+                        <Grid.Col span={2} />
+                        <Grid.Col span={8}>
+                            <Checkbox
+                                label={t("editTorrent.seedRatio")}
+                                checked={form.values.seedRatioMode < 2}
+                                indeterminate={form.values.seedRatioMode === 0}
+                                onChange={() => {
+                                    form.setFieldValue(
+                                        "seedRatioMode",
+                                        (form.values.seedRatioMode + 1) % 3,
+                                    );
+                                }}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={2}>
+                            <NumberInput
+                                min={0}
+                                step={0.05}
+                                precision={2}
+                                {...form.getInputProps("seedRatioLimit")}
+                                disabled={form.values.seedRatioMode !== 1}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={2} />
+                        <Grid.Col span={8}>
+                            <Checkbox
+                                label={t("editTorrent.stopSeedingWhenInactiveFor")}
+                                checked={form.values.seedIdleMode < 2}
+                                indeterminate={form.values.seedIdleMode === 0}
+                                onChange={() => {
+                                    form.setFieldValue(
+                                        "seedIdleMode",
+                                        (form.values.seedIdleMode + 1) % 3,
+                                    );
+                                }}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={2}>
+                            <NumberInput
+                                min={0}
+                                {...form.getInputProps("seedIdleLimit")}
+                                disabled={form.values.seedIdleMode !== 1}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={2}>{t("editTorrent.minutes")}</Grid.Col>
+                    </Grid>
+                </SaveCancelModal>
+            )}
+        </>
+    );
 }

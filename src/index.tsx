@@ -25,186 +25,185 @@ import type { CSSProperties } from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 const { TAURI, appWindow, invoke } = await import(
-  /* webpackChunkName: "taurishim" */ "taurishim"
+    /* webpackChunkName: "taurishim" */ "taurishim"
 );
 
 const TauriApp = lazy(async () => await import("components/app"));
 const WebApp = lazy(async () => await import("components/webapp"));
 const CustomMantineProvider = lazy(
-  async () => await import("components/mantinetheme")
+    async () => await import("components/mantinetheme"),
 );
 
 async function onCloseRequested(app: Root, config: Config) {
-  await config.save();
-  await appWindow.emit("listener-pause", {});
-  app.unmount();
-  const configs = config.getOpenServers().map((serverConfig) => ({
-    name: serverConfig.name,
-    connection: serverConfig.connection,
-    interval: serverConfig.intervals.torrentsMinimized,
-  }));
-  await invoke("set_poller_config", {
-    configs,
-    toast: config.values.app.toastNotifications,
-    sound: config.values.app.toastNotificationSound,
-  });
-  void appWindow.emit("frontend-done");
+    await config.save();
+    await appWindow.emit("listener-pause", {});
+    app.unmount();
+    const configs = config.getOpenServers().map((serverConfig) => ({
+        name: serverConfig.name,
+        connection: serverConfig.connection,
+        interval: serverConfig.intervals.torrentsMinimized,
+    }));
+    await invoke("set_poller_config", {
+        configs,
+        toast: config.values.app.toastNotifications,
+        sound: config.values.app.toastNotificationSound,
+    });
+    void appWindow.emit("frontend-done");
 }
 
 async function onFocusChange(focused: boolean, config: Config) {
-  if (!focused && config.values.app.onMinimize === "hide") {
-    if (await appWindow.isMinimized()) {
-      void appWindow.emit("window-hidden");
-      void appWindow.hide();
+    if (!focused && config.values.app.onMinimize === "hide") {
+        if (await appWindow.isMinimized()) {
+            void appWindow.emit("window-hidden");
+            void appWindow.hide();
+        }
     }
-  }
 }
 
 function setupTauriEvents(config: Config, app: Root) {
-  void appWindow.onCloseRequested((event) => {
-    if (config.values.app.onClose === "hide") {
-      event.preventDefault();
-      void appWindow.emit("window-hidden");
-      void appWindow.hide();
-    } else if (config.values.app.onClose === "quit") {
-      event.preventDefault();
-      config.save().finally(() => {
-        void appWindow.emit("app-exit");
-      });
-    } else {
-      void onCloseRequested(app, config);
-    }
-  });
+    void appWindow.onCloseRequested((event) => {
+        if (config.values.app.onClose === "hide") {
+            event.preventDefault();
+            void appWindow.emit("window-hidden");
+            void appWindow.hide();
+        } else if (config.values.app.onClose === "quit") {
+            event.preventDefault();
+            config.save().finally(() => {
+                void appWindow.emit("app-exit");
+            });
+        } else {
+            void onCloseRequested(app, config);
+        }
+    });
 
-  void appWindow.listen("exit-requested", () => {
-    void onCloseRequested(app, config);
-  });
+    void appWindow.listen("exit-requested", () => {
+        void onCloseRequested(app, config);
+    });
 
-  void appWindow.onFocusChanged(({ payload: focused }) => {
-    void onFocusChange(focused, config);
-  });
+    void appWindow.onFocusChanged(({ payload: focused }) => {
+        void onFocusChange(focused, config);
+    });
 
-  void appWindow.onResized(({ payload: size }) => {
-    if (size.width > 0 && size.height > 0) {
-      config.values.app.window.size = [size.width, size.height];
-    }
-  });
+    void appWindow.onResized(({ payload: size }) => {
+        if (size.width > 0 && size.height > 0) {
+            config.values.app.window.size = [size.width, size.height];
+        }
+    });
 
-  void appWindow.onMoved(({ payload: size }) => {
-    if (size.x > -32000 && size.y > -32000) {
-      config.values.app.window.position = [size.x, size.y];
-    }
-  });
+    void appWindow.onMoved(({ payload: size }) => {
+        if (size.x > -32000 && size.y > -32000) {
+            config.values.app.window.position = [size.x, size.y];
+        }
+    });
 }
 
 function setupWebEvents(config: Config) {
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-      config.save().catch(() => {});
-    }
-  });
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") {
+            config.save().catch(() => { });
+        }
+    });
 }
 
 async function restoreWindow(config: Config) {
-  const positionWindow = async function () {
-    const pos = config.values.app.window.position;
-    if (pos?.length === 2 && pos?.[0] > -32000 && pos?.[1] > -32000) {
-      await appWindow.setPosition(pos);
-    } else {
-      await appWindow.center();
+    const positionWindow = async function () {
+        const pos = config.values.app.window.position;
+        if (pos?.length === 2 && pos?.[0] > -32000 && pos?.[1] > -32000) {
+            await appWindow.setPosition(pos);
+        } else {
+            await appWindow.center();
+        }
+    };
+
+    const sizeCheck = async function () {
+        const sz = await appWindow.getSize();
+        const delta = [sz.width - size[0], sz.height - size[1]];
+        if (delta[0] != 0 || delta[1] != 0) {
+            console.log("Window size delta", delta);
+            await appWindow.setSize([size[0] - delta[0], size[1] - delta[1]]);
+        }
+    };
+
+    const sleep20ms = async function () {
+        await new Promise<void>((r) => setTimeout(r, 20));
+    };
+
+    const size = config.values.app.window.size;
+
+    if (size.length === 2 && size[0] > 100 && size[1] > 100) {
+        await appWindow.setSize(size);
+
+        // Run the size verification a bit later to allow the window system to apply the size
+        // (on some platforms the immediate getSize() after setSize() returns the old value).
+        void sleep20ms().then(sizeCheck);
     }
-  };
 
-  const sizeCheck = async function () {
-    const sz = await appWindow.getSize();
-    const delta = [sz.width - size[0], sz.height - size[1]];
-    if (delta[0] != 0 || delta[1] != 0) {
-      console.log("Window size delta", delta);
-      await appWindow.setSize([size[0] - delta[0], size[1] - delta[1]]);
-    }
-  };
-
-  const sleep20ms = async function () {
-    await new Promise<void>((r) => setTimeout(r, 20));
-  };
-
-  const size = config.values.app.window.size;
-
-  if (size.length === 2 && size[0] > 100 && size[1] > 100) {
-    await appWindow.setSize(size);
-
-    // Run the size verification a bit later to allow the window system to apply the size
-    // (on some platforms the immediate getSize() after setSize() returns the old value).
-    void sleep20ms().then(sizeCheck);
-  }
-
-  void positionWindow();
+    void positionWindow();
 }
 
 function Loader() {
-  const config = useContext(ConfigContext);
+    const config = useContext(ConfigContext);
 
-  const interfaceConfig = config.values.interface;
-  const theme = interfaceConfig.theme;
-  const backgroundColorOverride =
+    const interfaceConfig = config.values.interface;
+    const theme = interfaceConfig.theme;
+    const backgroundColorOverride =
     interfaceConfig.styleOverrides[theme ?? "light"]?.backgroundColor;
-  const spinnerStyle: CSSProperties = {
-    borderTopColor: `hsla(222, 100%, ${
-      theme === "dark" ? "50%" : "36%"
-    }, 0.376)`,
-  };
+    const spinnerStyle: CSSProperties = {
+        borderTopColor: `hsla(222, 100%, ${theme === "dark" ? "50%" : "36%"
+        }, 0.376)`,
+    };
 
-  return (
-    <div
-      className="loader-container"
-      style={{
-        backgroundColor:
+    return (
+        <div
+            className="loader-container"
+            style={{
+                backgroundColor:
           backgroundColorOverride?.computed ??
           (theme === "dark" ? "#1A1B1E" : "#fff"), // #1A1B1E comes from theme.colors.dark[7]
-      }}
-    >
-      <div className="lds-ring">
-        <div style={spinnerStyle}></div>
-        <div style={spinnerStyle}></div>
-        <div style={spinnerStyle}></div>
-        <div style={spinnerStyle}></div>
-      </div>
-    </div>
-  );
+            }}
+        >
+            <div className="lds-ring">
+                <div style={spinnerStyle}></div>
+                <div style={spinnerStyle}></div>
+                <div style={spinnerStyle}></div>
+                <div style={spinnerStyle}></div>
+            </div>
+        </div>
+    );
 }
 
 async function run(config: Config) {
-  const appnode = document.getElementById("app") as HTMLElement;
-  const app = createRoot(appnode);
+    const appnode = document.getElementById("app") as HTMLElement;
+    const app = createRoot(appnode);
 
-  if (TAURI) {
-    setupTauriEvents(config, app);
+    if (TAURI) {
+        setupTauriEvents(config, app);
 
-    if (config.values.app.showTrayIcon) {
-      void invoke("create_tray");
+        if (config.values.app.showTrayIcon) {
+            void invoke("create_tray");
+        }
+
+        await restoreWindow(config);
+    } else {
+        setupWebEvents(config);
     }
 
-    await restoreWindow(config);
-  } else {
-    setupWebEvents(config);
-  }
-
-  app.render(
-    <React.StrictMode>
-      <I18nextProvider i18n={i18n}>
-        <ConfigContext.Provider value={config}>
-          <Suspense fallback={<Loader />}>
-            <CustomMantineProvider>
-              {TAURI && <TauriApp />}
-              {!TAURI && <WebApp />}
-            </CustomMantineProvider>
-          </Suspense>
-        </ConfigContext.Provider>
-      </I18nextProvider>
-    </React.StrictMode>
-  );
+    app.render(
+        <React.StrictMode>
+            <I18nextProvider i18n={i18n}>
+                <ConfigContext.Provider value={config}>
+                    <Suspense fallback={<Loader />}>
+                        <CustomMantineProvider>
+                            {TAURI && <TauriApp />}
+                            {!TAURI && <WebApp />}
+                        </CustomMantineProvider>
+                    </Suspense>
+                </ConfigContext.Provider>
+            </I18nextProvider>
+        </React.StrictMode>,
+    );
 }
 
 window.onload = () => {
-  new Config().read().then(run).catch(console.error);
+    new Config().read().then(run).catch(console.error);
 };
