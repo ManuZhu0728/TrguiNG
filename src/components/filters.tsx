@@ -27,7 +27,7 @@ import React, {
 } from "react";
 import type { Torrent } from "../rpc/torrent";
 import {
-    useServerSelectedTorrents,
+    // useServerSelectedTorrents,
     useServerTorrentData,
 } from "../rpc/torrent";
 import { Status } from "../rpc/transmission";
@@ -87,7 +87,7 @@ const statusFilters: StatusFilter[] = [
         filter: (t: Torrent) => {
             return (
                 t.status === Status.seeding ||
-        (t.sizeWhenDone > 0 && Math.max(t.sizeWhenDone - t.haveValid, 0) === 0)
+                (t.sizeWhenDone > 0 && Math.max(t.sizeWhenDone - t.haveValid, 0) === 0)
             );
         },
         icon: StatusIcons.Completed,
@@ -104,8 +104,8 @@ const statusFilters: StatusFilter[] = [
         filter: (t: Torrent) => {
             return (
                 t.rateDownload === 0 &&
-        t.rateUpload === 0 &&
-        t.status !== Status.stopped
+                t.rateUpload === 0 &&
+                t.status !== Status.stopped
             );
         },
         icon: StatusIcons.Inactive,
@@ -186,9 +186,9 @@ function focusNextFilter(element: HTMLElement, next: boolean) {
             for (const node of parent.parentElement?.children ?? []) {
                 if (parseInt((node as HTMLElement).style.order) === order + 1) {
                     nextElement = node.firstElementChild?.nextElementSibling as
-            | HTMLElement
-            | null
-            | undefined;
+                        | HTMLElement
+                        | null
+                        | undefined;
                 }
             }
         }
@@ -394,8 +394,8 @@ function DirFilterRow(props: DirFilterRowProps) {
                 props.expandedReducer({ verb: "add", value: props.dir.path });
             } else if (
                 expandable &&
-        props.dir.expanded &&
-        event.key === "ArrowLeft"
+                props.dir.expanded &&
+                event.key === "ArrowLeft"
             ) {
                 props.dir.expanded = false;
                 props.expandedReducer({ verb: "remove", value: props.dir.path });
@@ -409,7 +409,7 @@ function DirFilterRow(props: DirFilterRowProps) {
     const count = useMemo(() => {
         if (
             config.values.interface.recursiveDirectories ||
-      props.dir.count === props.dir.recursiveCount
+            props.dir.count === props.dir.recursiveCount
         ) {
             return `(${props.dir.recursiveCount})`;
         }
@@ -703,7 +703,7 @@ export const Filters = React.memo(function Filters({
         null,
     ) as React.MutableRefObject<HTMLDivElement>;
     const [statusFiltersSubmenuOpened, setStatusFiltersSubmenuOpened] =
-    useState(false);
+        useState(false);
     const [statusFiltersItemRect, setStatusFiltersItemRect] = useState<DOMRect>(
         () => new DOMRect(0, -1000, 0, 0),
     );
@@ -711,7 +711,7 @@ export const Filters = React.memo(function Filters({
     const openStatusFiltersSubmenu = useCallback(() => {
         if (
             contextMenuContainerRef.current == null ||
-      statusFiltersItemRef.current == null
+            statusFiltersItemRef.current == null
         )
             return;
         const dropdownRect = contextMenuContainerRef.current
@@ -741,7 +741,7 @@ export const Filters = React.memo(function Filters({
             const filterId = `status-${filterName}`;
             const newStatusFiltersVisibility = { ...statusFiltersVisibility };
             newStatusFiltersVisibility[filterName] =
-        !statusFiltersVisibility[filterName];
+                !statusFiltersVisibility[filterName];
             setStatusFiltersVisibility(newStatusFiltersVisibility);
             const selectedFilter = currentFilters.find((f) => f.id === filterId);
             if (selectedFilter != null) {

@@ -29,7 +29,7 @@ import type { Row, ColumnDef, CellContext } from "@tanstack/react-table";
 import type { CachedFileTree, FileDirEntryView } from "../../cachedfiletree";
 import { isDirEntry } from "../../cachedfiletree";
 import { ConfigContext, ServerConfigContext } from "../../config";
-import { PriorityColors, PriorityStrings } from "../../rpc/transmission";
+import { PriorityColors } from "../../rpc/transmission";
 import {
     bytesToHumanReadableStr,
     fileSystemSafeName,
@@ -336,9 +336,9 @@ function useSelected(
             const recurse = (entry: FileDirEntryView) => {
                 if (
                     (selectAll ||
-            fileTree.findEntry(entry.fullpath)?.isSelected === true) &&
-          (entry.subrows.length === 0 ||
-            entryMatchesSearchTerms(entry, searchTerms))
+                        fileTree.findEntry(entry.fullpath)?.isSelected === true) &&
+                    (entry.subrows.length === 0 ||
+                        entryMatchesSearchTerms(entry, searchTerms))
                 ) {
                     result.push(entry.fullpath);
                     return;
@@ -528,7 +528,7 @@ export function FileTreeTable(props: FileTreeTableProps) {
                 });
             }
         },
-        [props.downloadDir, serverConfig],
+        [props.downloadDir, serverConfig, t],
     );
 
     const onRowDoubleClick = useCallback(
@@ -556,7 +556,7 @@ export function FileTreeTable(props: FileTreeTableProps) {
                     copy.subrows = filter(copy.subrows);
                     if (
                         copy.subrows.length > 0 ||
-            entryMatchesSearchTerms(copy, searchTerms)
+                        entryMatchesSearchTerms(copy, searchTerms)
                     ) {
                         result.push(copy);
                     }
