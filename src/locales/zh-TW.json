@@ -78,13 +78,16 @@
         "menu": {
             "statusFilters": "狀態過濾器",
             "compactDirectories": "緊湊目錄顯示",
-            "recursiveDirectories": "遞迴目錄顯示"
+            "recursiveDirectories": "遞迴目錄顯示",
+            "showFilterGroupSize": "顯示分組體積",
+            "selectFilterGroupOnDbClk": "雙擊全選分組"
         },
         "section": {
             "status": "狀態",
             "directories": "資料目錄",
             "labels": "標籤",
-            "trackers": "Tracker 分佈"
+            "trackers": "Tracker 分佈",
+            "errors": "錯誤分佈"
         }
     },
     "details": {

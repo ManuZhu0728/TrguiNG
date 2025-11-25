@@ -78,13 +78,16 @@
         "menu": {
             "statusFilters": "状态过滤器",
             "compactDirectories": "紧凑目录显示",
-            "recursiveDirectories": "递归目录显示"
+            "recursiveDirectories": "递归目录显示",
+            "showFilterGroupSize": "显示分组体积",
+            "selectFilterGroupOnDbClk": "双击全选分组"
         },
         "section": {
             "status": "状态",
             "directories": "数据目录",
             "labels": "标签",
-            "trackers": "Tracker 分布"
+            "trackers": "Tracker 分布",
+            "errors": "错误分布"
         }
     },
     "details": {

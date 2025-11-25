@@ -337,6 +337,7 @@ export function Server({
                   torrents={torrents ?? []}
                   currentFilters={currentFilters}
                   setCurrentFilters={setCurrentFilters}
+                  setSearchTracker={() => {}}
                 />
               </div>
             ) : undefined

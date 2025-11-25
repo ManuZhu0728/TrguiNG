@@ -26,6 +26,10 @@ import React, {
   useState,
 } from "react";
 import type { Torrent } from "../rpc/torrent";
+import {
+  useServerSelectedTorrents,
+  useServerTorrentData,
+} from "../rpc/torrent";
 import { Status } from "../rpc/transmission";
 import * as Icon from "react-bootstrap-icons";
 import * as StatusIcons from "./statusicons";
@@ -36,7 +40,11 @@ import type {
 } from "../config";
 import { ConfigContext, ServerConfigContext } from "../config";
 import { Box, Button, Divider, Flex, Menu, Portal } from "@mantine/core";
-import { eventHasModKey, useForceRender } from "trutil";
+import {
+  bytesToHumanReadableStr,
+  eventHasModKey,
+  useForceRender,
+} from "trutil";
 import { useTranslation } from "react-i18next";
 import { useContextMenu } from "./contextmenu";
 import { MemoSectionsContextMenu, getSectionsMap } from "./sectionscontextmenu";
@@ -144,6 +152,7 @@ interface WithCurrentFilters {
     verb: "set" | "toggle";
     filter: TorrentFilter;
   }>;
+  setSearchTracker: (tracker: string) => void;
 }
 
 interface FiltersProps extends WithCurrentFilters {
@@ -155,6 +164,8 @@ interface FilterRowProps extends WithCurrentFilters {
   filter: NamedFilter;
   count: number;
   label?: string;
+  showSize: boolean;
+  selectAllOnDbClk: boolean;
 }
 
 function focusNextFilter(element: HTMLElement, next: boolean) {
@@ -206,6 +217,22 @@ function filterOnKeyDown(event: React.KeyboardEvent<HTMLElement>) {
 }
 
 const FilterRow = React.memo(function FilterRow(props: FilterRowProps) {
+  const serverData = useServerTorrentData();
+  const serverSelected = useServerSelectedTorrents();
+  const filterTorrents = useMemo(
+    () => serverData.torrents.filter(props.filter.filter),
+    [serverData.torrents, props.filter.filter]
+  );
+  const filterSize = useMemo(
+    () =>
+      props.showSize
+        ? bytesToHumanReadableStr(
+            filterTorrents.reduce((p, t) => p + (t.sizeWhenDone as number), 0)
+          )
+        : "",
+    [filterTorrents, props.showSize]
+  );
+
   return (
     <Flex
       align="center"
@@ -222,6 +249,16 @@ const FilterRow = React.memo(function FilterRow(props: FilterRowProps) {
           verb: eventHasModKey(event) ? "toggle" : "set",
           filter: { id: props.id, filter: props.filter.filter },
         });
+        props.setSearchTracker("");
+      }}
+      onDoubleClick={() => {
+        if (props.selectAllOnDbClk) {
+          serverSelected.clear();
+          filterTorrents.forEach((t) => {
+            serverSelected.add(t.id);
+          });
+        }
+        props.setSearchTracker("");
       }}
       onKeyDown={filterOnKeyDown}
     >
@@ -234,6 +271,16 @@ const FilterRow = React.memo(function FilterRow(props: FilterRowProps) {
         {props.label ?? props.filter.name}
       </div>
       <div style={{ flexShrink: 0 }}>{`(${props.count})`}</div>
+      {props.showSize && (
+        <div
+          style={{
+            flexShrink: 0,
+            marginLeft: "auto",
+            fontSize: "small",
+            opacity: 0.8,
+          }}
+        >{`[${filterSize}]`}</div>
+      )}
     </Flex>
   );
 });
@@ -270,6 +317,23 @@ const TrackerFilterRow = React.memo(function TrackerFilterRow(
   );
 });
 
+const ErrorFilterRow = React.memo(function ErrorFilterRow(
+  props: Omit<FilterRowProps, "filter" | "id" | "label"> & { error: string }
+) {
+  return (
+    <FilterRow
+      {...props}
+      id={`error-${props.error}`}
+      filter={{
+        name: props.error,
+        filter: (t: Torrent) => t.cachedError === props.error,
+        icon: StatusIcons.Error,
+      }}
+      label={props.error}
+    />
+  );
+});
+
 interface DirFilterRowProps extends FiltersProps {
   id: string;
   dir: Directory;
@@ -280,6 +344,8 @@ interface DirFilterRowProps extends FiltersProps {
     verb: "add" | "remove";
     value: string;
   }) => void;
+  showSize: boolean;
+  selectAllOnDbClk: boolean;
 }
 
 function DirFilterRow(props: DirFilterRowProps) {
@@ -492,6 +558,7 @@ export const Filters = React.memo(function Filters({
   torrents,
   currentFilters,
   setCurrentFilters,
+  setSearchTracker,
 }: FiltersProps) {
   const { t } = useTranslation();
   const config = useContext(ConfigContext);
@@ -541,26 +608,30 @@ export const Filters = React.memo(function Filters({
     config.values.interface.compactDirectories,
   ]);
 
-  const [labels, trackers] = useMemo(() => {
+  const [labels, trackers, errors] = useMemo(() => {
     const labels: Record<string, number> = {};
     const trackers: Record<string, number> = {};
+    const errors: Record<string, number> = {};
     config.values.interface.preconfiguredLabels.forEach((label) => {
       labels[label] = 0;
     });
 
-    torrents.forEach((t) =>
+    torrents.forEach((t) => {
       t.labels?.forEach((l: string) => {
         if (!(l in labels)) labels[l] = 0;
         labels[l] = labels[l] + 1;
-      })
-    );
+      });
 
-    torrents.forEach((t) => {
       if (!(t.cachedMainTracker in trackers)) trackers[t.cachedMainTracker] = 0;
       trackers[t.cachedMainTracker] = trackers[t.cachedMainTracker] + 1;
+
+      if (t.cachedError !== "") {
+        if (!(t.cachedError in errors)) errors[t.cachedError] = 0;
+        errors[t.cachedError] = errors[t.cachedError] + 1;
+      }
     });
 
-    return [labels, trackers];
+    return [labels, trackers, errors];
   }, [config, torrents]);
 
   const [sections, setSections] = useReducer(
@@ -586,12 +657,20 @@ export const Filters = React.memo(function Filters({
   const [recursiveDirectories, setRecursiveDirectories] = useState(
     config.values.interface.recursiveDirectories
   );
+  const [showFilterGroupSize, setShowFilterGroupSize] = useState(
+    config.values.interface.showFilterGroupSize ?? false
+  );
+  const [selectFilterGroupOnDbClk, setSelectFilterGroupOnDbClk] = useState(
+    config.values.interface.selectFilterGroupOnDbClk ?? false
+  );
 
   useEffect(() => {
     config.values.interface.filterSections = sections;
     config.values.interface.statusFiltersVisibility = statusFiltersVisibility;
     config.values.interface.compactDirectories = compactDirectories;
     config.values.interface.recursiveDirectories = recursiveDirectories;
+    config.values.interface.showFilterGroupSize = showFilterGroupSize;
+    config.values.interface.selectFilterGroupOnDbClk = selectFilterGroupOnDbClk;
     setSectionsMap(getSectionsMap(sections));
   }, [
     config,
@@ -599,6 +678,8 @@ export const Filters = React.memo(function Filters({
     statusFiltersVisibility,
     compactDirectories,
     recursiveDirectories,
+    showFilterGroupSize,
+    selectFilterGroupOnDbClk,
   ]);
 
   const [info, setInfo, handler] = useContextMenu();
@@ -676,6 +757,22 @@ export const Filters = React.memo(function Filters({
     [recursiveDirectories, setCurrentFilters]
   );
 
+  const onShowFilterGroupSizeClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setShowFilterGroupSize(!showFilterGroupSize);
+    },
+    [showFilterGroupSize]
+  );
+
+  const onSelectFilterGroupOnDbClkClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setSelectFilterGroupOnDbClk(!selectFilterGroupOnDbClk);
+    },
+    [selectFilterGroupOnDbClk]
+  );
+
   const statusFiltersTranslationKeys: Record<StatusFilterName, string> = {
     "All Torrents": "filters.status.all",
     Downloading: "filters.status.downloading",
@@ -694,6 +791,7 @@ export const Filters = React.memo(function Filters({
     Directories: "filters.section.directories",
     Labels: "filters.section.labels",
     Trackers: "filters.section.trackers",
+    Errors: "filters.section.errors",
   };
 
   return (
@@ -825,6 +923,32 @@ export const Filters = React.memo(function Filters({
           >
             {t("filters.menu.recursiveDirectories")}
           </Menu.Item>
+          <Menu.Item
+            icon={
+              showFilterGroupSize ? (
+                <Icon.Check size="1rem" />
+              ) : (
+                <Box miw="1rem" />
+              )
+            }
+            onMouseEnter={closeStatusFiltersSubmenu}
+            onMouseDown={onShowFilterGroupSizeClick}
+          >
+            {t("filters.menu.showFilterGroupSize")}
+          </Menu.Item>
+          <Menu.Item
+            icon={
+              selectFilterGroupOnDbClk ? (
+                <Icon.Check size="1rem" />
+              ) : (
+                <Box miw="1rem" />
+              )
+            }
+            onMouseEnter={closeStatusFiltersSubmenu}
+            onMouseDown={onSelectFilterGroupOnDbClkClick}
+          >
+            {t("filters.menu.selectFilterGroupOnDbClk")}
+          </Menu.Item>
         </MemoSectionsContextMenu>
         {sections[sectionsMap.Status].visible && (
           <div style={{ order: sectionsMap.Status }}>
@@ -842,8 +966,11 @@ export const Filters = React.memo(function Filters({
                     filter={f}
                     label={t(statusFiltersTranslationKeys[f.name])}
                     count={torrents.filter(f.filter).length}
+                    showSize={showFilterGroupSize}
+                    selectAllOnDbClk={selectFilterGroupOnDbClk}
                     currentFilters={currentFilters}
                     setCurrentFilters={setCurrentFilters}
+                    setSearchTracker={setSearchTracker}
                   />
                 )
             )}
@@ -863,7 +990,14 @@ export const Filters = React.memo(function Filters({
                 id={`dir-${d.path}`}
                 dir={d}
                 expandedReducer={expandedReducer}
-                {...{ torrents, currentFilters, setCurrentFilters }}
+                showSize={showFilterGroupSize}
+                selectAllOnDbClk={selectFilterGroupOnDbClk}
+                {...{
+                  torrents,
+                  currentFilters,
+                  setCurrentFilters,
+                  setSearchTracker,
+                }}
               />
             ))}
           </div>
@@ -881,8 +1015,11 @@ export const Filters = React.memo(function Filters({
               filter={noLabelsFilter}
               label={t("filters.noLabels")}
               count={torrents.filter(noLabelsFilter.filter).length}
+              showSize={showFilterGroupSize}
+              selectAllOnDbClk={selectFilterGroupOnDbClk}
               currentFilters={currentFilters}
               setCurrentFilters={setCurrentFilters}
+              setSearchTracker={setSearchTracker}
             />
             {Object.keys(labels)
               .sort()
@@ -891,8 +1028,11 @@ export const Filters = React.memo(function Filters({
                   key={`labels-${label}`}
                   label={label}
                   count={labels[label]}
+                  showSize={showFilterGroupSize}
+                  selectAllOnDbClk={selectFilterGroupOnDbClk}
                   currentFilters={currentFilters}
                   setCurrentFilters={setCurrentFilters}
+                  setSearchTracker={setSearchTracker}
                 />
               ))}
           </div>
@@ -912,8 +1052,35 @@ export const Filters = React.memo(function Filters({
                   key={`trackers-${tracker}`}
                   tracker={tracker}
                   count={trackers[tracker]}
+                  showSize={showFilterGroupSize}
+                  selectAllOnDbClk={selectFilterGroupOnDbClk}
                   currentFilters={currentFilters}
                   setCurrentFilters={setCurrentFilters}
+                  setSearchTracker={setSearchTracker}
+                />
+              ))}
+          </div>
+        )}
+        {sections[sectionsMap.Errors]?.visible && (
+          <div style={{ order: sectionsMap.Errors }}>
+            <Divider
+              mx="sm"
+              mt="md"
+              label={t("filters.section.errors")}
+              labelPosition="center"
+            />
+            {Object.keys(errors)
+              .sort()
+              .map((error) => (
+                <ErrorFilterRow
+                  key={`errors-${error}`}
+                  error={error}
+                  count={errors[error]}
+                  showSize={showFilterGroupSize}
+                  selectAllOnDbClk={selectFilterGroupOnDbClk}
+                  currentFilters={currentFilters}
+                  setCurrentFilters={setCurrentFilters}
+                  setSearchTracker={setSearchTracker}
                 />
               ))}
           </div>

@@ -78,13 +78,16 @@
         "menu": {
             "statusFilters": "Status filters",
             "compactDirectories": "Compact Directories",
-            "recursiveDirectories": "Recursive Directories"
+            "recursiveDirectories": "Recursive Directories",
+            "showFilterGroupSize": "Show group size",
+            "selectFilterGroupOnDbClk": "Double-click selects group"
         },
         "section": {
             "status": "Status",
             "directories": "Directories",
             "labels": "Labels",
-            "trackers": "Trackers"
+            "trackers": "Trackers",
+            "errors": "Errors"
         }
     },
     "details": {

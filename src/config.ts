@@ -77,7 +77,13 @@ export type TableName = (typeof TableNames)[number];
 
 export type SplitType = "vertical" | "horizontal";
 
-const FilterSections = ["Status", "Directories", "Labels", "Trackers"] as const;
+const FilterSections = [
+  "Status",
+  "Directories",
+  "Labels",
+  "Trackers",
+  "Errors",
+] as const;
 export type FilterSectionName = (typeof FilterSections)[number];
 
 const StatusFilters = [
@@ -200,6 +206,8 @@ interface Settings {
     statusFiltersVisibility: StatusFiltersVisibility;
     compactDirectories: boolean;
     recursiveDirectories: boolean;
+    showFilterGroupSize: boolean;
+    selectFilterGroupOnDbClk: boolean;
     statusBarSections: SectionsVisibility<StatusbarSectionName>;
     statusBarGlobalSpeeds: boolean;
     showFiltersPanel: boolean;
@@ -332,6 +340,8 @@ const DefaultSettings: Settings = {
     ) as Record<StatusFilterName, boolean>,
     compactDirectories: false,
     recursiveDirectories: true,
+    showFilterGroupSize: false,
+    selectFilterGroupOnDbClk: false,
     statusBarSections: StatusbarSections.map((section) => ({
       section,
       visible: true,
