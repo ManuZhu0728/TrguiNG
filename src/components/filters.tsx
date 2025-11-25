@@ -49,6 +49,11 @@ import { useTranslation } from "react-i18next";
 import { useContextMenu } from "./contextmenu";
 import { MemoSectionsContextMenu, getSectionsMap } from "./sectionscontextmenu";
 
+export type SelectedReducer = React.Dispatch<{
+  verb: "add" | "set" | "toggle" | "filter";
+  ids: string[];
+}>;
+
 export interface TorrentFilter {
   id: string;
   filter: (t: Torrent) => boolean;
@@ -157,6 +162,7 @@ interface WithCurrentFilters {
 
 interface FiltersProps extends WithCurrentFilters {
   torrents: Torrent[];
+  selectedReducer: SelectedReducer;
 }
 
 interface FilterRowProps extends WithCurrentFilters {
@@ -166,6 +172,7 @@ interface FilterRowProps extends WithCurrentFilters {
   label?: string;
   showSize: boolean;
   selectAllOnDbClk: boolean;
+  selectedReducer: SelectedReducer;
 }
 
 function focusNextFilter(element: HTMLElement, next: boolean) {
@@ -253,9 +260,9 @@ const FilterRow = React.memo(function FilterRow(props: FilterRowProps) {
       }}
       onDoubleClick={() => {
         if (props.selectAllOnDbClk) {
-          serverSelected.clear();
-          filterTorrents.forEach((t) => {
-            serverSelected.add(t.id);
+          props.selectedReducer({
+            verb: "set",
+            ids: filterTorrents.map((t) => t.id),
           });
         }
         props.setSearchTracker("");
@@ -430,6 +437,13 @@ function DirFilterRow(props: DirFilterRowProps) {
           filter: { id: props.id, filter },
         });
       }}
+      onDoubleClick={() => {
+        if (props.selectAllOnDbClk) {
+          const ids = props.torrents.filter(filter).map((t) => t.id);
+          props.selectedReducer({ verb: "set", ids });
+        }
+        props.setSearchTracker("");
+      }}
       onKeyDown={onKeyDown}
     >
       <div className="icon-container">
@@ -559,6 +573,7 @@ export const Filters = React.memo(function Filters({
   currentFilters,
   setCurrentFilters,
   setSearchTracker,
+  selectedReducer,
 }: FiltersProps) {
   const { t } = useTranslation();
   const config = useContext(ConfigContext);
@@ -971,6 +986,7 @@ export const Filters = React.memo(function Filters({
                     currentFilters={currentFilters}
                     setCurrentFilters={setCurrentFilters}
                     setSearchTracker={setSearchTracker}
+                    selectedReducer={selectedReducer}
                   />
                 )
             )}
@@ -997,6 +1013,7 @@ export const Filters = React.memo(function Filters({
                   currentFilters,
                   setCurrentFilters,
                   setSearchTracker,
+                  selectedReducer,
                 }}
               />
             ))}
@@ -1020,6 +1037,7 @@ export const Filters = React.memo(function Filters({
               currentFilters={currentFilters}
               setCurrentFilters={setCurrentFilters}
               setSearchTracker={setSearchTracker}
+              selectedReducer={selectedReducer}
             />
             {Object.keys(labels)
               .sort()
@@ -1033,6 +1051,7 @@ export const Filters = React.memo(function Filters({
                   currentFilters={currentFilters}
                   setCurrentFilters={setCurrentFilters}
                   setSearchTracker={setSearchTracker}
+                  selectedReducer={selectedReducer}
                 />
               ))}
           </div>
@@ -1057,6 +1076,7 @@ export const Filters = React.memo(function Filters({
                   currentFilters={currentFilters}
                   setCurrentFilters={setCurrentFilters}
                   setSearchTracker={setSearchTracker}
+                  selectedReducer={selectedReducer}
                 />
               ))}
           </div>
@@ -1081,6 +1101,7 @@ export const Filters = React.memo(function Filters({
                   currentFilters={currentFilters}
                   setCurrentFilters={setCurrentFilters}
                   setSearchTracker={setSearchTracker}
+                  selectedReducer={selectedReducer}
                 />
               ))}
           </div>

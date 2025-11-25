@@ -338,6 +338,7 @@ export function Server({
                   currentFilters={currentFilters}
                   setCurrentFilters={setCurrentFilters}
                   setSearchTracker={() => {}}
+                  selectedReducer={selectedReducer}
                 />
               </div>
             ) : undefined
