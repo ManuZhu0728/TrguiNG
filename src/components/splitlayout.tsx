@@ -23,134 +23,134 @@ import React, { useCallback, useContext } from "react";
 import Split from "react-split";
 
 interface SplitLayoutProps {
-  mainSplit: SplitType;
-  left: React.ReactNode | undefined;
-  right: React.ReactNode;
-  bottom: React.ReactNode | undefined;
+    mainSplit: SplitType,
+    left: React.ReactNode | undefined,
+    right: React.ReactNode,
+    bottom: React.ReactNode | undefined,
 }
 
 // The left is filters, right is torrents, bottom is details.
 // Depending on mainSplit it may actually be "left", "midle", "right".
 export function SplitLayout({
-  mainSplit,
-  left,
-  right,
-  bottom,
+    mainSplit,
+    left,
+    right,
+    bottom,
 }: SplitLayoutProps) {
-  const config = useContext(ConfigContext);
+    const config = useContext(ConfigContext);
 
-  const onVerticalDragEnd = useCallback(
-    (sizes: [number, number]) => {
-      config.setSashSizes("vertical", sizes);
-    },
-    [config]
-  );
-  const onHorizontalDragEnd = useCallback(
-    (sizes: [number, number]) => {
-      config.setSashSizes("horizontal", sizes);
-    },
-    [config]
-  );
-  const onSidebarDragEnd = useCallback(
-    (sizes: [number, number]) => {
-      config.setSashSizes("sidebar", sizes);
-    },
-    [config]
-  );
+    const onVerticalDragEnd = useCallback(
+        (sizes: [number, number]) => {
+            config.setSashSizes("vertical", sizes);
+        },
+        [config],
+    );
+    const onHorizontalDragEnd = useCallback(
+        (sizes: [number, number]) => {
+            config.setSashSizes("horizontal", sizes);
+        },
+        [config],
+    );
+    const onSidebarDragEnd = useCallback(
+        (sizes: [number, number]) => {
+            config.setSashSizes("sidebar", sizes);
+        },
+        [config],
+    );
 
-  if (mainSplit === "sidebar") {
-    const rightPane =
+    if (mainSplit === "sidebar") {
+        const rightPane =
       bottom === undefined ? (
-        right
+          right
       ) : (
-        <Split
-          direction="vertical"
-          sizes={config.getSashSizes("vertical")}
-          snapOffset={0}
-          gutterSize={6}
-          className="split-vertical"
-          onDragEnd={onVerticalDragEnd}
-        >
-          {right}
-          {bottom}
-        </Split>
+          <Split
+              direction="vertical"
+              sizes={config.getSashSizes("vertical")}
+              snapOffset={0}
+              gutterSize={6}
+              className="split-vertical"
+              onDragEnd={onVerticalDragEnd}
+          >
+              {right}
+              {bottom}
+          </Split>
       );
 
-    return (
-      <Box
-        sx={(theme) => ({
-          flexGrow: 1,
-          "& .gutter": {
-            backgroundColor:
+        return (
+            <Box
+                sx={(theme) => ({
+                    flexGrow: 1,
+                    "& .gutter": {
+                        backgroundColor:
               theme.colorScheme === "dark"
-                ? theme.colors.gray[7]
-                : theme.colors.gray[3],
-          },
-        })}
-      >
-        {left === undefined ? (
-          rightPane
-        ) : (
-          <Split
+                  ? theme.colors.gray[7]
+                  : theme.colors.gray[3],
+                    },
+                })}
+            >
+                {left === undefined ? (
+                    rightPane
+                ) : (
+                    <Split
+                        direction="horizontal"
+                        sizes={config.getSashSizes("sidebar")}
+                        snapOffset={0}
+                        gutterSize={6}
+                        className="split-horizontal"
+                        onDragEnd={onSidebarDragEnd}
+                    >
+                        {left}
+                        {rightPane}
+                    </Split>
+                )}
+            </Box>
+        );
+    }
+
+    const top =
+    left === undefined ? (
+        right
+    ) : (
+        <Split
             direction="horizontal"
-            sizes={config.getSashSizes("sidebar")}
+            sizes={config.getSashSizes("horizontal")}
             snapOffset={0}
             gutterSize={6}
             className="split-horizontal"
-            onDragEnd={onSidebarDragEnd}
-          >
-            {left}
-            {rightPane}
-          </Split>
-        )}
-      </Box>
-    );
-  }
-
-  const top =
-    left === undefined ? (
-      right
-    ) : (
-      <Split
-        direction="horizontal"
-        sizes={config.getSashSizes("horizontal")}
-        snapOffset={0}
-        gutterSize={6}
-        className="split-horizontal"
-        onDragEnd={onHorizontalDragEnd}
-      >
-        {left}
-        {right}
-      </Split>
-    );
-
-  return (
-    <Box
-      sx={(theme) => ({
-        flexGrow: 1,
-        "& .gutter": {
-          backgroundColor:
-            theme.colorScheme === "dark"
-              ? theme.colors.gray[7]
-              : theme.colors.gray[3],
-        },
-      })}
-    >
-      {bottom === undefined ? (
-        top
-      ) : (
-        <Split
-          direction={mainSplit}
-          sizes={config.getSashSizes("vertical")}
-          snapOffset={0}
-          gutterSize={6}
-          className={`split-${mainSplit}`}
-          onDragEnd={onVerticalDragEnd}
+            onDragEnd={onHorizontalDragEnd}
         >
-          {top}
-          {bottom}
+            {left}
+            {right}
         </Split>
-      )}
-    </Box>
-  );
+    );
+
+    return (
+        <Box
+            sx={(theme) => ({
+                flexGrow: 1,
+                "& .gutter": {
+                    backgroundColor:
+            theme.colorScheme === "dark"
+                ? theme.colors.gray[7]
+                : theme.colors.gray[3],
+                },
+            })}
+        >
+            {bottom === undefined ? (
+                top
+            ) : (
+                <Split
+                    direction={mainSplit}
+                    sizes={config.getSashSizes("vertical")}
+                    snapOffset={0}
+                    gutterSize={6}
+                    className={`split-${mainSplit}`}
+                    onDragEnd={onVerticalDragEnd}
+                >
+                    {top}
+                    {bottom}
+                </Split>
+            )}
+        </Box>
+    );
 }

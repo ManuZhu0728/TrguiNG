@@ -25,224 +25,224 @@ import type { SessionInfo } from "rpc/client";
 import type { Torrent } from "rpc/torrent";
 import { ColorSchemeToggle, ShowVersion } from "components/miscbuttons";
 import {
-  ConfigContext,
-  ServerConfigContext,
-  type StatusbarSectionName,
+    ConfigContext,
+    ServerConfigContext,
+    type StatusbarSectionName,
 } from "config";
 import { useContextMenu } from "./contextmenu";
 import { MemoSectionsContextMenu, getSectionsMap } from "./sectionscontextmenu";
 
 const { TAURI, appWindow } = await import(
-  /* webpackChunkName: "taurishim" */ "taurishim"
+    /* webpackChunkName: "taurishim" */ "taurishim",
 );
 
 export interface StatusbarProps {
-  session: SessionInfo | undefined;
-  torrents: Torrent[];
-  filteredTorrents: Torrent[];
-  selectedTorrents: Set<number>;
-  hostname: string;
-  showMisc: boolean;
+    session: SessionInfo | undefined,
+    torrents: Torrent[],
+    filteredTorrents: Torrent[],
+    selectedTorrents: Set<number>,
+    hostname: string,
+    showMisc: boolean,
 }
 
 export function Statusbar({
-  session,
-  torrents,
-  filteredTorrents,
-  selectedTorrents,
-  hostname,
-  showMisc,
+    session,
+    torrents,
+    filteredTorrents,
+    selectedTorrents,
+    hostname,
+    showMisc,
 }: StatusbarProps) {
-  const { t } = useTranslation();
-  const config = useContext(ConfigContext);
-  const serverConfig = useContext(ServerConfigContext);
+    const { t } = useTranslation();
+    const config = useContext(ConfigContext);
+    const serverConfig = useContext(ServerConfigContext);
 
-  const serverFields = useMemo(
-    () => ({
-      downRateLimit:
+    const serverFields = useMemo(
+        () => ({
+            downRateLimit:
         session !== undefined
-          ? session["alt-speed-enabled"] === true
-            ? (session["alt-speed-down"] as number)
-            : session["speed-limit-down-enabled"] === true
-            ? (session["speed-limit-down"] as number)
-            : -1
-          : -1,
-      upRateLimit:
+            ? session["alt-speed-enabled"] === true
+                ? (session["alt-speed-down"] as number)
+                : session["speed-limit-down-enabled"] === true
+                    ? (session["speed-limit-down"] as number)
+                    : -1
+            : -1,
+            upRateLimit:
         session !== undefined
-          ? session["alt-speed-enabled"] === true
-            ? (session["alt-speed-up"] as number)
-            : session["speed-limit-up-enabled"] === true
-            ? (session["speed-limit-up"] as number)
-            : -1
-          : -1,
-      free: (session?.["download-dir-free-space"] as number) ?? 0,
-    }),
-    [session]
-  );
+            ? session["alt-speed-enabled"] === true
+                ? (session["alt-speed-up"] as number)
+                : session["speed-limit-up-enabled"] === true
+                    ? (session["speed-limit-up"] as number)
+                    : -1
+            : -1,
+            free: (session?.["download-dir-free-space"] as number) ?? 0,
+        }),
+        [session],
+    );
 
-  const [sizeSelected, sizeDone, sizeLeft] = useMemo(() => {
-    const selected = filteredTorrents.filter((t) => selectedTorrents.has(t.id));
+    const [sizeSelected, sizeDone, sizeLeft] = useMemo(() => {
+        const selected = filteredTorrents.filter((t) => selectedTorrents.has(t.id));
 
-    return [
-      bytesToHumanReadableStr(
-        selected.reduce((p, t) => p + (t.sizeWhenDone as number), 0)
-      ),
-      bytesToHumanReadableStr(
-        selected.reduce((p, t) => p + (t.haveValid as number), 0)
-      ),
-      bytesToHumanReadableStr(
-        selected.reduce(
-          (p, t) => p + Math.max(t.sizeWhenDone - t.haveValid, 0),
-          0
-        )
-      ),
-    ];
-  }, [filteredTorrents, selectedTorrents]);
+        return [
+            bytesToHumanReadableStr(
+                selected.reduce((p, t) => p + (t.sizeWhenDone as number), 0),
+            ),
+            bytesToHumanReadableStr(
+                selected.reduce((p, t) => p + (t.haveValid as number), 0),
+            ),
+            bytesToHumanReadableStr(
+                selected.reduce(
+                    (p, t) => p + Math.max(t.sizeWhenDone - t.haveValid, 0),
+                    0,
+                ),
+            ),
+        ];
+    }, [filteredTorrents, selectedTorrents]);
 
-  const [showGlobalSpeeds, setShowGlobalSpeeds] = useState(
-    config.values.interface.statusBarGlobalSpeeds
-  );
-  const [sections, setSections] = useState(
-    config.values.interface.statusBarSections
-  );
-  const [sectionsMap, setSectionsMap] = useState(getSectionsMap(sections));
+    const [showGlobalSpeeds, setShowGlobalSpeeds] = useState(
+        config.values.interface.statusBarGlobalSpeeds,
+    );
+    const [sections, setSections] = useState(
+        config.values.interface.statusBarSections,
+    );
+    const [sectionsMap, setSectionsMap] = useState(getSectionsMap(sections));
 
-  useEffect(() => {
-    config.values.interface.statusBarGlobalSpeeds = showGlobalSpeeds;
-    config.values.interface.statusBarSections = sections;
-    setSectionsMap(getSectionsMap(sections));
-  }, [config, showGlobalSpeeds, sections]);
+    useEffect(() => {
+        config.values.interface.statusBarGlobalSpeeds = showGlobalSpeeds;
+        config.values.interface.statusBarSections = sections;
+        setSectionsMap(getSectionsMap(sections));
+    }, [config, showGlobalSpeeds, sections]);
 
-  const [downRate, upRate, sizeTotal] = useMemo(
-    () => [
-      bytesToHumanReadableStr(
-        (showGlobalSpeeds ? torrents : filteredTorrents).reduce(
-          (p, t) => p + (t.rateDownload as number),
-          0
-        )
-      ),
-      bytesToHumanReadableStr(
-        (showGlobalSpeeds ? torrents : filteredTorrents).reduce(
-          (p, t) => p + (t.rateUpload as number),
-          0
-        )
-      ),
-      bytesToHumanReadableStr(
-        filteredTorrents.reduce((p, t) => p + (t.sizeWhenDone as number), 0)
-      ),
-    ],
-    [showGlobalSpeeds, torrents, filteredTorrents]
-  );
+    const [downRate, upRate, sizeTotal] = useMemo(
+        () => [
+            bytesToHumanReadableStr(
+                (showGlobalSpeeds ? torrents : filteredTorrents).reduce(
+                    (p, t) => p + (t.rateDownload as number),
+                    0,
+                ),
+            ),
+            bytesToHumanReadableStr(
+                (showGlobalSpeeds ? torrents : filteredTorrents).reduce(
+                    (p, t) => p + (t.rateUpload as number),
+                    0,
+                ),
+            ),
+            bytesToHumanReadableStr(
+                filteredTorrents.reduce((p, t) => p + (t.sizeWhenDone as number), 0),
+            ),
+        ],
+        [showGlobalSpeeds, torrents, filteredTorrents],
+    );
 
-  useEffect(() => {
-    const speeds = `↓${downRate}/s ↑${upRate}/s`;
-    document.title = `${speeds} - TrguiNG`;
-    if (TAURI) {
-      void appWindow.setTitle(
-        `Transmission GUI - ${serverConfig.name} (${speeds})`
-      );
-    }
-  }, [serverConfig, downRate, upRate]);
+    useEffect(() => {
+        const speeds = `↓${downRate}/s ↑${upRate}/s`;
+        document.title = `${speeds} - TrguiNG`;
+        if (TAURI) {
+            void appWindow.setTitle(
+                `Transmission GUI - ${serverConfig.name} (${speeds})`,
+            );
+        }
+    }, [serverConfig, downRate, upRate]);
 
-  const [info, setInfo, handler] = useContextMenu();
+    const [info, setInfo, handler] = useContextMenu();
 
-  const sectionTranslationMap: Record<StatusbarSectionName, string> = {
-    Connection: "statusbar.section.connection",
-    "Download speed ": "statusbar.section.downloadSpeed",
-    "Upload speed": "statusbar.section.uploadSpeed",
-    "Free space": "statusbar.section.freeSpace",
-    Total: "statusbar.section.total",
-    Selected: "statusbar.section.selected",
-  };
+    const sectionTranslationMap: Record<StatusbarSectionName, string> = {
+        Connection: "statusbar.section.connection",
+        "Download speed ": "statusbar.section.downloadSpeed",
+        "Upload speed": "statusbar.section.uploadSpeed",
+        "Free space": "statusbar.section.freeSpace",
+        Total: "statusbar.section.total",
+        Selected: "statusbar.section.selected",
+    };
 
-  return (
-    <Flex
-      className="statusbar"
-      sx={{ flexWrap: "nowrap" }}
-      onContextMenu={handler}
-      gap="md"
-    >
-      <MemoSectionsContextMenu
-        sections={sections}
-        setSections={setSections}
-        contextMenuInfo={info}
-        setContextMenuInfo={setInfo}
-        translationMap={sectionTranslationMap}
-        t={t}
-      >
-        <Menu.Divider />
-        <Menu.Item
-          icon={
-            showGlobalSpeeds ? <Icon.Check size="1rem" /> : <Box miw="1rem" />
-          }
-          onMouseDown={(e) => {
-            e.stopPropagation();
-            setShowGlobalSpeeds(!showGlobalSpeeds);
-          }}
+    return (
+        <Flex
+            className="statusbar"
+            sx={{ flexWrap: "nowrap" }}
+            onContextMenu={handler}
+            gap="md"
         >
-          {t("statusbar.showGlobalSpeeds")}
-        </Menu.Item>
-      </MemoSectionsContextMenu>
-      {sections[sectionsMap.Connection].visible && (
-        <div style={{ flex: "1 1 23%", order: sectionsMap.Connection }}>
-          <Box component="span" my="auto" mr="xs">
-            <Icon.Diagram2 />
-          </Box>
-          <span>{`${
-            (session?.version as string) ?? t("statusbar.notConnected")
-          } at ${hostname}`}</span>
-        </div>
-      )}
-      {sections[sectionsMap["Download speed "]].visible && (
-        <div style={{ flex: "1 1 15%", order: sectionsMap["Download speed "] }}>
-          <Box component="span" my="auto" mr="xs">
-            {showGlobalSpeeds && <Icon.Globe />}
-            <Icon.ArrowDown />
-          </Box>
-          <span>{`${downRate}/s (${byteRateToHumanReadableStr(
-            serverFields.downRateLimit * 1024
-          )})`}</span>
-        </div>
-      )}
-      {sections[sectionsMap["Upload speed"]].visible && (
-        <div style={{ flex: "1 1 15%", order: sectionsMap["Upload speed"] }}>
-          <Box component="span" my="auto" mr="xs">
-            {showGlobalSpeeds && <Icon.Globe />}
-            <Icon.ArrowUp />
-          </Box>
-          <span>{`${upRate}/s (${byteRateToHumanReadableStr(
-            serverFields.upRateLimit * 1024
-          )})`}</span>
-        </div>
-      )}
-      {sections[sectionsMap["Free space"]].visible && (
-        <div style={{ flex: "1 1 12%", order: sectionsMap["Free space"] }}>
-          <Box component="span" my="auto" mr="xs">
-            <Icon.Hdd />
-          </Box>
-          <span>{`${t("statusbar.free")}${bytesToHumanReadableStr(
-            serverFields.free
-          )}`}</span>
-        </div>
-      )}
-      {sections[sectionsMap.Total].visible && (
-        <div style={{ flex: "1 1 12%", order: sectionsMap.Total }}>
-          {`${t("statusbar.total")}${sizeTotal}`}
-        </div>
-      )}
-      {sections[sectionsMap.Selected].visible && (
-        <div style={{ flex: "1 1 23%", order: sectionsMap.Selected }}>
-          {`${t("statusbar.selected")}${sizeSelected}${t(
-            "statusbar.done"
-          )}${sizeDone}${t("statusbar.left")}${sizeLeft}`}
-        </div>
-      )}
-      {(!TAURI || showMisc) && (
-        <div style={{ flexShrink: 0, display: "flex", order: 100 }}>
-          <ShowVersion sz="0.9rem" btn="md" />
-          <ColorSchemeToggle sz="0.9rem" btn="md" />
-        </div>
-      )}
-    </Flex>
-  );
+            <MemoSectionsContextMenu
+                sections={sections}
+                setSections={setSections}
+                contextMenuInfo={info}
+                setContextMenuInfo={setInfo}
+                translationMap={sectionTranslationMap}
+                t={t}
+            >
+                <Menu.Divider />
+                <Menu.Item
+                    icon={
+                        showGlobalSpeeds ? <Icon.Check size="1rem" /> : <Box miw="1rem" />
+                    }
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                        setShowGlobalSpeeds(!showGlobalSpeeds);
+                    }}
+                >
+                    {t("statusbar.showGlobalSpeeds")}
+                </Menu.Item>
+            </MemoSectionsContextMenu>
+            {sections[sectionsMap.Connection].visible && (
+                <div style={{ flex: "1 1 23%", order: sectionsMap.Connection }}>
+                    <Box component="span" my="auto" mr="xs">
+                        <Icon.Diagram2 />
+                    </Box>
+                    <span>{`${
+                        (session?.version as string) ?? t("statusbar.notConnected")
+                    } at ${hostname}`}</span>
+                </div>
+            )}
+            {sections[sectionsMap["Download speed "]].visible && (
+                <div style={{ flex: "1 1 15%", order: sectionsMap["Download speed "] }}>
+                    <Box component="span" my="auto" mr="xs">
+                        {showGlobalSpeeds && <Icon.Globe />}
+                        <Icon.ArrowDown />
+                    </Box>
+                    <span>{`${downRate}/s (${byteRateToHumanReadableStr(
+                        serverFields.downRateLimit * 1024,
+                    )})`}</span>
+                </div>
+            )}
+            {sections[sectionsMap["Upload speed"]].visible && (
+                <div style={{ flex: "1 1 15%", order: sectionsMap["Upload speed"] }}>
+                    <Box component="span" my="auto" mr="xs">
+                        {showGlobalSpeeds && <Icon.Globe />}
+                        <Icon.ArrowUp />
+                    </Box>
+                    <span>{`${upRate}/s (${byteRateToHumanReadableStr(
+                        serverFields.upRateLimit * 1024,
+                    )})`}</span>
+                </div>
+            )}
+            {sections[sectionsMap["Free space"]].visible && (
+                <div style={{ flex: "1 1 12%", order: sectionsMap["Free space"] }}>
+                    <Box component="span" my="auto" mr="xs">
+                        <Icon.Hdd />
+                    </Box>
+                    <span>{`${t("statusbar.free")}${bytesToHumanReadableStr(
+                        serverFields.free,
+                    )}`}</span>
+                </div>
+            )}
+            {sections[sectionsMap.Total].visible && (
+                <div style={{ flex: "1 1 12%", order: sectionsMap.Total }}>
+                    {`${t("statusbar.total")}${sizeTotal}`}
+                </div>
+            )}
+            {sections[sectionsMap.Selected].visible && (
+                <div style={{ flex: "1 1 23%", order: sectionsMap.Selected }}>
+                    {`${t("statusbar.selected")}${sizeSelected}${t(
+                        "statusbar.done",
+                    )}${sizeDone}${t("statusbar.left")}${sizeLeft}`}
+                </div>
+            )}
+            {(!TAURI || showMisc) && (
+                <div style={{ flexShrink: 0, display: "flex", order: 100 }}>
+                    <ShowVersion sz="0.9rem" btn="md" />
+                    <ColorSchemeToggle sz="0.9rem" btn="md" />
+                </div>
+            )}
+        </Flex>
+    );
 }

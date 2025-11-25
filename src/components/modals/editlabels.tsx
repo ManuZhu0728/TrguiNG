@@ -23,103 +23,103 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useMutateTorrent } from "queries";
 import { notifications } from "@mantine/notifications";
 import {
-  useServerRpcVersion,
-  useServerSelectedTorrents,
-  useServerTorrentData,
+    useServerRpcVersion,
+    useServerSelectedTorrents,
+    useServerTorrentData,
 } from "rpc/torrent";
 import { useTranslation } from "react-i18next";
 
 export function EditLabelsModal(props: ModalState) {
-  const { opened, close } = props;
-  const serverData = useServerTorrentData();
-  const serverSelected = useServerSelectedTorrents();
-  const rpcVersion = useServerRpcVersion();
-  const [labels, setLabels] = useState<string[]>([]);
-  const { t } = useTranslation();
+    const { opened, close } = props;
+    const serverData = useServerTorrentData();
+    const serverSelected = useServerSelectedTorrents();
+    const rpcVersion = useServerRpcVersion();
+    const [labels, setLabels] = useState<string[]>([]);
+    const { t } = useTranslation();
 
-  const calculateInitialLabels = useCallback(() => {
-    const selected =
+    const calculateInitialLabels = useCallback(() => {
+        const selected =
       serverData.torrents.filter((t) => serverSelected.has(t.id)) ?? [];
-    const labels: string[] = [];
-    selected.forEach((t) =>
-      t.labels?.forEach((l: string) => {
-        if (!labels.includes(l)) labels.push(l);
-      })
+        const labels: string[] = [];
+        selected.forEach((t) =>
+            t.labels?.forEach((l: string) => {
+                if (!labels.includes(l)) labels.push(l);
+            }),
+        );
+        return labels;
+    }, [serverData.torrents, serverSelected]);
+
+    useEffect(() => {
+        if (opened) setLabels(calculateInitialLabels());
+    }, [calculateInitialLabels, opened]);
+
+    const { mutate } = useMutateTorrent();
+
+    const onSave = useCallback(() => {
+        if (rpcVersion < 16) {
+            notifications.show({
+                title: t("editLabels.canNotSetLabels"),
+                message: t("editLabels.requiresTransmission3"),
+                color: "red",
+            });
+            close();
+            return;
+        }
+        mutate(
+            {
+                torrentIds: Array.from(serverSelected),
+                fields: { labels },
+            },
+            {
+                onSuccess: () => {
+                    notifications.show({
+                        message: t("editLabels.labelsUpdated"),
+                        color: "green",
+                    });
+                },
+                onError: (error) => {
+                    notifications.show({
+                        title: t("editLabels.failedToUpdateLabels"),
+                        message: String(error),
+                        color: "red",
+                    });
+                },
+            },
+        );
+        close();
+    }, [rpcVersion, mutate, serverSelected, labels, close, t]);
+
+    return (
+        <>
+            {props.opened && (
+                <SaveCancelModal
+                    opened={props.opened}
+                    size="lg"
+                    onClose={props.close}
+                    onSave={onSave}
+                    centered
+                    title={t("editLabels.editTorrentLabels")}
+                >
+                    {rpcVersion < 16 ? (
+                        <Text color="red" fz="lg">
+                            {t("editLabels.requiresTransmission3")}
+                        </Text>
+                    ) : (
+                        <>
+                            <Text mb="md">{t("editLabels.enterNewLabelsFor")}</Text>
+                            <TorrentsNames />
+                        </>
+                    )}
+                    <Box mih="17rem">
+                        <TorrentLabels
+                            labels={labels}
+                            setLabels={setLabels}
+                            disabled={rpcVersion < 16}
+                            initiallyOpened
+                        />
+                    </Box>
+                </SaveCancelModal>
+            )}
+        </>
     );
-    return labels;
-  }, [serverData.torrents, serverSelected]);
-
-  useEffect(() => {
-    if (opened) setLabels(calculateInitialLabels());
-  }, [calculateInitialLabels, opened]);
-
-  const { mutate } = useMutateTorrent();
-
-  const onSave = useCallback(() => {
-    if (rpcVersion < 16) {
-      notifications.show({
-        title: t("editLabels.canNotSetLabels"),
-        message: t("editLabels.requiresTransmission3"),
-        color: "red",
-      });
-      close();
-      return;
-    }
-    mutate(
-      {
-        torrentIds: Array.from(serverSelected),
-        fields: { labels },
-      },
-      {
-        onSuccess: () => {
-          notifications.show({
-            message: t("editLabels.labelsUpdated"),
-            color: "green",
-          });
-        },
-        onError: (error) => {
-          notifications.show({
-            title: t("editLabels.failedToUpdateLabels"),
-            message: String(error),
-            color: "red",
-          });
-        },
-      }
-    );
-    close();
-  }, [rpcVersion, mutate, serverSelected, labels, close, t]);
-
-  return (
-    <>
-      {props.opened && (
-        <SaveCancelModal
-          opened={props.opened}
-          size="lg"
-          onClose={props.close}
-          onSave={onSave}
-          centered
-          title={t("editLabels.editTorrentLabels")}
-        >
-          {rpcVersion < 16 ? (
-            <Text color="red" fz="lg">
-              {t("editLabels.requiresTransmission3")}
-            </Text>
-          ) : (
-            <>
-              <Text mb="md">{t("editLabels.enterNewLabelsFor")}</Text>
-              <TorrentsNames />
-            </>
-          )}
-          <Box mih="17rem">
-            <TorrentLabels
-              labels={labels}
-              setLabels={setLabels}
-              disabled={rpcVersion < 16}
-              initiallyOpened
-            />
-          </Box>
-        </SaveCancelModal>
-      )}
-    </>
-  );
 }

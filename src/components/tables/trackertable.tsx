@@ -26,104 +26,104 @@ import { useTranslation } from "react-i18next";
 import { TrguiTable, useStandardSelect } from "./common";
 
 interface TableFieldProps {
-  entry: TrackerStats;
-  fieldName: TrackerStatsFieldsType;
+    entry: TrackerStats,
+    fieldName: TrackerStatsFieldsType,
 }
 
 interface TableField {
-  name: TrackerStatsFieldsType;
-  label: string;
-  columnId?: string;
-  accessorFn?: AccessorFn<TrackerStats>;
-  component?: React.FunctionComponent<TableFieldProps>;
+    name: TrackerStatsFieldsType,
+    label: string,
+    columnId?: string,
+    accessorFn?: AccessorFn<TrackerStats>,
+    component?: React.FunctionComponent<TableFieldProps>,
 }
 
 function NextUpdateField(props: TableFieldProps) {
-  if (props.entry.announceState !== 1) return <div>-</div>;
-  const seconds = props.entry[props.fieldName] - Math.floor(Date.now() / 1000);
-  if (seconds > 0) return <div>{secondsToHumanReadableStr(seconds)}</div>;
-  return <div>-</div>;
+    if (props.entry.announceState !== 1) return <div>-</div>;
+    const seconds = props.entry[props.fieldName] - Math.floor(Date.now() / 1000);
+    if (seconds > 0) return <div>{secondsToHumanReadableStr(seconds)}</div>;
+    return <div>-</div>;
 }
 
 function NumberField(props: TableFieldProps) {
-  const count = props.entry[props.fieldName] as number;
+    const count = props.entry[props.fieldName] as number;
 
-  return (
-    <div style={{ width: "100%", textAlign: "right" }}>
-      {count >= 0 ? count : ""}
-    </div>
-  );
+    return (
+        <div style={{ width: "100%", textAlign: "right" }}>
+            {count >= 0 ? count : ""}
+        </div>
+    );
 }
 
 export function TrackersTable(props: { torrent: Torrent }) {
-  const { t } = useTranslation();
-  const columns = useMemo(() => {
-    const allFields: readonly TableField[] = [
-      { name: "announce", label: t("tables.trackers.announce_url") },
-      {
-        name: "announceState",
-        label: t("tables.trackers.status"),
-        columnId: "status",
-        accessorFn: getTrackerAnnounceState,
-      },
-      {
-        name: "nextAnnounceTime",
-        label: t("tables.trackers.next_update"),
-        component: NextUpdateField,
-      },
-      {
-        name: "seederCount",
-        label: t("tables.trackers.seeds"),
-        component: NumberField,
-      },
-      {
-        name: "leecherCount",
-        label: t("tables.trackers.peers"),
-        component: NumberField,
-      },
-      {
-        name: "downloadCount",
-        label: t("tables.trackers.downloads"),
-        component: NumberField,
-      },
-    ] as const;
+    const { t } = useTranslation();
+    const columns = useMemo(() => {
+        const allFields: readonly TableField[] = [
+            { name: "announce", label: t("tables.trackers.announce_url") },
+            {
+                name: "announceState",
+                label: t("tables.trackers.status"),
+                columnId: "status",
+                accessorFn: getTrackerAnnounceState,
+            },
+            {
+                name: "nextAnnounceTime",
+                label: t("tables.trackers.next_update"),
+                component: NextUpdateField,
+            },
+            {
+                name: "seederCount",
+                label: t("tables.trackers.seeds"),
+                component: NumberField,
+            },
+            {
+                name: "leecherCount",
+                label: t("tables.trackers.peers"),
+                component: NumberField,
+            },
+            {
+                name: "downloadCount",
+                label: t("tables.trackers.downloads"),
+                component: NumberField,
+            },
+        ] as const;
 
-    return allFields.map((field): ColumnDef<TrackerStats> => {
-      const cell = (props: CellContext<TrackerStats, unknown>) => {
-        if (field.component !== undefined) {
-          return (
-            <field.component
-              entry={props.row.original}
-              fieldName={field.name}
-            />
-          );
-        } else {
-          return <div>{props.getValue() as string}</div>;
-        }
-      };
-      return {
-        header: field.label,
-        accessorKey: field.name,
-        accessorFn: field.accessorFn,
-        cell,
-      };
-    });
-  }, [t]);
+        return allFields.map((field): ColumnDef<TrackerStats> => {
+            const cell = (props: CellContext<TrackerStats, unknown>) => {
+                if (field.component !== undefined) {
+                    return (
+                        <field.component
+                            entry={props.row.original}
+                            fieldName={field.name}
+                        />
+                    );
+                } else {
+                    return <div>{props.getValue() as string}</div>;
+                }
+            };
+            return {
+                header: field.label,
+                accessorKey: field.name,
+                accessorFn: field.accessorFn,
+                cell,
+            };
+        });
+    }, [t]);
 
-  const getRowId = useCallback((t: TrackerStats) => String(t.id), []);
+    const getRowId = useCallback((t: TrackerStats) => String(t.id), []);
 
-  const [selected, selectedReducer] = useStandardSelect();
+    const [selected, selectedReducer] = useStandardSelect();
 
-  return (
-    <TrguiTable<TrackerStats>
-      {...{
-        tablename: "trackers",
-        columns: columns,
-        data: props.torrent.trackerStats,
-        selected,
-        getRowId,
-        selectedReducer,
-      }}
-    />
-  );
+    return (
+        <TrguiTable<TrackerStats>
+            {...{
+                tablename: "trackers",
+                columns: columns,
+                data: props.torrent.trackerStats,
+                selected,
+                getRowId,
+                selectedReducer,
+            }}
+        />
+    );
 }
