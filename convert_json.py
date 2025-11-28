@@ -2,7 +2,7 @@ import json
 import os
 from collections import OrderedDict
 
-files = ["src/locales/en.json", "src/locales/zh.json", "src/locales/zh-TW.json"]
+files = ["src/locales/en.json", "src/locales/zh-CN.json", "src/locales/zh-TW.json"]
 
 
 def deep_merge(target, source):

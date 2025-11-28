@@ -60,7 +60,7 @@ const { TAURI, invoke } = await import(
 );
 
 const languageOverrides: Record<string, string> = {
-    zh: "简体中文",
+    "zh-CN": "简体中文",
     "zh-TW": "繁體中文",
 };
 

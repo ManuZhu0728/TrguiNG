@@ -32,7 +32,15 @@ void i18n
     .use(initReactI18next)
     .init({
         resources,
-        fallbackLng: "en",
+        fallbackLng: {
+            "zh": ["zh-CN"],
+            "zh-Hans": ["zh-CN"],
+            "zh-SG": ["zh-CN"],
+            "zh-Hant": ["zh-TW"],
+            "zh-HK": ["zh-TW"],
+            "zh-MO": ["zh-TW"],
+            "default": ["en"],
+        },
         supportedLngs: availableLanguages,
         interpolation: {
             escapeValue: false,
