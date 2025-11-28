@@ -2,10 +2,10 @@
 > ### Unofficial Fork / 非官方分支声明
 >
 > **English:**
-> This is a modified fork of the original TrguiNG project. The main focus is **Internationalization (i18n) support** (Simplified & Traditional Chinese) and additional feature enhancements.
+> This is a modified fork of the original TrguiNG project. The main focus is **Internationalization (i18n) support** (Simplified & Traditional Chinese for now) and additional feature enhancements.
 >
 > **中文：**
-> 这是 TrguiNG 的一个非官方修改版。核心改动是增加了 **国际化 (i18n) 框架支持**（简体中文 & 繁体中文）以及部分功能增强。
+> 这是 TrguiNG 的一个非官方修改版。核心改动是增加了 **国际化 (i18n) 框架支持**（目前支持简体中文 & 繁体中文）以及部分功能增强。
 >
 > <details>
 > <summary><strong>🤖 AI Attribution & Translation Details / AI 模型与翻译说明 (Click to expand)</strong></summary>
