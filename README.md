@@ -2,10 +2,10 @@
 > ### Unofficial Fork / 非官方分支声明
 >
 > **English:**
-> This is a modified fork of the original TrguiNG project. The main focus is **Internationalization (i18n) support** (Simplified & Traditional Chinese for now) and additional feature enhancements.
+> This is a modified fork of the original TrguiNG project. The main focus is **Internationalization (i18n) support** (Simplified & Traditional Chinese for now) and additional feature enhancements. Support for additional languages can be added by creating translation files in `src/locales/`.
 >
 > **中文：**
-> 这是 TrguiNG 的一个非官方修改版。核心改动是增加了 **国际化 (i18n) 框架支持**（目前支持简体中文 & 繁体中文）以及部分功能增强。
+> 这是 TrguiNG 的一个非官方修改版。核心改动是增加了 **国际化 (i18n) 框架支持**（目前支持简体中文 & 繁体中文）以及部分功能增强。可在`src/locales/`目录下创建翻译文件以支持更多语言。
 >
 > <details>
 > <summary><strong>🤖 AI Attribution & Translation Details / AI 模型与翻译说明 (Click to expand)</strong></summary>
@@ -42,7 +42,7 @@
 >     * 错误状态单独分组
 >     * 新增一种布局模式
 > </details>
->
+> 
 > ---
 > **Disclaimer:** This repository is intended as a "proof of concept" created via AI rapid prototyping (Vibe Coding). The code quality may differ from official standards.
 > **免责声明：** 本仓库代码主要为 AI 辅助快速生成的“概念验证”版本，代码质量可能与官方标准存在差异。

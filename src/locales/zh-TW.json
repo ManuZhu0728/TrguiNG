@@ -409,8 +409,8 @@
         "trayHint": "隱藏視窗會保持前端執行，這會佔用更多記憶體，但重新開啟視窗幾乎是瞬間的。關閉視窗會關閉 webview，這種模式下重新開啟視窗較慢。您始終可以透過系統匣圖示存取視窗。"
     },
     "version": {
-        "remoteInterfaceFor": "遠端介面用於",
-        "torrentDaemon": "種子守護行程",
+        "remoteInterfaceFor": "",
+        "torrentDaemon": "WebUI",
         "version": "版本",
         "frontend": "前端",
         "buildDate": "建置日期",
@@ -501,7 +501,7 @@
                 "progress": "進度",
                 "priority": "優先級",
                 "done": "已完成",
-                "percent": "百分比"
+                "percent": "進度"
             },
             "search": {
                 "placeholder": "搜尋檔案...",

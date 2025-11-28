@@ -409,8 +409,8 @@
         "trayHint": "隐藏窗口会保持前端运行，这会占用更多内存，但重新打开窗口几乎是瞬间的。关闭窗口会关闭 webview，这种模式下重新打开窗口较慢。您始终可以通过系统托盘图标访问窗口。"
     },
     "version": {
-        "remoteInterfaceFor": "远程界面用于",
-        "torrentDaemon": "种子守护进程",
+        "remoteInterfaceFor": "",
+        "torrentDaemon": "WebUI",
         "version": "版本",
         "frontend": "前端",
         "buildDate": "构建日期",
@@ -501,7 +501,7 @@
                 "progress": "进度",
                 "priority": "优先级",
                 "done": "已完成",
-                "percent": "百分比"
+                "percent": "进度"
             },
             "search": {
                 "placeholder": "搜索文件...",
