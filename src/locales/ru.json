@@ -140,7 +140,7 @@
         "torrent": {
             "fullPath": "Полный путь:",
             "created": "Создан:",
-            "by": "кем",
+            "by": "by",
             "totalSize": "Общий размер:",
             "pieces": "Части:",
             "hash": "Хеш:",
