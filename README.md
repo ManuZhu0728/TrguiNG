@@ -2,10 +2,12 @@
 > ### Unofficial Fork / 非官方分支声明
 >
 > **English:**
-> This is a modified fork of the original TrguiNG project. The main focus is **Internationalization (i18n) support** (Simplified & Traditional Chinese for now) and additional feature enhancements. Support for additional languages can be added by creating translation files in `src/locales/`.
+> This is a modified fork of the original TrguiNG project. The main focus is **Internationalization (i18n) support** and additional feature enhancements. 
+> Currently supports Simplified & Traditional Chinese and Russian. Support for additional languages can be added by creating translation files in `src/locales/`.
 >
 > **中文：**
-> 这是 TrguiNG 的一个非官方修改版。核心改动是增加了 **国际化 (i18n) 框架支持**（目前支持简体中文 & 繁体中文）以及部分功能增强。可在`src/locales/`目录下创建翻译文件以支持更多语言。
+> 这是 TrguiNG 的一个非官方修改版。核心改动是增加了 **国际化 (i18n) 框架支持**以及部分功能增强。
+> 目前支持简体中文、繁体中文和俄语。可在`src/locales/`目录下创建翻译文件以支持更多语言。
 >
 > <details>
 > <summary><strong>🤖 AI Attribution & Translation Details / AI 模型与翻译说明 (Click to expand)</strong></summary>
@@ -16,6 +18,7 @@
 > * **Quality:**
 >     * **Simplified Chinese:** AI-generated + Manually refined referencing [jayzcoder/TrguiNG](https://github.com/jayzcoder/TrguiNG).
 >     * **Traditional Chinese:** AI-converted from Simplified Chinese.
+>     * **Russian:** Thanks to @abubaca4.
 >
 > **中文：**
 > * **框架与代码：** 由 **GPT-5.1** 完成。
@@ -23,6 +26,7 @@
 > * **翻译质量：**
 >     * **简体中文：** AI 初译 + 参考项目 [jayzcoder/TrguiNG](https://github.com/jayzcoder/TrguiNG) 进行手动润色。
 >     * **繁体中文：** 由 AI 参考简体中文自动转换。
+>     * **俄语：** 感谢 @abubaca4 协助完成。
 > </details>
 >
 > <details>
@@ -45,6 +49,7 @@
 > 
 > ---
 > **Disclaimer:** This repository is intended as a "proof of concept" created via AI rapid prototyping (Vibe Coding). The code quality may differ from official standards.
+> 
 > **免责声明：** 本仓库代码主要为 AI 辅助快速生成的“概念验证”版本，代码质量可能与官方标准存在差异。
 
 
