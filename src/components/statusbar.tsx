@@ -23,7 +23,7 @@ import { Box, Flex, Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import type { SessionInfo } from "rpc/client";
 import type { Torrent } from "rpc/torrent";
-import { ColorSchemeToggle, ShowVersion } from "components/miscbuttons";
+import { ColorSchemeToggle, FontSizeToggle, ShowVersion } from "components/miscbuttons";
 import {
     ConfigContext,
     ServerConfigContext,
@@ -241,6 +241,7 @@ export function Statusbar({
                 <div style={{ flexShrink: 0, display: "flex", order: 100 }}>
                     <ShowVersion sz="0.9rem" btn="md" />
                     <ColorSchemeToggle sz="0.9rem" btn="md" />
+                    <FontSizeToggle sz="0.9rem" btn="md" />
                 </div>
             )}
         </Flex>

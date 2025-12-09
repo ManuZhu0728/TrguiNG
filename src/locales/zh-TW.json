@@ -23,7 +23,7 @@
         "altSpeedOn": "開啟替代頻寬模式 (F8)",
         "altSpeedOff": "關閉替代頻寬模式 (F8)",
         "searchPlaceholder": "搜尋（{{hotkey}} + f）",
-        "searchHint": "按名稱、路徑 path:某路徑 或標籤 label:某標籤 搜尋",
+        "searchHint": "按名稱、路徑或標籤搜尋",
         "clearSearch": "清除",
         "layoutMenu": "版面配置",
         "changeLayout": "切換版面配置",

@@ -23,7 +23,7 @@
         "altSpeedOn": "开启备用带宽模式 (F8)",
         "altSpeedOff": "关闭备用带宽模式 (F8)",
         "searchPlaceholder": "搜索（{{hotkey}} + f）",
-        "searchHint": "按名称、路径 path:某路径 或标签 label:某标签 搜索",
+        "searchHint": "按名称、路径或标签搜索",
         "clearSearch": "清空",
         "layoutMenu": "布局",
         "changeLayout": "切换布局",

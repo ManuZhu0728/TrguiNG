@@ -89,7 +89,7 @@ export function ShowVersion(props: { sz?: string, btn?: MantineNumberSize }) {
     );
 }
 
-export function FontSizeToggle() {
+export function FontSizeToggle(props: { sz?: string, btn?: MantineNumberSize }) {
     const { toggle } = useFontSize();
     const { t } = useTranslation();
 
@@ -105,14 +105,14 @@ export function FontSizeToggle() {
     return (
         <ActionIcon
             variant="default"
-            size="lg"
+            size={props.btn ?? "lg"}
             onClick={() => {
                 toggle();
             }}
             title={t("toolbar.toggleFontSize", { hotkey: modKeyString() + " + =" })}
             my="auto"
         >
-            <FontSizeIcon width="1.1rem" height="1.1rem" fill="currentColor" />
+            <FontSizeIcon width={props.sz ?? "1.1rem"} height={props.sz ?? "1.1rem"} fill="currentColor" />
         </ActionIcon>
     );
 }
