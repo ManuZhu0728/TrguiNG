@@ -322,13 +322,15 @@ export function AddMagnet(props: AddCommonModalProps) {
 
         common.onAdd();
         if (existingTorrent === undefined) {
-            addMutation.mutate({
-                url: magnet,
-                downloadDir: common.location.path,
-                labels: common.props.labels,
-                paused: !common.start,
-                priority: common.priority,
-            });
+            addMutation.mutate(
+                {
+                    url: magnet,
+                    downloadDir: common.location.path,
+                    labels: common.props.labels,
+                    paused: !common.start,
+                    bandwidthPriority: common.priority,
+                },
+            );
             common.location.addPath(common.location.path);
         } else {
             mutateAddTrackers(
@@ -737,11 +739,8 @@ export function AddTorrent(props: AddCommonModalProps) {
                         downloadDir: common.location.path,
                         labels: common.props.labels,
                         paused: !common.start,
-                        priority: common.priority,
-                        unwanted:
-              td.files == null || torrentData.length > 1
-                  ? undefined
-                  : fileTree.getUnwanted(),
+                        bandwidthPriority: common.priority,
+                        unwanted: (td.files == null || torrentData.length > 1) ? undefined : fileTree.getUnwanted(),
                         filePath: td.torrentPath,
                     });
                 }),
