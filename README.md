@@ -38,6 +38,7 @@
 >     * Double-click group header to select all
 >     * Dedicated Error grouping
 >     * Added a new layout mode
+>     * WebUI supports font size adjustment
 >
 > **中文：**
 > * **移植自 [jayzcoder/TrguiNG](https://github.com/jayzcoder/TrguiNG)：**
@@ -45,6 +46,7 @@
 >     * 双击分组标题全选
 >     * 错误状态单独分组
 >     * 新增一种布局模式
+>     * 网页端支持调整字体大小
 > </details>
 > 
 > ---
