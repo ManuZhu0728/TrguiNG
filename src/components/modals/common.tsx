@@ -264,7 +264,9 @@ export function TorrentLocation(props: LocationData) {
                             <ActionIcon
                                 py="md"
                                 disabled={
-                                    props.disabled === true || props.lastPaths.length === 0
+                                    props.disabled === true ||
+                                    (props.lastPaths.length === 0 &&
+                                        config.values.interface.preconfiguredDirs.length === 0)
                                 }
                             >
                                 <Icon.ClockHistory size="16" />
